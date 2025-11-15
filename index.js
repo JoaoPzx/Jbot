@@ -1,3 +1,4 @@
+// deploy de teste
 // index.js
 const { EmbedBuilder, Collection, Client, IntentsBitField } = require('discord.js');
 const { partidasAtivas, iniciarRodada } = require("./commands/Game/play");
