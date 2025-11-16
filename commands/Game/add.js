@@ -1,5 +1,6 @@
 const { EmbedBuilder } = require("discord.js");
 const Tema = require("../../models/Tema");
+const cloudinary = require("../../commands/Utility/cloudinary");
 
 module.exports = {
     name: "add",
@@ -7,95 +8,109 @@ module.exports = {
 
     async execute(message, args) {
 
-        // ==== Função Embed Padrão ====
-        const criarEmbed = (cor, descricao) => {
-            return new EmbedBuilder()
-                .setColor(cor)
-                .setDescription(descricao)
-        };
+        // ====== EMBEDS PADRÃO ======
+        const erro = (txt) =>
+            message.reply({
+                embeds: [
+                    new EmbedBuilder()
+                        .setColor("#ff4d4d")
+                        .setDescription(`❌ ${txt}`)
+                ],
+                allowedMentions: { repliedUser: false }
+            });
 
-        // ==== PERMISSÃO ====
+        const sucesso = (embed) =>
+            message.reply({
+                embeds: [embed],
+                allowedMentions: { repliedUser: false }
+            });
+
+        // ====== PERMISSÃO ======
         if (!message.member.permissions.has("Administrator"))
-            return message.reply({
-                embeds: [
-                    criarEmbed("Red", "❌ **Você não tem permissão para usar este comando.**")
-                ]
-            });
+            return erro("Você não tem permissão para usar este comando.");
 
-        // ==== USO INCORRETO ====
         if (!args[0])
-            return message.reply({
-                embeds: [
-                    criarEmbed("Yellow", "⚠️ **Uso correto:** `;add <tema> <resposta>` + imagem/anexo")
-                ]
-            });
+            return erro("Uso correto: `;add <tema> <resposta>` + imagem");
 
+        // Tema (abreviação aceita)
         const entradaTema = args.shift().toLowerCase().trim();
         const temas = await Tema.find({});
+        if (!temas.length) return erro("Nenhum tema cadastrado ainda.");
 
-        // ==== SEM TEMAS ====
-        if (!temas.length)
-            return message.reply({
-                embeds: [
-                    criarEmbed("Yellow", "⚠️ **Nenhum tema cadastrado ainda.**")
-                ]
-            });
-
-        // ==== BUSCAR TEMA POR ABREVIAÇÃO ====
         const tema = temas.find(t =>
             (t.nomeOriginal || t.nome).toLowerCase().startsWith(entradaTema)
         );
+        if (!tema) return erro(`O tema **${entradaTema}** não existe.`);
 
-        if (!tema)
-            return message.reply({
-                embeds: [
-                    criarEmbed("Red", `❌ **O tema \`${entradaTema}\` não existe.**`)
-                ]
-            });
-
-        // ==== IMAGEM AUSENTE ====
+        // Verifica imagem
         const attachment = message.attachments.first();
-        if (!attachment || !attachment.url)
-            return message.reply({
-                embeds: [
-                    criarEmbed("Yellow", "⚠️ **Envie uma imagem junto com o comando.**")
-                ]
-            });
+        if (!attachment?.url) return erro("Envie a imagem junto com o comando.");
 
-        // ==== RESPOSTA AUSENTE ====
         const resposta = args.join(" ").toLowerCase().trim();
-        if (!resposta)
-            return message.reply({
-                embeds: [
-                    criarEmbed("Yellow", "⚠️ **Você precisa informar a resposta da imagem.**")
-                ]
-            });
+        if (!resposta) return erro("Você precisa informar a resposta da imagem.");
 
-        // ==== SALVAR NO DB ====
+
+        // =====================================================
+        // 🚫 BLOQUEAR DUPLICAÇÃO (Resposta + URL)
+        // =====================================================
+
+        // Verifica duplicação por resposta
+        const existeResposta = tema.imagens.find(img => img.resposta === resposta);
+        if (existeResposta)
+            return erro(`Já existe uma imagem com a resposta **${resposta}** neste tema.`);
+
+        // Verifica duplicação por URL Cloudinary antes de salvar
+        const jaExisteURL = tema.imagens.find(img => img.url === attachment.url);
+        if (jaExisteURL)
+            return erro("Esta imagem já foi adicionada anteriormente.");
+
+
+        // =====================================================
+        // UPLOAD PARA CLOUDINARY
+        // =====================================================
+        let urlFinal;
+        try {
+            const upload = await cloudinary.uploader.upload(attachment.url, {
+                folder: `jbot/${tema.nomeLower}`,   // organiza por tema
+                public_id: resposta.replace(/\s+/g, "_"),
+                overwrite: false // impede substituição acidental
+            });
+            urlFinal = upload.secure_url;
+        } catch (e) {
+            console.error(e);
+            return erro("Falha ao hospedar imagem no servidor.");
+        }
+
+
+        // =====================================================
+        // SALVAR NO BANCO
+        // =====================================================
         tema.imagens.push({
             resposta,
-            url: attachment.url,
+            url: urlFinal,
             addedBy: message.author.id,
             addedAt: new Date()
         });
 
         await tema.save();
 
-        // ==== EMBED SUCESSO ====
-        const embedSucesso = new EmbedBuilder()
+
+        // =====================================================
+        // Embed de Confirmação
+        // =====================================================
+        const embed = new EmbedBuilder()
             .setColor("Green")
             .setAuthor({
-                name: "Imagem adicionada com sucesso!",
+                name: "Imagem adicionada com sucesso ✔️",
                 iconURL: message.client.user.displayAvatarURL()
             })
             .addFields(
-                { name: "🖼 Tema", value: `\`${tema.nomeOriginal || tema.nome}\``, inline: true },
-                { name: "💬 Resposta", value: `\`${resposta}\``, inline: true },
+                { name: "🖼 Tema", value: tema.nomeOriginal || tema.nome, inline: true },
+                { name: "💬 Resposta", value: resposta, inline: true },
                 { name: "👤 Adicionado por", value: `<@${message.author.id}>`, inline: true }
             )
-            .setThumbnail(attachment.url)
-            .setTimestamp();
+            .setThumbnail(urlFinal);
 
-        return message.reply({ embeds: [embedSucesso] });
+        return sucesso(embed);
     }
 };

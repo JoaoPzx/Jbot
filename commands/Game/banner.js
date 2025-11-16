@@ -5,93 +5,115 @@ const { uploadImgBB } = require("../../commands/Utility/uploadImgBB");
 
 module.exports = {
     name: "banner",
-    description: "Adiciona ou atualiza o banner de um tema.",
+    description: "Adiciona ou atualiza o banner de um tema (por link ou imagem).",
 
     async execute(message, args) {
 
-        const erro = (txt) =>
+        const erro = (msg) =>
             message.reply({
-                embeds: [
-                    new EmbedBuilder()
-                        .setColor("#ff4d4d")
-                        .setAuthor({
-                            name: message.client.user.username,
-                            iconURL: message.client.user.displayAvatarURL()
-                        })
-                        .setDescription(`❌ ${txt}`)
+                embeds: [new EmbedBuilder()
+                    .setColor("#ff4d4d")
+                    .setAuthor({
+                        name: message.client.user.username,
+                        iconURL: message.client.user.displayAvatarURL()
+                    })
+                    .setDescription(`❌ ${msg}`)
                 ],
                 allowedMentions: { repliedUser: false }
             });
 
-        const sucesso = (emb) =>
-            message.reply({
-                embeds: [emb],
-                allowedMentions: { repliedUser: false }
-            });
-
+        // Permissão
         if (!message.member.permissions.has("Administrator"))
             return erro("Você não tem permissão para usar este comando.");
 
+        // Verificação de argumentos
         if (!args.length)
-            return erro("Uso correto: `;banner <tema>` + imagem");
+            return erro("Uso: `;banner <tema> <link opcional>` + imagem (ou link)");
 
-        const entrada = args.shift().toLowerCase();
+        const entradaTema = args.shift().toLowerCase().trim();
+
+        // Buscar tema
         const temas = await Tema.find({});
         if (!temas.length) return erro("Nenhum tema cadastrado.");
 
-        const tema = temas.find(t =>
-            (t.nomeOriginal || t.nome).toLowerCase().startsWith(entrada)
+        const tema = temas.find(t => 
+            (t.nomeOriginal || t.nome).toLowerCase().startsWith(entradaTema)
         );
-        if (!tema) return erro(`Nenhum tema encontrado correspondente a **${entrada}**.`);
 
-        const attachment = message.attachments.first();
-        if (!attachment) return erro("Envie a imagem como anexo ou colando a imagem!");
+        if (!tema) return erro(`Nenhum tema encontrado correspondente a **${entradaTema}**.`);
 
-        const mime = attachment.contentType || "";
-        if (!mime.startsWith("image/"))
-            return erro("O arquivo enviado não é uma imagem válida.");
+        const insignia = tema.insigniaEmoji ? `${tema.insigniaEmoji} ` : "";
+        const nomeExibir = `${insignia}${tema.nomeOriginal || tema.nome}`;
 
-        let bufferFinal;
-        try {
-            bufferFinal = await redimensionarBanner(attachment.url);
-        } catch (e) {
-            console.error(e);
-            return erro("Não foi possível processar a imagem.");
+        let bannerFinalURL;
+        const linkRecebido = args[0];
+        const anexo = message.attachments.first();
+
+        // =====================================================
+        // 1️⃣ CASO LINK
+        // =====================================================
+        if (linkRecebido && linkRecebido.startsWith("http")) {
+
+            // Se já for link do ImgBB → usar direto
+            if (linkRecebido.includes("ibb.co") || linkRecebido.includes("imgbb.com")) {
+                bannerFinalURL = linkRecebido;
+            } else {
+                // Se for link externo → fazer upload
+                try {
+                    const response = await fetch(linkRecebido);
+                    const buffer = Buffer.from(await response.arrayBuffer());
+                    bannerFinalURL = await uploadImgBB(buffer);
+                } catch {
+                    return erro("Falha ao processar o link enviado.");
+                }
+            }
         }
 
-        // === Enviar para ImgBB ===
-        const finalURL = await uploadImgBB(bufferFinal);
-        if (!finalURL) return erro("Falha ao enviar o banner para ImgBB.");
+        // =====================================================
+        // 2️⃣ CASO ANEXO
+        // =====================================================
+        else if (anexo && anexo.url) {
+            try {
+                const buffer = await redimensionarBanner(anexo.url);
+                bannerFinalURL = await uploadImgBB(buffer);
+            } catch (err) {
+                console.error(err);
+                return erro("Não foi possível processar o anexo enviado.");
+            }
+        }
 
-        const tinhaAntes = !!tema.banner;
-        tema.banner = finalURL;
+        // Nenhum banner encontrado
+        else {
+            return erro("Envie um link ou anexo válido.");
+        }
+
+        if (!bannerFinalURL) return erro("Erro inesperado ao processar o banner.");
+
+        const jaTinha = !!tema.banner;
+        tema.banner = bannerFinalURL;
         await tema.save();
 
-        const insignia = tema.insignia ? tema.insignia + " " : "";
-        const nomeExibir = insignia + (tema.nomeOriginal || tema.nome);
+        // Embed de sucesso
+        // Embed de sucesso
+const embed = new EmbedBuilder()
+    .setColor("#5865F2")
+    .setAuthor({
+        name: message.client.user.username,
+        iconURL: message.client.user.displayAvatarURL()
+    })
+    .setTitle("🎨 Banner do Tema Atualizado")
+    .addFields(
+        { name: "Tema", value: `**${nomeExibir}**`, inline: true },
+        { name: "Status", value: jaTinha ? "🔄 Atualizado" : "🆕 Adicionado", inline: true }
+    )
+    .setImage(bannerFinalURL);
 
-        const embed = new EmbedBuilder()
-            .setColor("#5865F2")
-            .setAuthor({
-                name: message.client.user.username,
-                iconURL: message.client.user.displayAvatarURL()
-            })
-            .setTitle("🎨 Banner do Tema Atualizado")
-            .addFields(
-                { name: "Tema", value: `**${nomeExibir}**`, inline: true },
-                {
-                    name: "Status",
-                    value: tinhaAntes ? "🔄 Atualizado" : "🆕 Adicionado",
-                    inline: true
-                }
-            )
-            .setImage(finalURL)
-            .setFooter({
-                text: `Solicitado por ${message.author.username}`,
-                iconURL: message.author.displayAvatarURL()
-            })
-            .setTimestamp();
+// Enviar confirmação
+message.reply({ embeds: [embed], allowedMentions: { repliedUser: false } }).then(() => {
+    setTimeout(() => {
+        if (message.deletable) message.delete().catch(() => {});
+    }, 3000); // 3 segundos
+});
 
-        return sucesso(embed);
-    },
+    }
 };

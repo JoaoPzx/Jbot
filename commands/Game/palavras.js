@@ -1,23 +1,42 @@
-const { EmbedBuilder } = require("discord.js");
+const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
 const Tema = require("../../models/Tema");
 
 module.exports = {
     name: "palavras",
-    description: "Lista todas as palavras de um tema, com visual aprimorado e suporte a abreviação.",
+    description: "Lista todas as palavras de um tema, com paginação.",
 
     async execute(message, args) {
 
+        // ==========================
+        // ERRO PADRÃO
+        // ==========================
+        const erro = (txt) =>
+            message.reply({
+                embeds: [
+                    new EmbedBuilder()
+                        .setColor("#ff4d4d")
+                        .setAuthor({
+                            name: message.client.user.username,
+                            iconURL: message.client.user.displayAvatarURL()
+                        })
+                        .setDescription(`❌ ${txt}`)
+                ],
+                allowedMentions: { repliedUser: false }
+            });
+
+        // ==========================
+        // ARGUMENTO
+        // ==========================
         const entradaRaw = args[0];
-        if (!entradaRaw) {
-            return message.reply("❌ Uso correto: `;palavras <tema>`");
-        }
+        if (!entradaRaw) return erro("Uso correto: `;palavras <tema>`");
 
         const entrada = entradaRaw.toLowerCase();
 
+        // ==========================
+        // BUSCAR TEMAS
+        // ==========================
         const temas = await Tema.find({});
-        if (!temas.length) {
-            return message.reply("❌ Não há temas cadastrados.");
-        }
+        if (!temas.length) return erro("Não há temas cadastrados.");
 
         const ordenados = temas.sort((a, b) =>
             (a.nomeOriginal || a.nome).localeCompare(b.nomeOriginal || b.nome)
@@ -27,40 +46,91 @@ module.exports = {
             (t.nomeOriginal || t.nome || "").toLowerCase().startsWith(entrada)
         );
 
-        if (!tema) {
-            return message.reply(`❌ O tema **${entradaRaw}** não existe.`);
-        }
+        if (!tema) return erro(`O tema **${entradaRaw}** não existe.`);
+        if (!tema.imagens.length) return erro(`⚠️ O tema **${tema.nomeOriginal || tema.nome}** não possui palavras cadastradas.`);
 
-        if (!tema.imagens.length) {
-            return message.reply(`⚠️ O tema **${tema.nomeOriginal || tema.nome}** não possui palavras cadastradas.`);
-        }
-
-        // ✅ CORRIGIDO: usa a insígnia REAL salva no banco
+        // ==========================
+        // TRATAMENTO DO NOME
+        // ==========================
         const insignia = tema.insigniaEmoji ? tema.insigniaEmoji + " " : "";
         const nomeFinal = `${insignia}${tema.nomeOriginal || tema.nome}`;
 
-        const total = tema.imagens.length;
-
-        const palavrasOrdenadas = tema.imagens
+        // ==========================
+        // PAGINAÇÃO
+        // ==========================
+        const palavras = tema.imagens
             .map(img => img.resposta.toUpperCase())
             .sort((a, b) => a.localeCompare(b, "pt-BR"));
 
-        const lista = "```\n" + palavrasOrdenadas.join("\n") + "\n```";
+        const porPagina = 20;
+        const totalPaginas = Math.ceil(palavras.length / porPagina);
+        let paginaAtual = 1;
 
-        const embed = new EmbedBuilder()
-            .setColor("#9b59b6")
-            .setAuthor({
-                name: message.client.user.username,
-                iconURL: message.client.user.displayAvatarURL()
-            })
-            .setTitle(`📝 Palavras do tema: ${nomeFinal}`)
-            .setDescription(`**1 – ${total}**\n\n${lista}`)
-            .setFooter({
-                text: `${total} palavra(s) cadastrada(s) • solicitado por ${message.author.username}`,
-                iconURL: message.author.displayAvatarURL()
-            })
-            .setTimestamp();
+        function gerarEmbed() {
+            const inicio = (paginaAtual - 1) * porPagina;
+            const fim = inicio + porPagina;
 
-        return message.reply({ embeds: [embed] });
+            const lista = "```\n" + palavras.slice(inicio, fim).join("\n") + "\n```";
+
+            return new EmbedBuilder()
+                .setColor("#9b59b6")
+                .setAuthor({
+                    name: message.client.user.username,
+                    iconURL: message.client.user.displayAvatarURL()
+                })
+                .setTitle(`📝 Palavras do tema: ${nomeFinal}`)
+                .setDescription(`**1 – ${tema.imagens.length}**\n\n${lista}`)
+                .setFooter({
+                    text: `${tema.imagens.length} palavra(s) cadastrada(s) • solicitado por ${message.author.username}`,
+                    iconURL: message.author.displayAvatarURL()
+                })
+                .setTimestamp();
+        }
+
+        function gerarBotoes() {
+            return new ActionRowBuilder().addComponents(
+                new ButtonBuilder()
+                    .setCustomId("primeira")
+                    .setEmoji("⏮️")
+                    .setStyle(ButtonStyle.Secondary)
+                    .setDisabled(paginaAtual === 1),
+                new ButtonBuilder()
+                    .setCustomId("voltar")
+                    .setEmoji("⬅️")
+                    .setStyle(ButtonStyle.Secondary)
+                    .setDisabled(paginaAtual === 1),
+                new ButtonBuilder()
+                    .setCustomId("avancar")
+                    .setEmoji("➡️")
+                    .setStyle(ButtonStyle.Secondary)
+                    .setDisabled(paginaAtual === totalPaginas),
+                new ButtonBuilder()
+                    .setCustomId("ultima")
+                    .setEmoji("⏭️")
+                    .setStyle(ButtonStyle.Secondary)
+                    .setDisabled(paginaAtual === totalPaginas)
+            );
+        }
+
+        const msg = await message.reply({ embeds: [gerarEmbed()], components: [gerarBotoes()] });
+
+        const collector = msg.createMessageComponentCollector({ time: 120000 });
+
+        collector.on("collect", async (i) => {
+
+            if (i.user.id !== message.author.id)
+                return i.reply({ content: "❌ Apenas quem usou o comando pode navegar.", ephemeral: true });
+
+            if (i.customId === "primeira") paginaAtual = 1;
+            if (i.customId === "voltar") paginaAtual--;
+            if (i.customId === "avancar") paginaAtual++;
+            if (i.customId === "ultima") paginaAtual = totalPaginas;
+
+            await i.update({ embeds: [gerarEmbed()], components: [gerarBotoes()] });
+        });
+
+        collector.on("end", () => {
+            msg.edit({ components: [] }).catch(() => {});
+        });
     }
 };

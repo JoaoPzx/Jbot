@@ -3,13 +3,9 @@ const Tema = require("../../models/Tema");
 
 // Monta o nome com o emoji da insígnia
 function nomeComInsignia(tema) {
-
-    // Se tiver emoji custom criado pelo /insignia
     if (tema.insigniaEmoji) {
         return `${tema.insigniaEmoji} ${tema.nomeOriginal || tema.nome}`;
     }
-
-    // Se não tiver insígnia → só nome
     return tema.nomeOriginal || tema.nome;
 }
 
@@ -34,17 +30,17 @@ module.exports = {
             });
         }
 
-        /* =====================================================
-           ARGUMENTO
-        ====================================================== */
+        // ==============================
+        // ARGUMENTO
+        // ==============================
         const entradaRaw = args[0];
         if (!entradaRaw) return erro("Uso correto: `;temainfo <tema>`");
 
         const entrada = entradaRaw.toLowerCase();
 
-        /* =====================================================
-           CARREGAR TEMAS
-        ====================================================== */
+        // ==============================
+        // CARREGAR TEMAS
+        // ==============================
         const temas = await Tema.find({});
         if (!temas.length) return erro("Não há temas cadastrados.");
 
@@ -52,9 +48,9 @@ module.exports = {
             (a.nomeOriginal || a.nome).localeCompare(b.nomeOriginal || b.nome)
         );
 
-        /* =====================================================
-           BUSCA CORRIGIDA (igual ao ;play)
-        ====================================================== */
+        // ==============================
+        // BUSCA (mesma lógica do ;play)
+        // ==============================
         const tema = ordenados.find(t => {
             const nome = (t.nomeOriginal || t.nome).toLowerCase();
             return (
@@ -66,27 +62,41 @@ module.exports = {
 
         if (!tema) return erro(`O tema **${entradaRaw}** não existe.`);
 
-        /* =====================================================
-           FAZER NOME COM INSÍGNIA
-        ====================================================== */
+        // ==============================
+        // DADOS
+        // ==============================
         const nomeExibir = nomeComInsignia(tema);
         const totalImagens = tema.imagens?.length ?? 0;
         const criadoPor = tema.criadoPor ? `<@${tema.criadoPor}>` : "Desconhecido";
 
-        /* =====================================================
-           EMBED FINAL
-        ====================================================== */
+        // ==============================
+// RECORDISTA
+// ==============================
+        let textoRecordista;
+
+        if (tema.record?.userId && tema.record?.pontos > 0) {
+        textoRecordista = `👑 <@${tema.record.userId}> — **${tema.record.pontos} pontos**`;
+        } else {
+    // Se não houver recordista → BOT é o recordista padrão
+        textoRecordista = `🤖 <@${message.client.user.id}> — **0 pontos**`;
+}
+
+
+        // ==============================
+        // EMBED
+        // ==============================
         const embed = new EmbedBuilder()
             .setColor("#3498db")
-            .setTitle(`📘 Informações do Tema`)
+            .setTitle("📘 Informações do Tema")
             .setAuthor({
-                            name: message.client.user.username,
-                            iconURL: message.client.user.displayAvatarURL()
-                        })
+                name: message.client.user.username,
+                iconURL: message.client.user.displayAvatarURL()
+            })
             .addFields(
                 { name: "Nome", value: `**${nomeExibir}**`, inline: true },
                 { name: "Total de imagens", value: `🖼 **${totalImagens}**`, inline: true },
-                { name: "Criado por", value: `🧑‍💻 ${criadoPor}`, inline: true }
+                { name: "Criado por", value: `🧑‍💻 ${criadoPor}`, inline: true },
+                { name: "Recordista", value: textoRecordista }
             )
             .setFooter({
                 text: `Solicitado por ${message.author.username}`,
@@ -94,10 +104,14 @@ module.exports = {
             })
             .setTimestamp();
 
-        // SE houver banner → adiciona
-        if (tema.banner) {
-            embed.setImage(tema.banner);
-        }
+        // ==============================
+// BANNER (tema ou padrão)
+// ==============================
+const { BANNER_PADRAO } = require("../../commands/Utility/banners");
+const bannerFinal = tema.banner || BANNER_PADRAO;
+
+embed.setImage(bannerFinal);
+
 
         return message.reply({ embeds: [embed], allowedMentions: { repliedUser: false } });
     }
