@@ -71,10 +71,34 @@ async function execute(message, args) {
         });
     }
 
-    const temaEncontrado = temas.find(t => {
-        const nome = (t.nomeOriginal || t.nome).toLowerCase();
-        return nome.startsWith(entrada) || nome.includes(entrada) || t.nomeLower === entrada;
+    // Normaliza e ordena temas alfabeticamente
+const ordenados = temas.sort((a, b) =>
+    (a.nomeOriginal || a.nome).localeCompare(b.nomeOriginal || b.nome)
+);
+
+// 1️⃣ Filtrar temas que começam com a entrada
+let filtrados = ordenados.filter(t =>
+    (t.nomeOriginal || t.nome).toLowerCase().startsWith(entrada)
+);
+
+// 2️⃣ Se nenhum começar, filtrar por includes()
+if (!filtrados.length) {
+    filtrados = ordenados.filter(t =>
+        (t.nomeOriginal || t.nome).toLowerCase().includes(entrada)
+    );
+}
+
+// 3️⃣ Se mesmo assim não houver resultados → erro
+if (!filtrados.length) {
+    return message.reply({
+        embeds: [embedErro(`Nenhum tema encontrado para **${entradaRaw}**.`)],
+        allowedMentions: { repliedUser: false }
     });
+}
+
+// 4️⃣ Selecionar o primeiro da lista (correto alfabeticamente)
+const temaEncontrado = filtrados[0];
+
 
     if (!temaEncontrado) {
         return message.reply({
