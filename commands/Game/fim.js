@@ -25,7 +25,6 @@ module.exports = {
             const embedErro = new EmbedBuilder()
                 .setColor("#ff4d4d")
                 .setDescription("❌ Não há nenhuma partida ativa neste canal.");
-
             return message.reply({ embeds: [embedErro] });
         }
 
@@ -33,12 +32,11 @@ module.exports = {
             const embedErro = new EmbedBuilder()
                 .setColor("#ff4d4d")
                 .setDescription("❌ Apenas **quem iniciou a partida** pode encerrá-la.");
-
             return message.reply({ embeds: [embedErro] });
         }
 
         // ============================
-        // INFORMAÇÕES
+        // INFO
         // ============================
         const tema = await Tema.findById(partida.tema._id);
         const nomeTema = partida.temaNomeExibir;
@@ -66,12 +64,30 @@ module.exports = {
         encerrarPartida(canalId);
 
         // ============================
-        // BANNER COM FALLBACK
+        // BANNER
         // ============================
         const bannerFinal = validarBanner(tema.banner);
 
         // ============================
-        // EMBED FINAL
+        // DEFININDO RECORDISTA ATUAL
+        // ============================
+        let recordistaTexto;
+
+        if (tema.record?.userId && tema.record?.pontos > 0) {
+            recordistaTexto = `🏆 <@${tema.record.userId}> — **${tema.record.pontos} pts**`;
+        } else {
+            // salva bot como recordista oficial
+            tema.record = {
+                userId: message.client.user.id,
+                pontos: 0,
+                data: new Date()
+            };
+            await tema.save();
+            recordistaTexto = `🏆 <@${message.client.user.id}> — **0 pts**`;
+        }
+
+        // ============================
+        // EMBED FINAL (NOVO FORMATO)
         // ============================
         const embedFim = new EmbedBuilder()
             .setColor("#f1c40f")
@@ -83,15 +99,18 @@ module.exports = {
             .setImage(bannerFinal)
             .addFields(
                 { name: "Tema", value: `**${nomeTema}**`, inline: true },
-                { name: "Nível atingido", value: `**🧩 ${nivel}**`, inline: true },
-                { name: "Tempo total", value: `**⏰ ${tempoTotal}**`, inline: true },
-                { name: "🏆 Rank Final", value: rankingTexto }
-            );
+                { name: "Nível atingido", value: `🧩 **${nivel}**`, inline: true },
+                { name: "Recordista", value: recordistaTexto, inline: true }
+            )
+            .addFields({
+                name: "🏆 Ranking Final",
+                value: rankingTexto
+            });
 
         await message.reply({ embeds: [embedFim] });
 
         // ============================
-        // SISTEMA DE RECORDE (sem alteração)
+        // SISTEMA DE RECORDE (SEM ALTERAÇÃO)
         // ============================
         if (melhorJogadorId && melhorPontuacao > 0) {
             if (!tema.record?.userId || melhorPontuacao > tema.record.pontos) {
@@ -105,13 +124,13 @@ module.exports = {
 
                 const embedRecorde = new EmbedBuilder()
                     .setColor("#FFD700")
-                    .setTitle("🏆 **RECORDE ABSOLUTO BATIDO!**")
+                    .setTitle("🏆 **NOVO RECORDE ATINGIDO!**")
                     .setThumbnail("https://i.ibb.co/3mKpcBQq/medal-1.png")
                     .setDescription(
-                        `O jogador **<@${melhorJogadorId}>** acaba de alcançar\n\n` +
-                        `💥 **${melhorPontuacao} pontos**\n\n` +
-                        `e agora se torna o **Recordista Oficial** do tema **${nomeTema}**!\n\n` +
-                        `🔥 *Uma nova lenda acaba de ser escrita...*`
+                        `🔥 **<@${melhorJogadorId}> Quebrou o recorde!**\n\n` +
+                        `Pontuação: **${melhorPontuacao} pts**\n` +
+                        `Tema: **${nomeTema}**\n\n` +
+                        `✨ *Uma nova lenda foi criada...*`
                     );
 
                 return message.channel.send({ embeds: [embedRecorde] });

@@ -227,21 +227,42 @@ async function iniciarRodada(message, partida) {
             ? formatarRanking(rankingOrdenado)
             : "Ninguém pontuou.";
 
-        const embedFim = new EmbedBuilder()
-            .setColor(partida.cor)
-            .setAuthor({
-                name: message.client.user.username,
-                iconURL: message.client.user.displayAvatarURL()
-            })
-            .setTitle(`⏳ Tempo Esgotado! A resposta era: **${item.resposta}**`)
-            .setImage(themeBanner)
-            .addFields(
-                { name: "Tema", value: `**${partida.temaNomeExibir}**`, inline: true },
-                { name: "Nível atingido", value: `**🧩 ${partida.nivel}**`, inline: true },
-                { name: "🏆 Rank Final", value: rankingTexto }
-            );
+const temaDB = await Tema.findById(partida.tema._id);
 
-        await message.channel.send({ embeds: [embedFim] });
+// ===== RECORDISTA ATUAL =====
+let recordistaLinha;
+if (temaDB.record?.userId && temaDB.record?.pontos > 0) {
+    recordistaLinha = `<@${temaDB.record.userId}> — **${temaDB.record.pontos} pts**`;
+} else {
+    recordistaLinha = `<@${message.client.user.id}> — **0 pts**`;
+}
+
+// ===== EMBED FINAL (ajustado com 3 fields lado a lado) =====
+const embedFim = new EmbedBuilder()
+    .setColor(partida.cor)
+    .setAuthor({
+        name: message.client.user.username,
+        iconURL: message.client.user.displayAvatarURL()
+    })
+    .setTitle(`⏳ Tempo Esgotado! A resposta era: **${item.resposta}**`)
+    .setImage(themeBanner)
+    .addFields(
+        { name: "Tema", value: `**${partida.temaNomeExibir}**`, inline: true },
+        { name: "Nível atingido", value: `**🧩 ${partida.nivel}**`, inline: true },
+        { name: "Recordista", value: `🏆 ${recordistaLinha}`, inline: true }
+    )
+    .addFields(
+        { name: "🏆 Ranking Final", value: rankingTexto }
+    );
+
+// enviar
+await message.channel.send({ embeds: [embedFim] });
+
+
+
+// === RECORDISTA ATUAL DO TEMA ===
+    
+
 
         // === SISTEMA DE RECORDE ===
         if (rankingOrdenado.length > 0) {

@@ -5,7 +5,7 @@ const {
 
 const Tema = require("../../models/Tema");
 const { redimensionarBanner } = require("../../commands/Utility/redimensionarBanner");
-const { uploadImgBB } = require("../../commands/Utility/uploadImgBB");
+const cloudinary = require("../../commands/Utility/cloudinary");
 
 // =====================
 // EMBED PADRÃO (ERRO)
@@ -25,11 +25,7 @@ function embedSucesso(temaNome, url, atualizado) {
         .setTitle("🎨 Banner do Tema Atualizado")
         .addFields(
             { name: "Tema", value: `**${temaNome}**`, inline: true },
-            {
-                name: "Status",
-                value: atualizado ? "🔄 Atualizado" : "🆕 Adicionado",
-                inline: true
-            }
+            { name: "Status", value: atualizado ? "🔄 Atualizado" : "🆕 Adicionado", inline: true }
         )
         .setImage(url)
         .setTimestamp();
@@ -56,17 +52,15 @@ module.exports = {
     // ==========================
     async autocomplete(interaction) {
         const focused = interaction.options.getFocused().toLowerCase();
-
         const temas = await Tema.find({});
-        const lista = temas
-            .map(t => t.nomeOriginal || t.nome)
-            .filter(n => n.toLowerCase().includes(focused))
-            .slice(0, 25);
-
-        return interaction.respond(lista.map(n => ({
-            name: n,
-            value: n
-        })));
+        
+        return interaction.respond(
+            temas
+                .map(t => t.nomeOriginal || t.nome)
+                .filter(n => n.toLowerCase().includes(focused))
+                .slice(0, 25)
+                .map(n => ({ name: n, value: n }))
+        );
     },
 
     // ==========================
@@ -78,78 +72,75 @@ module.exports = {
         const entradaRaw = interaction.options.getString("tema");
         const entrada = entradaRaw.toLowerCase();
 
-        // ==========================
-        // VALIDAÇÃO
-        // ==========================
-        if (!imagem.contentType?.startsWith("image/")) {
+        // Validação inicial
+        if (!imagem?.contentType?.startsWith("image/")) {
             return interaction.reply({
-                embeds: [embedErro("A imagem deve ser PNG, JPG, JPEG ou WEBP.")],
-                ephemeral: true
+                embeds: [embedErro("A imagem deve ser PNG, JPG, JPEG ou WEBP valida.")],
+                flags: 64
             });
         }
 
         const temas = await Tema.find({});
         if (!temas.length) {
-            return interaction.reply({
-                embeds: [embedErro("Nenhum tema cadastrado.")],
-                ephemeral: true
-            });
+            return interaction.reply({ embeds: [embedErro("Nenhum tema cadastrado.")], flags: 64 });
         }
 
-        const ordenados = temas.sort((a, b) =>
-            (a.nomeOriginal || a.nome).localeCompare(b.nomeOriginal || b.nome)
-        );
-
-        const tema = ordenados.find(t =>
+        const tema = temas.find(t =>
             (t.nomeOriginal || t.nome).toLowerCase().startsWith(entrada)
         );
 
         if (!tema) {
             return interaction.reply({
                 embeds: [embedErro(`Nenhum tema encontrado correspondente a **${entradaRaw}**.`)],
-                ephemeral: true
+                flags: 64
             });
         }
 
-        const nomeExibir = tema.nomeOriginal || tema.nome;
+        // === Nome com insignia ===
+        const insignia = tema.insigniaEmoji ? `${tema.insigniaEmoji} ` : "";
+        const nomeExibir = `${insignia}${tema.nomeOriginal || tema.nome}`;
 
-        // ==========================
-        // REDIMENSIONAR
-        // ==========================
-        let bufferFinal;
+        // === Redimensionar imagem para 1920x640 ===
+        let resizedBuffer;
         try {
-            bufferFinal = await redimensionarBanner(imagem.url);
-        } catch (e) {
-            console.error(e);
+            resizedBuffer = await redimensionarBanner(imagem.url);
+        } catch (err) {
             return interaction.reply({
-                embeds: [embedErro("Erro ao processar a imagem enviada.")],
-                ephemeral: true
+                embeds: [embedErro("Erro ao redimensionar a imagem.")],
+                flags: 64
             });
         }
 
-        // ==========================
-        // UPLOAD PARA IMGBB
-        // ==========================
-        const finalURL = await uploadImgBB(bufferFinal);
-        if (!finalURL) {
+        // === Upload para Cloudinary ===
+        const cloudFolder = `jbot/banners/${tema.nomeLower}`;
+
+        let finalURL;
+        try {
+            finalURL = await new Promise((resolve, reject) => {
+                const upload = cloudinary.uploader.upload_stream({
+                    folder: cloudFolder,
+                    public_id: "banner",
+                    overwrite: true,
+                    format: "jpg"
+                }, (err, result) => {
+                    if (err) reject(err);
+                    else resolve(result.secure_url);
+                });
+
+                upload.end(resizedBuffer);
+            });
+        } catch (err) {
+            console.log(err);
             return interaction.reply({
-                embeds: [embedErro("Falha ao enviar o banner para ImgBB.")],
-                ephemeral: true
+                embeds: [embedErro("Falha ao enviar o banner ao Cloudinary.")],
+                flags: 64
             });
         }
 
-        // ==========================
-        // SALVAR NO BANCO
-        // ==========================
-        const foiAtualizado = !!tema.banner;
+        const atualizado = !!tema.banner;
         tema.banner = finalURL;
         await tema.save();
 
-        // ==========================
-        // RESPOSTA FINAL
-        // ==========================
-        return interaction.reply({
-            embeds: [embedSucesso(nomeExibir, finalURL, foiAtualizado)]
-        });
+        return interaction.reply({ embeds: [embedSucesso(nomeExibir, finalURL, atualizado)] });
     },
 };

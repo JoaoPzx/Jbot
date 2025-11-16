@@ -7,7 +7,14 @@ module.exports = {
     description: "Pausa ou retoma a partida.",
 
     async execute(message) {
-        const partida = partidasAtivas.get(message.channel.id);
+    // Aceitar apenas ";p" ou o prefixo que você usa
+    const conteudo = message.content.trim().toLowerCase();
+    if (conteudo !== ";p" && conteudo !== ";pause") {
+        return; // ignora qualquer outra variação
+    }
+
+    const partida = partidasAtivas.get(message.channel.id);
+
 
         // Nenhuma partida no canal
         if (!partida) {

@@ -93,9 +93,9 @@ module.exports = {
                 iconURL: message.client.user.displayAvatarURL()
             })
             .addFields(
-                { name: "🖼 Tema", value: temaNomeFinal, inline: true },
-                { name: "💬 Resposta", value: `\`${imagem.resposta}\``, inline: true },
-                { name: "👤 Adicionado por", value: addedBy, inline: true },
+                { name: "Tema", value: temaNomeFinal, inline: true },
+                { name: "Resposta", value: `\`${imagem.resposta}\``, inline: true },
+                { name: "Adicionado por", value: `👤 ${addedBy}`, inline: true },
                 { name: "📅 Data", value: dataAdicao, inline: true }
             )
             .setImage(imagem.url)
