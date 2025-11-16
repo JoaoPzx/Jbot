@@ -7,8 +7,6 @@ module.exports = {
 
     async execute(message) {
         const canalId = message.channel.id;
-
-        // Verificar se existe partida ativa
         const partida = partidasAtivas.get(canalId);
 
         if (!partida) {
@@ -16,47 +14,58 @@ module.exports = {
                 embeds: [
                     new EmbedBuilder()
                         .setColor("Red")
-                        .setAuthor({
-                            name: message.client.user.username,
-                            iconURL: message.client.user.displayAvatarURL()
-                        })
                         .setDescription("⚠️ Não há nenhuma partida ativa neste canal.")
                 ]
             });
         }
 
-        // ❗ Somente o criador pode encerrar
         if (message.author.id !== partida.autorId) {
             return message.channel.send({
                 embeds: [
                     new EmbedBuilder()
                         .setColor("Red")
-                        .setAuthor({
-                            name: message.client.user.username,
-                            iconURL: message.client.user.displayAvatarURL()
-                        })
                         .setDescription("❌ Apenas **quem iniciou a partida** pode encerrá-la.")
                 ]
             });
         }
 
-        // Executar encerramento
-        const encerrado = encerrarPartida(canalId);
+        const nomeTema = partida.temaNomeExibir;
+        const nivel = partida.nivel;
 
-        if (!encerrado) {
-            return message.channel.send("❌ Ocorreu um erro ao tentar encerrar a partida.");
+        const ranking = Object.entries(partida.ranking)
+            .sort((a, b) => b[1] - a[1])
+            .map(([id, pts], i) => `**${i + 1}. <@${id}> — ${pts} ponto(s)**`)
+            .join("\n") || "Nenhum ponto registrado.";
+
+        let tempoTotal = "Indisponível";
+        if (partida.inicio) {
+            const duracao = Date.now() - partida.inicio;
+            const s = Math.floor((duracao / 1000) % 60);
+            const m = Math.floor((duracao / 1000 / 60) % 60);
+            const h = Math.floor(duracao / 1000 / 60 / 60);
+
+            tempoTotal = (h ? `${h}h ` : "") + (m ? `${m}m ` : "") + `${s}s`;
         }
 
-        return message.channel.send({
-            embeds: [
-                new EmbedBuilder()
-                    .setColor("Yellow")
-                    .setAuthor({
-                        name: message.client.user.username,
-                        iconURL: message.client.user.displayAvatarURL()
-                    })
-                    .setDescription(`🛑 **${message.author.username} encerrou a partida.**`)
-            ]
-        });
+        encerrarPartida(canalId);
+
+        const embed = new EmbedBuilder()
+            .setColor("#f1c40f")
+            .setTitle("🛑 Partida Finalizada!")
+            .setAuthor({
+                name: message.client.user.username,
+                iconURL: message.client.user.displayAvatarURL()
+            })
+            .addFields(
+                { name: "Tema", value: `**${nomeTema}**`, inline: true },
+                { name: "Nível atingido", value: `**🧩 ${nivel}**`, inline: true },
+                { name: "Tempo total", value: `**⏰ ${tempoTotal}**`, inline: true }
+            )
+            .addFields(
+                { name: "🏅 Rank Final", value: ranking }
+            )
+            .setTimestamp();
+
+        return message.channel.send({ embeds: [embed] });
     }
 };

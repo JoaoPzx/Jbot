@@ -2,6 +2,7 @@
 const { EmbedBuilder, Collection, Client, IntentsBitField } = require('discord.js');
 const { partidasAtivas, iniciarRodada } = require("./commands/Game/play");
 
+
 require('dotenv').config();
 const { connect } = require('./database');
 const fs = require('fs');

@@ -19,8 +19,8 @@ module.exports = {
             });
         }
 
-        // ❌ Tentou pausar durante a rodada
-        if (partida.rodadaEmCurso === true) {
+        // Não pode pausar enquanto o timer está contando na rodada
+        if (partida.rodadaEmCurso) {
             return message.reply({
                 embeds: [
                     new EmbedBuilder()
@@ -31,12 +31,9 @@ module.exports = {
             });
         }
 
-        // ==========================================
-        // DESPAUSE
-        // ==========================================
+        // Se já pausada — TENTANDO DESPAUSAR
         if (partida.pausada) {
 
-            // Somente quem pausou pode despausar
             if (message.author.id !== partida.autorPausa) {
                 return message.reply({
                     embeds: [
@@ -64,13 +61,12 @@ module.exports = {
             }, 1000);
         }
 
-        // ==========================================
-        // PAUSE
-        // ==========================================
+        // ---- PAUSAR ----
         partida.pausada = true;
         partida.autorPausa = message.author.id;
 
-        clearTimeout(partida.timeout);
+        if (partida.timeout) clearTimeout(partida.timeout);
+        if (partida.coletor) partida.coletor.stop("paused");
 
         const embedPause = new EmbedBuilder()
             .setColor("#f1c40f")
@@ -90,7 +86,6 @@ module.exports = {
             components: [botao]
         });
 
-        // Pausa expira após 5 minutos
         partida.despausarTimer = setTimeout(() => {
             if (partida.pausada) {
                 partida.pausada = false;

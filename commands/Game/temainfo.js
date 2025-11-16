@@ -79,10 +79,14 @@ module.exports = {
         const embed = new EmbedBuilder()
             .setColor("#3498db")
             .setTitle(`📘 Informações do Tema`)
+            .setAuthor({
+                            name: message.client.user.username,
+                            iconURL: message.client.user.displayAvatarURL()
+                        })
             .addFields(
-                { name: "Nome", value: `**${nomeExibir}**`, inline: false },
-                { name: "Total de imagens", value: `🖼 **${totalImagens}**`, inline: false },
-                { name: "Criado por", value: `🧑‍💻 ${criadoPor}`, inline: false }
+                { name: "Nome", value: `**${nomeExibir}**`, inline: true },
+                { name: "Total de imagens", value: `🖼 **${totalImagens}**`, inline: true },
+                { name: "Criado por", value: `🧑‍💻 ${criadoPor}`, inline: true }
             )
             .setFooter({
                 text: `Solicitado por ${message.author.username}`,

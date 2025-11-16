@@ -6,58 +6,96 @@ module.exports = {
     description: "Adiciona uma imagem a um tema existente.",
 
     async execute(message, args) {
+
+        // ==== Função Embed Padrão ====
+        const criarEmbed = (cor, descricao) => {
+            return new EmbedBuilder()
+                .setColor(cor)
+                .setDescription(descricao)
+        };
+
+        // ==== PERMISSÃO ====
         if (!message.member.permissions.has("Administrator"))
-            return message.reply("❌ Você não tem permissão para usar este comando.");
+            return message.reply({
+                embeds: [
+                    criarEmbed("Red", "❌ **Você não tem permissão para usar este comando.**")
+                ]
+            });
 
+        // ==== USO INCORRETO ====
         if (!args[0])
-            return message.reply("❌ Uso correto: `;add <tema> <resposta>` + imagem/anexo");
+            return message.reply({
+                embeds: [
+                    criarEmbed("Yellow", "⚠️ **Uso correto:** `;add <tema> <resposta>` + imagem/anexo")
+                ]
+            });
 
-        // Nome do tema
-        const temaNomeLower = args.shift().toLowerCase();
+        const entradaTema = args.shift().toLowerCase().trim();
+        const temas = await Tema.find({});
 
-        // Buscar tema pelo nomeLower (correto)
-        const tema = await Tema.findOne({ nomeLower: temaNomeLower });
+        // ==== SEM TEMAS ====
+        if (!temas.length)
+            return message.reply({
+                embeds: [
+                    criarEmbed("Yellow", "⚠️ **Nenhum tema cadastrado ainda.**")
+                ]
+            });
+
+        // ==== BUSCAR TEMA POR ABREVIAÇÃO ====
+        const tema = temas.find(t =>
+            (t.nomeOriginal || t.nome).toLowerCase().startsWith(entradaTema)
+        );
 
         if (!tema)
-            return message.reply(`❌ O tema **${temaNomeLower}** não existe.`);
+            return message.reply({
+                embeds: [
+                    criarEmbed("Red", `❌ **O tema \`${entradaTema}\` não existe.**`)
+                ]
+            });
 
-        // -------------------------------------------------------
-        // PRIORIDADE ÚNICA: ANEXO (arrastado, colado, copiar imagem)
-        // -------------------------------------------------------
+        // ==== IMAGEM AUSENTE ====
         const attachment = message.attachments.first();
+        if (!attachment || !attachment.url)
+            return message.reply({
+                embeds: [
+                    criarEmbed("Yellow", "⚠️ **Envie uma imagem junto com o comando.**")
+                ]
+            });
 
-        if (!attachment || !attachment.url) {
-            return message.reply("⚠️ Envie uma imagem junto com o comando (anexo, arrastada ou colada).");
-        }
-
-        const imageURL = attachment.url; // << CDN link — CORRETO para embeds
-
-        // Resposta (resto da mensagem)
+        // ==== RESPOSTA AUSENTE ====
         const resposta = args.join(" ").toLowerCase().trim();
+        if (!resposta)
+            return message.reply({
+                embeds: [
+                    criarEmbed("Yellow", "⚠️ **Você precisa informar a resposta da imagem.**")
+                ]
+            });
 
-        if (!resposta) {
-            return message.reply("❌ Você precisa informar a resposta da imagem.");
-        }
-
-        // Salvar no MongoDB
+        // ==== SALVAR NO DB ====
         tema.imagens.push({
             resposta,
-            url: imageURL
+            url: attachment.url,
+            addedBy: message.author.id,
+            addedAt: new Date()
         });
 
         await tema.save();
 
-        // Confirmar com embed
-        const embed = new EmbedBuilder()
+        // ==== EMBED SUCESSO ====
+        const embedSucesso = new EmbedBuilder()
             .setColor("Green")
             .setAuthor({
-                name: "Imagem adicionada ✔️",
+                name: "Imagem adicionada com sucesso!",
                 iconURL: message.client.user.displayAvatarURL()
             })
-            .setDescription(`🖼 **Tema:** \`${tema.nomeOriginal || tema.nome}\`\n🔤 **Resposta:** \`${resposta}\``)
-            .setThumbnail(imageURL)
-            .setFooter({ text: `Adicionado por ${message.author.username}` });
+            .addFields(
+                { name: "🖼 Tema", value: `\`${tema.nomeOriginal || tema.nome}\``, inline: true },
+                { name: "💬 Resposta", value: `\`${resposta}\``, inline: true },
+                { name: "👤 Adicionado por", value: `<@${message.author.id}>`, inline: true }
+            )
+            .setThumbnail(attachment.url)
+            .setTimestamp();
 
-        return message.channel.send({ embeds: [embed] });
+        return message.reply({ embeds: [embedSucesso] });
     }
 };

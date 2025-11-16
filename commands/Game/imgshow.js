@@ -1,71 +1,108 @@
-const { EmbedBuilder } = require('discord.js');
-const Tema = require('../../models/Tema');
+const { EmbedBuilder } = require("discord.js");
+const Tema = require("../../models/Tema");
 
 module.exports = {
-    name: 'imgshow',
-    description: 'Mostra uma imagem e sua resposta de um tema.',
+    name: "imgshow",
+    aliases: ["show"],
+    description: "Mostra uma imagem aleatória de um tema.",
 
     async execute(message, args) {
 
-        // =============================
-        // 1. VALIDAR ARGUMENTOS
-        // =============================
-        const temaArg = args.shift()?.toLowerCase();
-        const resposta = args.join(" ").toLowerCase();
+        // === Função utilitária de embed ===
+        const criarEmbed = (cor, texto) => {
+            return new EmbedBuilder()
+                .setColor(cor)
+                .setDescription(texto)
+        };
 
-        if (!temaArg || !resposta) {
+        // === Validação: parâmetro ausente ===
+        if (!args[0])
             return message.reply({
-                content: "❌ Uso correto: `;imgshow <tema> <resposta>`",
-                allowedMentions: { repliedUser: false }
+                embeds: [
+                    criarEmbed("Yellow", "⚠️ **Uso correto:** `;imgshow <tema> <resposta opcional>`")
+                ]
             });
+
+        // Normalizar valores
+        const entradaTema = args.shift().toLowerCase().trim();
+        const entradaResp = args.join(" ").toLowerCase().trim();
+
+        // Buscar temas
+        const temas = await Tema.find({});
+        if (!temas.length)
+            return message.reply({
+                embeds: [
+                    criarEmbed("Yellow", "⚠️ **Nenhum tema cadastrado ainda.**")
+                ]
+            });
+
+        // Buscar tema por abreviação
+        const tema = temas.find(t =>
+            (t.nomeOriginal || t.nome).toLowerCase().startsWith(entradaTema)
+        );
+
+        if (!tema)
+            return message.reply({
+                embeds: [
+                    criarEmbed("Red", `❌ **O tema \`${entradaTema}\` não existe.**`)
+                ]
+            });
+
+        // Tema sem imagens
+        if (!tema.imagens.length)
+            return message.reply({
+                embeds: [
+                    criarEmbed("Yellow", `📭 **O tema \`${tema.nomeOriginal || tema.nome}\` não possui imagens.**`)
+                ]
+            });
+
+        let imagem;
+
+        // Buscar imagem específica pela resposta
+        if (entradaResp) {
+            imagem = tema.imagens.find(img =>
+                img.resposta.toLowerCase() === entradaResp
+            );
+            if (!imagem)
+                return message.reply({
+                    embeds: [
+                        criarEmbed("Red", `❌ **Nenhuma imagem encontrada com a resposta \`${entradaResp}\`.**`)
+                    ]
+                });
+        } else {
+            imagem = tema.imagens[tema.imagens.length - 1];
         }
 
-        // =============================
-        // 2. BUSCAR TEMA PELO nomeLower
-        // =============================
-        const tema = await Tema.findOne({ nomeLower: temaArg });
+        // === Informações formatadas ===
+        const insignia = tema.insigniaEmoji || "";
+        const temaNomeFinal = `${insignia} ${tema.nomeOriginal || tema.nome}`.trim();
 
-        if (!tema) {
-            return message.reply({
-                content: `⚠️ O tema **${temaArg}** não existe.`,
-                allowedMentions: { repliedUser: false }
-            });
-        }
+        const addedBy = imagem.addedBy
+            ? `<@${imagem.addedBy}>`
+            : "Desconhecido";
 
-        const nomeExibir = tema.nomeOriginal;
+        const dataAdicao = imagem.addedAt
+            ? `<t:${Math.floor(new Date(imagem.addedAt).getTime() / 1000)}:f>`
+            : "Não informada";
 
-        // =============================
-        // 3. BUSCAR IMAGEM PELA RESPOSTA
-        // =============================
-        const imagem = tema.imagens.find(img => img.resposta.toLowerCase() === resposta);
-
-        if (!imagem) {
-            return message.reply({
-                content: `⚠️ Nenhuma imagem encontrada para **${resposta}** no tema **${nomeExibir}**.`,
-                allowedMentions: { repliedUser: false }
-            });
-        }
-
-        // =============================
-        // 4. EMBED
-        // =============================
+        // === Embed final ===
         const embed = new EmbedBuilder()
-            .setColor('Blue')
-            .setTitle(`🖼️ Tema: ${nomeExibir}`)
-            .setDescription(`💬 **Resposta:** ${imagem.resposta}`)
-            .setImage(imagem.url)
-            .setFooter({
-                text: `Comando solicitado por ${message.author.username}`,
-                iconURL: message.author.displayAvatarURL()
+            .setColor("#2b2d31")
+            .setAuthor({
+                name: message.client.user.username,
+                iconURL: message.client.user.displayAvatarURL()
             })
+            .addFields(
+                { name: "🖼 Tema", value: temaNomeFinal, inline: true },
+                { name: "💬 Resposta", value: `\`${imagem.resposta}\``, inline: true },
+                { name: "👤 Adicionado por", value: addedBy, inline: true },
+                { name: "📅 Data", value: dataAdicao, inline: true }
+            )
+            .setImage(imagem.url)
+            .setFooter({ text: message.author.username, iconURL: message.author.displayAvatarURL() })
             .setTimestamp();
+            
 
-        // =============================
-        // 5. RESPONDER
-        // =============================
-        return message.reply({
-            embeds: [embed],
-            allowedMentions: { repliedUser: false }
-        });
-    },
+        return message.reply({ embeds: [embed] });
+    }
 };
