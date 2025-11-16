@@ -1,10 +1,11 @@
 const { EmbedBuilder } = require("discord.js");
 const Tema = require("../../models/Tema");
+const { BANNER_PADRAO } = require("../../commands/Utility/banners");
 
 const partidasAtivas = new Map();
 
 /* =====================================================
-   SISTEMA DE TEMPO — queda suave e controlada
+   SISTEMA DE TEMPO – queda suave e controlada
 ===================================================== */
 function calcularTempo(nivel) {
     if (nivel <= 10) return 60;
@@ -12,10 +13,7 @@ function calcularTempo(nivel) {
 
     const decremento = 56 / 290;
     let tempo = 60 - ((nivel - 10) * decremento);
-
-    if (tempo < 4) tempo = 4;
-
-    return parseFloat(tempo.toFixed(1));
+    return tempo < 4 ? 4 : parseFloat(tempo.toFixed(1));
 }
 
 function formatarTempo(t) {
@@ -33,6 +31,9 @@ function embedErro(txt) {
         .setDescription(`❌ ${txt}`);
 }
 
+/* =====================================================
+   DIFICULDADE POR NÍVEL
+===================================================== */
 function dificuldadePorNivel(nivel) {
     if (nivel <= 100) return "Fácil";
     if (nivel <= 200) return "Médio";
@@ -53,7 +54,6 @@ async function execute(message, args) {
         });
     }
 
-    // Impede múltiplas partidas
     if (partidasAtivas.has(message.channel.id)) {
         return message.reply({
             embeds: [embedErro("Já existe uma partida ativa neste canal!")],
@@ -71,17 +71,9 @@ async function execute(message, args) {
         });
     }
 
-    const ordenados = temas.sort((a, b) =>
-        (a.nomeOriginal || a.nome).localeCompare(b.nomeOriginal || b.nome)
-    );
-
-    const temaEncontrado = ordenados.find(t => {
+    const temaEncontrado = temas.find(t => {
         const nome = (t.nomeOriginal || t.nome).toLowerCase();
-        return (
-            nome.startsWith(entrada) ||
-            nome.includes(entrada) ||
-            t.nomeLower === entrada
-        );
+        return nome.startsWith(entrada) || nome.includes(entrada) || t.nomeLower === entrada;
     });
 
     if (!temaEncontrado) {
@@ -101,10 +93,7 @@ async function execute(message, args) {
     const insignia = temaEncontrado.insigniaEmoji ? `${temaEncontrado.insigniaEmoji} ` : "";
     const temaNomeExibir = `${insignia}${temaEncontrado.nomeOriginal || temaEncontrado.nome}`;
 
-    const cores = [
-        "#5865F2", "#FF4757", "#FFA502", "#2ED573", "#1E90FF",
-        "#E84393", "#00CEC9", "#6C5CE7", "#FD79A8", "#55EFC4"
-    ];
+    const cores = ["#5865F2", "#FF4757", "#FFA502", "#2ED573", "#1E90FF", "#E84393", "#00CEC9", "#6C5CE7", "#FD79A8", "#55EFC4"];
     const corDaPartida = cores[Math.floor(Math.random() * cores.length)];
 
     const partida = {
@@ -125,6 +114,8 @@ async function execute(message, args) {
 
     partidasAtivas.set(message.channel.id, partida);
 
+    const bannerInicio = validarBanner(temaEncontrado.banner);
+
     const embedInicio = new EmbedBuilder()
         .setColor(corDaPartida)
         .setAuthor({
@@ -136,10 +127,8 @@ async function execute(message, args) {
             { name: "Tema", value: `**${temaNomeExibir}**`, inline: true },
             { name: "Palavras", value: `**🖼 ${temaEncontrado.imagens.length}**`, inline: true }
         )
-        .setFooter({ text: "⏳ Primeira imagem em 10s" });
-
-    if (temaEncontrado.banner)
-        embedInicio.setImage(temaEncontrado.banner);
+        .setFooter({ text: "⏳ Primeira imagem em 10s" })
+        .setImage(bannerInicio);
 
     await message.channel.send({ embeds: [embedInicio] });
 
@@ -147,7 +136,14 @@ async function execute(message, args) {
 }
 
 /* =====================================================
-   INICIAR RODADA (REVISADO)
+   VALIDAÇÃO DO BANNER
+===================================================== */
+function validarBanner(banner) {
+    return banner && banner.trim() !== "" ? banner : BANNER_PADRAO;
+}
+
+/* =====================================================
+   INICIAR RODADA
 ===================================================== */
 async function iniciarRodada(message, partida) {
 
@@ -194,8 +190,7 @@ async function iniciarRodada(message, partida) {
 
             msg.react("⭐").catch(() => {});
 
-            partida.ranking[msg.author.id] =
-                (partida.ranking[msg.author.id] || 0) + 1;
+            partida.ranking[msg.author.id] = (partida.ranking[msg.author.id] || 0) + 1;
 
             const rankingOrdenado = montarRanking(partida);
             const rankingTexto = formatarRanking(rankingOrdenado);
@@ -208,7 +203,7 @@ async function iniciarRodada(message, partida) {
                 })
                 .setDescription(`🏆 **RANKING**\n${rankingTexto}`)
                 .setFooter({ text: "⏳ Próxima imagem em 5s" });
-
+                
             await message.channel.send({ embeds: [embedAcerto] });
 
             partida.nivel++;
@@ -219,13 +214,13 @@ async function iniciarRodada(message, partida) {
     });
 
     collector.on("end", async (_, motivo) => {
-
         if (partida.encerrada || motivo === "acertou" || partida.pausada) return;
 
         partida.rodadaTerminada = true;
         partida.encerrada = true;
-
         partidasAtivas.delete(message.channel.id);
+
+        const themeBanner = validarBanner(partida.tema.banner);
 
         const rankingOrdenado = montarRanking(partida);
         const rankingTexto = rankingOrdenado.length
@@ -235,14 +230,49 @@ async function iniciarRodada(message, partida) {
         const embedFim = new EmbedBuilder()
             .setColor(partida.cor)
             .setAuthor({
-                name: `A resposta era: ${item.resposta}`,
+                name: message.client.user.username,
                 iconURL: message.client.user.displayAvatarURL()
             })
-            .setThumbnail("https://cdn-icons-png.flaticon.com/128/8853/8853834.png")
-            .setDescription(`🏆 **RANKING FINAL**\n${rankingTexto}`)
-            .setFooter({ text: "Tempo esgotado, use ;play para jogar novamente!" });
+            .setTitle(`⏳ Tempo Esgotado! A resposta era: **${item.resposta}**`)
+            .setImage(themeBanner)
+            .addFields(
+                { name: "Tema", value: `**${partida.temaNomeExibir}**`, inline: true },
+                { name: "Nível atingido", value: `**🧩 ${partida.nivel}**`, inline: true },
+                { name: "🏆 Rank Final", value: rankingTexto }
+            );
 
         await message.channel.send({ embeds: [embedFim] });
+
+        // === SISTEMA DE RECORDE ===
+        if (rankingOrdenado.length > 0) {
+            const melhorJogadorId = rankingOrdenado[0][0];
+            const melhorPontuacao = rankingOrdenado[0][1];
+
+            const temaDB = await Tema.findById(partida.tema._id);
+
+            if (!temaDB.record?.userId || melhorPontuacao > temaDB.record.pontos) {
+
+                temaDB.record = {
+                    userId: melhorJogadorId,
+                    pontos: melhorPontuacao,
+                    data: new Date()
+                };
+                await temaDB.save();
+
+                const embedRecorde = new EmbedBuilder()
+                    .setColor("#FFD700")
+                    .setTitle("🏆 NOVO RECORDE ATINGIDO!")
+                    .setThumbnail("https://i.ibb.co/3mKpcBQq/medal-1.png")
+                    .setDescription(
+                        `🔥 **<@${melhorJogadorId}> QUEBROU O RECORDE!**\n\n` +
+                        `Pontuação: **${melhorPontuacao} pts**\n` +
+                        `Tema: **${partida.temaNomeExibir}**\n\n` +
+                        `✨ *Uma nova lenda foi criada...*`
+                    );
+
+                return message.channel.send({ embeds: [embedRecorde] });
+            }
+        }
     });
 }
 
@@ -273,7 +303,6 @@ module.exports = {
         if (!partida) return false;
 
         partida.encerrada = true;
-
         if (partida.coletor) partida.coletor.stop("fim_manual");
         if (partida.timeout) clearTimeout(partida.timeout);
 

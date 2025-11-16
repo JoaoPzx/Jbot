@@ -5,6 +5,13 @@ const TemaSchema = new mongoose.Schema({
     nomeLower: { type: String, required: true },
     nomeOriginal: { type: String, default: null },
 
+    record: {
+    userId: { type: String, default: null },
+    pontos: { type: Number, default: 0 },
+    data: { type: Date, default: null }
+},
+
+
     criadoPor: { type: String, default: null },
     dataCriacao: { type: Date, default: Date.now },
 
@@ -22,6 +29,8 @@ const TemaSchema = new mongoose.Schema({
     insignia: { type: String, default: null },
     insigniaEmoji: { type: String, default: null },
     insigniaEmojiId: { type: String, default: null },
+
+    
 
     partidasJogadas: { type: Number, default: 0 }
 });

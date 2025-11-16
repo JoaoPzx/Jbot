@@ -1,11 +1,11 @@
 const {
     SlashCommandBuilder,
-    EmbedBuilder,
-    AttachmentBuilder
+    EmbedBuilder
 } = require("discord.js");
 
 const Tema = require("../../models/Tema");
 const { redimensionarBanner } = require("../../commands/Utility/redimensionarBanner");
+const { uploadImgBB } = require("../../commands/Utility/uploadImgBB");
 
 // =====================
 // EMBED PADRÃO (ERRO)
@@ -127,44 +127,29 @@ module.exports = {
             });
         }
 
-        const novoArquivo = new AttachmentBuilder(bufferFinal, {
-            name: `${tema.nomeLower}_banner.jpg`
-        });
-
         // ==========================
-        // ENVIAR E PEGAR URL FINAL
+        // UPLOAD PARA IMGBB
         // ==========================
-        let msgTemp;
-        try {
-            msgTemp = await interaction.channel.send({ files: [novoArquivo] });
-        } catch (e) {
+        const finalURL = await uploadImgBB(bufferFinal);
+        if (!finalURL) {
             return interaction.reply({
-                embeds: [embedErro("Falha ao gerar a URL final do banner.")],
+                embeds: [embedErro("Falha ao enviar o banner para ImgBB.")],
                 ephemeral: true
             });
         }
-
-        const rawURL = msgTemp.attachments.first()?.url;
-        const cdnURL = rawURL.split("?")[0]; // remove parâmetros
-
-        // Aguarda replicação da CDN e remove o anexo
-        setTimeout(() => {
-            msgTemp.delete().catch(() => {});
-        }, 6000);
 
         // ==========================
         // SALVAR NO BANCO
         // ==========================
         const foiAtualizado = !!tema.banner;
-
-        tema.banner = cdnURL;
+        tema.banner = finalURL;
         await tema.save();
 
         // ==========================
         // RESPOSTA FINAL
         // ==========================
         return interaction.reply({
-            embeds: [embedSucesso(nomeExibir, cdnURL, foiAtualizado)]
+            embeds: [embedSucesso(nomeExibir, finalURL, foiAtualizado)]
         });
     },
 };
