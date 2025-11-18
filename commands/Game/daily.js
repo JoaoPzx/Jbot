@@ -24,8 +24,8 @@ module.exports = {
                 .setAuthor({ name: "Recompensa diária já coletada!", iconURL: message.author.displayAvatarURL({ dynamic: true }) })
                 .setDescription(`Você já recebeu sua recompensa!`)
                 .addFields(
-                    { name: "<:alarme3d:1440073671443091526> Próxima liberação", value: `**${hours}h ${minutes}m restantes**`, inline: true },
-                    { name: "\<:doutilizador:1440074090663645355> Usuário", value: `${message.author}`, inline: true }
+                    { name: "Próxima liberação", value: `<:alarme:1440073671443091526> **${hours}h ${minutes}m restantes**`, inline: true },
+                    { name: "Usuário", value: `<:user:1440074090663645355> ${message.author}`, inline: true }
                 )
                 .setFooter({ text: "Aguarde a liberação para coletar novamente!" })
 

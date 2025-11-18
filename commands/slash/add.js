@@ -99,18 +99,7 @@ module.exports = {
 
         const embed = new EmbedBuilder()
             .setColor("Green")
-            .setAuthor({
-                name: "Imagem adicionada ✔️",
-                iconURL: interaction.client.user.displayAvatarURL()
-            })
-            .addFields(
-                { name: "Tema", value: nomeFinal, inline: true },
-                { name: "Resposta", value: `\`${resposta}\``, inline: true },
-                { name: "Adicionado por", value: `👤 <@${interaction.user.id}>`, inline: true }
-            )
-            .setImage(upload.secure_url)
-            .setTimestamp();
-
+            .setDescription(`🖼 \`${resposta}\` adicionado em \`${tema.nomeOriginal}\``)
         return interaction.reply({ embeds: [embed] });
     }
 };

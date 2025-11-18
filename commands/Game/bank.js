@@ -20,7 +20,7 @@ module.exports = {
             .setThumbnail(target.displayAvatarURL({ dynamic: true }))
             .setDescription(`Aqui estão as informações bancárias de **${target.username}**`)
             .addFields(
-                { name: "<:carteira:1440068592354725888> Saldo", value: `**${userData.balance} moedas**`, inline: true },
+                { name: "Saldo", value: `**<:carteira:1440068592354725888> ${userData.balance} moedas**`, inline: true },
             )
             .setFooter({ text: "Use as suas moedas com sabedoria!" })
             .setTimestamp();

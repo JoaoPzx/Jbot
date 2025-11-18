@@ -139,7 +139,8 @@ module.exports = {
             nomeLower: nomeLimpo,
             criadoPor: interaction.user.id,
             insigniaEmoji,
-            insigniaEmojiId
+            insigniaEmojiId,
+            dataCriacao: Date.now()
         });
 
         await novoTema.save();
@@ -151,10 +152,10 @@ module.exports = {
             .setColor("#00ff9d")
             .setTitle("🎉 Novo Tema Criado!")
             .addFields(
-                { name: "📌 Nome (Exibição)", value: nomeOriginal },
-                { name: "🔠 Nome Interno", value: nomeLimpo },
-                { name: "🏅 Insígnia", value: insigniaEmoji },
-                { name: "👤 Criado por", value: `<@${interaction.user.id}>` }
+                { name: "📌 Nome", value: nomeOriginal, inline: true },
+                { name: "🏅 Insígnia", value: insigniaEmoji, inline: true },
+                { name: "👤 Criado por", value: `<@${interaction.user.id}>`, inline: true },
+                { name: "Criado em", value: `<t:${Math.floor(Date.now() / 1000)}:F>` }
             )
             .setTimestamp();
 

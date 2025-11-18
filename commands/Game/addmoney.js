@@ -4,6 +4,7 @@ const findUser = require("../Utility/getUser");
 
 module.exports = {
     name: "addmoney",
+    aliases: ["add"],
     description: "Adiciona moedas ao usuário informado. (Admin)",
 
     async execute(message, args) {
@@ -52,11 +53,11 @@ module.exports = {
 
         const embed = new EmbedBuilder()
             .setColor("#00ff90")
-            .setTitle("Moedas adicionadas!")
+            .setTitle("<:adcjbot:1440431531763040476> Moedas adicionadas!")
             .addFields(
-                { name: "<:user:1440074090663645355> Usuário", value: `${target}`, inline: true },
-                { name: "<:ganhodedinheiro:1440113818134122516> Adição", value: `**${amount} moedas**`, inline: true },
-                { name: "<:carteira:1440068592354725888> Saldo", value: `**${userData.balance} moedas**`, inline: true }
+                { name: "Usuário", value: `<:user:1440074090663645355> ${target}`, inline: true },
+                { name: "Adição", value: `**<:ganhodedinheiro:1440113818134122516> ${amount} moedas**`, inline: true },
+                { name: "Saldo", value: `**<:carteira:1440068592354725888> ${userData.balance} moedas**`, inline: true }
             )
             .setTimestamp();
 

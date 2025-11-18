@@ -4,6 +4,7 @@ const findUser = require("../Utility/getUser");
 
 module.exports = {
     name: "removemoney",
+    aliases: ["rm"],
     description: "Remove moedas do usuário informado. (Admin)",
 
     async execute(message, args) {
@@ -61,11 +62,11 @@ module.exports = {
 
         const embed = new EmbedBuilder()
             .setColor("#ff6969")
-            .setTitle("Moedas removidas!")
+            .setTitle("<:rmjbot:1440431569071243314> Moedas removidas!")
             .addFields(
-                { name: "<:user:1440074090663645355> Usuário", value: `${target}`, inline: true },
-                { name: "<:perdadedinheiro:1440096747912302753> Remoção", value: `**${amount} moedas**`, inline: true },
-                { name: "<:carteira:1440068592354725888> Saldo", value: `**${userData.balance} moedass**`, inline: true }
+                { name: "Usuário", value: `<:user:1440074090663645355> ${target}`, inline: true },
+                { name: "Remoção", value: `**<:perdadedinheiro:1440096747912302753> ${amount} moedas**`, inline: true },
+                { name: "Saldo", value: `**<:carteira:1440068592354725888> ${userData.balance} moedas**`, inline: true }
             )
             .setTimestamp();
 
