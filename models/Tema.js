@@ -6,11 +6,19 @@ const TemaSchema = new mongoose.Schema({
     nomeOriginal: { type: String, default: null },
 
     record: {
-    userId: { type: String, default: null },
-    pontos: { type: Number, default: 0 },
-    data: { type: Date, default: null }
-},
+        userId: { type: String, default: null },
+        pontos: { type: Number, default: 0 },
+        data: { type: Date, default: null }
+    },
 
+    // 🔥 NOVO SISTEMA DE ACÚMULO DE PONTOS 🔥
+    pontuacoes: [
+        {
+            userId: String,
+            total: { type: Number, default: 0 },
+            partidas: { type: Number, default: 0 }
+        }
+    ],
 
     criadoPor: { type: String, default: null },
     dataCriacao: { type: Date, default: Date.now },
@@ -29,8 +37,6 @@ const TemaSchema = new mongoose.Schema({
     insignia: { type: String, default: null },
     insigniaEmoji: { type: String, default: null },
     insigniaEmojiId: { type: String, default: null },
-
-    
 
     partidasJogadas: { type: Number, default: 0 }
 });

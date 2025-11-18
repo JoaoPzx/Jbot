@@ -76,7 +76,6 @@ module.exports = {
         if (tema.record?.userId && tema.record?.pontos > 0) {
             recordistaTexto = `🏆 <@${tema.record.userId}> — **${tema.record.pontos} pts**`;
         } else {
-            // salva bot como recordista oficial
             tema.record = {
                 userId: message.client.user.id,
                 pontos: 0,
@@ -133,8 +132,28 @@ module.exports = {
                         `✨ *Uma nova lenda foi criada...*`
                     );
 
-                return message.channel.send({ embeds: [embedRecorde] });
+                message.channel.send({ embeds: [embedRecorde] });
             }
+        }
+
+        // ============================
+        // 🔥 SISTEMA DE RANK ACUMULADO (NOVO)
+        // ============================
+        if (melhorJogadorId && melhorPontuacao > 0) {
+            let registro = tema.pontuacoes?.find((p) => p.userId === melhorJogadorId);
+
+            if (!registro) {
+                tema.pontuacoes.push({
+                    userId: melhorJogadorId,
+                    total: melhorPontuacao,
+                    partidas: 1
+                });
+            } else {
+                registro.total += melhorPontuacao;
+                registro.partidas += 1;
+            }
+
+            await tema.save();
         }
     }
 };

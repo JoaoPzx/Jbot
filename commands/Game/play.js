@@ -265,10 +265,9 @@ if (temaDB.record?.userId && temaDB.record?.pontos > 0) {
 const embedFim = new EmbedBuilder()
     .setColor(partida.cor)
     .setAuthor({
-        name: message.client.user.username,
+        name: `A resposta era: ${item.resposta}`,
         iconURL: message.client.user.displayAvatarURL()
     })
-    .setTitle(`⏳ Tempo Esgotado! A resposta era: **${item.resposta}**`)
     .setImage(themeBanner)
     .addFields(
         { name: "Tema", value: `**${partida.temaNomeExibir}**`, inline: true },
@@ -286,38 +285,55 @@ await message.channel.send({ embeds: [embedFim] });
 
 // === RECORDISTA ATUAL DO TEMA ===
     
-
-
         // === SISTEMA DE RECORDE ===
-        if (rankingOrdenado.length > 0) {
-            const melhorJogadorId = rankingOrdenado[0][0];
-            const melhorPontuacao = rankingOrdenado[0][1];
+if (rankingOrdenado.length > 0) {
+    const melhorJogadorId = rankingOrdenado[0][0];
+    const melhorPontuacao = rankingOrdenado[0][1];
 
-            const temaDB = await Tema.findById(partida.tema._id);
+    const temaDB = await Tema.findById(partida.tema._id);
 
-            if (!temaDB.record?.userId || melhorPontuacao > temaDB.record.pontos) {
+    if (!temaDB.record?.userId || melhorPontuacao > temaDB.record.pontos) {
 
-                temaDB.record = {
-                    userId: melhorJogadorId,
-                    pontos: melhorPontuacao,
-                    data: new Date()
-                };
-                await temaDB.save();
+        temaDB.record = {
+            userId: melhorJogadorId,
+            pontos: melhorPontuacao,
+            data: new Date()
+        };
+        await temaDB.save();
 
-                const embedRecorde = new EmbedBuilder()
-                    .setColor("#FFD700")
-                    .setTitle("🏆 NOVO RECORDE ATINGIDO!")
-                    .setThumbnail("https://i.ibb.co/3mKpcBQq/medal-1.png")
-                    .setDescription(
-                        `🔥 **<@${melhorJogadorId}> QUEBROU O RECORDE!**\n\n` +
-                        `Pontuação: **${melhorPontuacao} pts**\n` +
-                        `Tema: **${partida.temaNomeExibir}**\n\n` +
-                        `✨ *Uma nova lenda foi criada...*`
-                    );
+        const embedRecorde = new EmbedBuilder()
+            .setColor("#FFD700")
+            .setTitle("🏆 NOVO RECORDE ATINGIDO!")
+            .setThumbnail("https://i.ibb.co/3mKpcBQq/medal-1.png")
+            .setDescription(
+                `🔥 **<@${melhorJogadorId}> Quebrou o recorde!**\n\n` +
+                `Pontuação: **${melhorPontuacao} pts**\n` +
+                `Tema: **${partida.temaNomeExibir}**\n\n` +
+                `✨ *Uma nova lenda foi criada...*`
+            );
 
-                return message.channel.send({ embeds: [embedRecorde] });
-            }
-        }
+        await message.channel.send({ embeds: [embedRecorde] });
+    }
+
+    // === SISTEMA DE ACÚMULO DE PONTOS POR JOGADOR (NOVO) ===
+    const temaAtualizado = await Tema.findById(partida.tema._id);
+
+    let registro = temaAtualizado.pontuacoes.find(p => p.userId === melhorJogadorId);
+
+    if (!registro) {
+        temaAtualizado.pontuacoes.push({
+            userId: melhorJogadorId,
+            total: melhorPontuacao,
+            partidas: 1
+        });
+    } else {
+        registro.total += melhorPontuacao;
+        registro.partidas += 1;
+    }
+
+    await temaAtualizado.save();
+}
+
     });
 }
 

@@ -21,7 +21,7 @@ module.exports = {
                         })
                         .setDescription(`❌ ${txt}`)
                 ],
-                allowedMentions: { repliedUser: false }
+                allowedMentions: { repliedUser: true }
             });
 
         // ==========================
