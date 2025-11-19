@@ -1,5 +1,5 @@
 const { EmbedBuilder, PermissionFlagsBits } = require("discord.js");
-const Economia = require("../../models/Economia");
+const Perfil = require("../../models/Perfil");
 const findUser = require("../Utility/getUser");
 
 module.exports = {
@@ -9,6 +9,7 @@ module.exports = {
 
     async execute(message, args) {
 
+        // Permissão
         if (!message.member.permissions.has(PermissionFlagsBits.Administrator)) {
             const embed = new EmbedBuilder()
                 .setColor("#ff4d4d")
@@ -17,6 +18,7 @@ module.exports = {
             return message.reply({ embeds: [embed] });
         }
 
+        // Localizar usuário
         const target = await findUser(message, args[0]);
         const amountStr = args[1];
 
@@ -28,6 +30,7 @@ module.exports = {
             return message.reply({ embeds: [embed] });
         }
 
+        // Validar número
         if (!amountStr || !/^\d+$/.test(amountStr)) {
             const embed = new EmbedBuilder()
                 .setColor("#ff4d4d")
@@ -36,7 +39,7 @@ module.exports = {
             return message.reply({ embeds: [embed] });
         }
 
-        const amount = parseInt(amountStr);
+        const amount = parseInt(amountStr, 10);
         if (amount <= 0) {
             const embed = new EmbedBuilder()
                 .setColor("#ff4d4d")
@@ -45,19 +48,24 @@ module.exports = {
             return message.reply({ embeds: [embed] });
         }
 
-        let userData = await Economia.findOne({ userId: target.id });
-        if (!userData) userData = await Economia.create({ userId: target.id, balance: 0 });
+        // Carregar perfil
+        let userData = await Perfil.findOne({ userId: target.id });
+        if (!userData) userData = await Perfil.create({ userId: target.id });
 
-        // 🚫 NOVA VALIDAÇÃO: saldo insuficiente
-        if (userData.balance < amount) {
+        // Validar saldo
+        if (userData.moedas < amount) {
             const embed = new EmbedBuilder()
                 .setColor("#ff4d4d")
                 .setTitle("❌ Erro")
-                .setDescription(`O usuário **${target.username}** não possui **${amount} moedas** para remover.\nSaldo atual: **${userData.balance} moedas**.`);
+                .setDescription(
+                    `O usuário **${target.username}** não possui **${amount} moedas** para remover.\n` +
+                    `Saldo atual: **${userData.moedas} moedas**.`
+                );
             return message.reply({ embeds: [embed] });
         }
 
-        userData.balance -= amount;
+        // Remover
+        userData.moedas -= amount;
         await userData.save();
 
         const embed = new EmbedBuilder()
@@ -66,7 +74,7 @@ module.exports = {
             .addFields(
                 { name: "Usuário", value: `<:user:1440074090663645355> ${target}`, inline: true },
                 { name: "Remoção", value: `**<:perdadedinheiro:1440096747912302753> ${amount} moedas**`, inline: true },
-                { name: "Saldo", value: `**<:carteira:1440068592354725888> ${userData.balance} moedas**`, inline: true }
+                { name: "Saldo", value: `**<:carteira:1440068592354725888> ${userData.moedas} moedas**`, inline: true }
             )
             .setTimestamp();
 

@@ -1,53 +1,87 @@
 const { EmbedBuilder } = require("discord.js");
-const Economia = require("../../models/Economia");
+const Perfil = require("../../models/Perfil");
 
 module.exports = {
     name: "daily",
     description: "Resgate sua recompensa diária.",
 
-    async execute(message, args) {
+    async execute(message) {
         const userId = message.author.id;
-        let userData = await Economia.findOne({ userId });
-        if (!userData) userData = await Economia.create({ userId, balance: 0 });
+
+        let userData = await Perfil.findOne({ userId });
+        if (!userData) {
+            userData = await Perfil.create({
+                userId,
+                moedas: 0,
+                lastDaily: null
+            });
+        }
 
         const now = Date.now();
-        const cooldown = 24 * 60 * 60 * 1000;
+        const cooldown = 24 * 60 * 60 * 1000; // 24h
 
+        // Verificar cooldown
         if (userData.lastDaily && now - userData.lastDaily.getTime() < cooldown) {
-
             const remaining = cooldown - (now - userData.lastDaily.getTime());
             const hours = Math.floor(remaining / (1000 * 60 * 60));
             const minutes = Math.floor((remaining / (1000 * 60)) % 60);
 
             const embedCooldown = new EmbedBuilder()
                 .setColor("#ff6969")
-                .setAuthor({ name: "Recompensa diária já coletada!", iconURL: message.author.displayAvatarURL({ dynamic: true }) })
+                .setAuthor({
+                    name: "Recompensa diária já coletada!",
+                    iconURL: message.author.displayAvatarURL({ dynamic: true })
+                })
                 .setDescription(`Você já recebeu sua recompensa!`)
                 .addFields(
-                    { name: "Próxima liberação", value: `<:alarme:1440073671443091526> **${hours}h ${minutes}m restantes**`, inline: true },
-                    { name: "Usuário", value: `<:user:1440074090663645355> ${message.author}`, inline: true }
+                    {
+                        name: "Próxima liberação",
+                        value: `<:alarme:1440073671443091526> **${hours}h ${minutes}m restantes**`,
+                        inline: true
+                    },
+                    {
+                        name: "Usuário",
+                        value: `<:user:1440074090663645355> ${message.author}`,
+                        inline: true
+                    }
                 )
-                .setFooter({ text: "Aguarde a liberação para coletar novamente!" })
+                .setFooter({ text: "Aguarde a liberação para coletar novamente!" });
 
             return message.reply({ embeds: [embedCooldown] });
         }
 
+        // Sorteio da recompensa
         const amount = Math.floor(Math.random() * (100 - 50 + 1)) + 50;
 
-        userData.balance += amount;
+        // Aplicar recompensa
+        userData.moedas += amount;
         userData.lastDaily = new Date();
         await userData.save();
 
         const embed = new EmbedBuilder()
             .setColor("#00FFA6")
-            .setAuthor({ name: "Daily Coletado!", iconURL: message.author.displayAvatarURL({ dynamic: true }) })
+            .setAuthor({
+                name: "Daily Coletado!",
+                iconURL: message.author.displayAvatarURL({ dynamic: true })
+            })
             .setDescription(`Você resgatou sua recompensa diária!`)
             .setThumbnail("https://i.ibb.co/Xr6wGhCB/presente-2.png")
             .addFields(
-                { name: "<:cofrinho:1440081499465453609> Valor Recebido", value: `**${amount} moedas**`, inline: true },
-                { name: "<:bolsadedinheiro:1440072521847275550> Saldo Atual", value: `**${userData.balance} moedas**`, inline: true }
+                {
+                    name: "Valor Recebido",
+                    value: `**<:cofrinho:1440081499465453609> ${amount} moedas**`,
+                    inline: true
+                },
+                {
+                    name: "Saldo Atual",
+                    value: `**<:carteira:1440068592354725888> ${userData.moedas} moedas**`,
+                    inline: true
+                }
             )
-            .setFooter({ text: `Recompensa disponível novamente em: ${cooldown/3600000}h!`, iconURL: 'https://i.ibb.co/C5vBBxr4/alarme-3d.png' })
+            .setFooter({
+                text: `Recompensa disponível novamente em: ${cooldown / 3600000}h!`,
+                iconURL: "https://i.ibb.co/C5vBBxr4/alarme-3d.png"
+            });
 
         return message.reply({ embeds: [embed] });
     }

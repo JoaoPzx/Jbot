@@ -1,5 +1,5 @@
 const { EmbedBuilder, PermissionFlagsBits } = require("discord.js");
-const Economia = require("../../models/Economia");
+const Perfil = require("../../models/Perfil");
 const findUser = require("../Utility/getUser");
 
 module.exports = {
@@ -36,7 +36,7 @@ module.exports = {
             return message.reply({ embeds: [embed] });
         }
 
-        const amount = parseInt(amountStr);
+        const amount = parseInt(amountStr, 10);
         if (amount <= 0) {
             const embed = new EmbedBuilder()
                 .setColor("#ff4d4d")
@@ -45,10 +45,11 @@ module.exports = {
             return message.reply({ embeds: [embed] });
         }
 
-        let userData = await Economia.findOne({ userId: target.id });
-        if (!userData) userData = await Economia.create({ userId: target.id, balance: 0 });
+        // Usando Perfil (unificado)
+        let userData = await Perfil.findOne({ userId: target.id });
+        if (!userData) userData = await Perfil.create({ userId: target.id, moedas: 0 });
 
-        userData.balance += amount;
+        userData.moedas = (userData.moedas || 0) + amount;
         await userData.save();
 
         const embed = new EmbedBuilder()
@@ -57,7 +58,7 @@ module.exports = {
             .addFields(
                 { name: "Usuário", value: `<:user:1440074090663645355> ${target}`, inline: true },
                 { name: "Adição", value: `**<:ganhodedinheiro:1440113818134122516> ${amount} moedas**`, inline: true },
-                { name: "Saldo", value: `**<:carteira:1440068592354725888> ${userData.balance} moedas**`, inline: true }
+                { name: "Saldo", value: `**<:carteira:1440068592354725888> ${userData.moedas} moedas**`, inline: true }
             )
             .setTimestamp();
 

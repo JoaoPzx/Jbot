@@ -1,5 +1,6 @@
 const { EmbedBuilder } = require("discord.js");
 const { partidasAtivas } = require("./play");
+const Perfil = require("../../models/Perfil");
 
 module.exports = {
     name: "dica",
@@ -14,13 +15,49 @@ module.exports = {
                 embeds: [
                     new EmbedBuilder()
                         .setColor("#ff4d4d")
-                        .setDescription("❌ Nenhuma rodada ativa para mostrar dica.")
+                        .setDescription("❌ Não há uma rodada ativa no momento.")
                 ]
             });
         }
 
+        // Carregar perfil
+        const perfil = await Perfil.findOne({ userId: message.author.id });
+
+        if (!perfil) {
+            return message.reply({
+                embeds: [
+                    new EmbedBuilder()
+                        .setColor("#ff4d4d")
+                        .setDescription("❌ Você ainda não possui um perfil no bot.")
+                ]
+            });
+        }
+
+        // Garantir que inventário existe
+        if (!Array.isArray(perfil.inventario)) {
+            perfil.inventario = [];
+            await perfil.save();
+        }
+
+        // Verificar se possui item 'dica'
+        if (!perfil.inventario.includes("dica")) {
+            return message.reply({
+                embeds: [
+                    new EmbedBuilder()
+                        .setColor("#ff4d4d")
+                        .setDescription("❌ Você não tem **dicas** no inventário!\nUse `;loja` para comprar.")
+                ]
+            });
+        }
+
+        // Remover uma dica do inventário
+        const index = perfil.inventario.indexOf("dica");
+        if (index !== -1) perfil.inventario.splice(index, 1);
+        await perfil.save();
+
+        // Verificar item atual
         const item = partida.itemAtual;
-        if (!item) {
+        if (!item || !item.resposta) {
             return message.reply({
                 embeds: [
                     new EmbedBuilder()
@@ -30,22 +67,19 @@ module.exports = {
             });
         }
 
-        const resposta = item.resposta.toUpperCase();
+        // Criar a dica
+        const resposta = String(item.resposta).toUpperCase();
         const letras = resposta.split("");
 
         const dicaFormatada = letras
-            .map((l, i) => {
-                if (i === 0 || i === letras.length - 1) return l;
-                return "_";
-            })
+            .map((l, i) => (i === 0 || i === letras.length - 1 ? l : "_"))
             .join(" ");
 
         const embed = new EmbedBuilder()
             .setColor("#f1c40f")
             .setTitle("💡 Dica da Rodada")
-            .setDescription(
-                "```" + `[${resposta.length}]  ${dicaFormatada}` + "```"
-            )
+            .setDescription("```" + `[${resposta.length}]  ${dicaFormatada}` + "```")
+            .setFooter({ text: "1 dica foi consumida do seu inventário." });
 
         return message.reply({ embeds: [embed] });
     }

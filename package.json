@@ -8,13 +8,16 @@
     "dev": "nodemon index.js"
   },
   "dependencies": {
+    "@napi-rs/canvas": "^0.1.82",
     "axios": "^1.13.2",
+    "canvas": "^3.2.0",
     "cloudinary": "^2.8.0",
     "discord.js": "^14.24.2",
     "dotenv": "^17.2.3",
     "express": "^4.21.2",
     "mongodb": "^7.0.0",
     "mongoose": "^8.19.3",
+    "path": "^0.12.7",
     "sharp": "^0.34.5"
   }
 }
