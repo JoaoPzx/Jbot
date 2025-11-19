@@ -21,15 +21,13 @@ module.exports = {
         }
 
         // Carregar perfil
-        const perfil = await Perfil.findOne({ userId: message.author.id });
+        let perfil = await Perfil.findOne({ userId: message.author.id });
 
         if (!perfil) {
-            return message.reply({
-                embeds: [
-                    new EmbedBuilder()
-                        .setColor("#ff4d4d")
-                        .setDescription("❌ Você ainda não possui um perfil no bot.")
-                ]
+            perfil = await Perfil.create({
+                userId: message.author.id,
+                inventario: [],
+                moedas: 0
             });
         }
 
@@ -39,7 +37,7 @@ module.exports = {
             await perfil.save();
         }
 
-        // Verificar se possui item 'dica'
+        // Verificar se possui item "dica"
         if (!perfil.inventario.includes("dica")) {
             return message.reply({
                 embeds: [
@@ -50,13 +48,14 @@ module.exports = {
             });
         }
 
-        // Remover uma dica do inventário
+        // Remover 1 dica do inventário
         const index = perfil.inventario.indexOf("dica");
         if (index !== -1) perfil.inventario.splice(index, 1);
         await perfil.save();
 
-        // Verificar item atual
+        // Criar a dica
         const item = partida.itemAtual;
+
         if (!item || !item.resposta) {
             return message.reply({
                 embeds: [
@@ -67,7 +66,6 @@ module.exports = {
             });
         }
 
-        // Criar a dica
         const resposta = String(item.resposta).toUpperCase();
         const letras = resposta.split("");
 
