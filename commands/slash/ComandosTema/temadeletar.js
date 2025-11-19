@@ -1,6 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
 const Tema = require("../../../models/Tema");
-const cloudinary = require("../../Utility/cloudinary"); // AJUSTE SE NECESSÁRIO
+const cloudinary = require("../../Utility/cloudinary"); 
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -39,7 +39,7 @@ module.exports = {
     // ===========================
     async execute(interaction) {
 
-        // Apenas admins
+        // Permissão
         if (!interaction.member.permissions.has("Administrator")) {
             return interaction.reply({
                 content: "❌ Você não tem permissão para deletar temas.",
@@ -48,8 +48,7 @@ module.exports = {
         }
 
         const nomeLower = interaction.options.getString("tema");
-        const tema = await Tema.findOne({ nomeLower: nomeLower });
-
+        const tema = await Tema.findOne({ nomeLower });
 
         if (!tema) {
             return interaction.reply({
@@ -66,7 +65,10 @@ module.exports = {
         const confirmEmbed = new EmbedBuilder()
             .setColor("#ff4d4d")
             .setTitle("🗑 Confirmar Exclusão do Tema?")
-            .setDescription(`Tem certeza que deseja deletar o tema **${nomeExibir}**?\nIsso **apagará todas as imagens e a pasta do Cloudinary**.`);
+            .setDescription(
+                `Tem certeza que deseja deletar o tema **${nomeExibir}**?\n` +
+                `Isso apagará imagens, pasta do Cloudinary e sua insígnia (emoji).`
+            );
 
         const botoes = new ActionRowBuilder().addComponents(
             new ButtonBuilder()
@@ -88,11 +90,9 @@ module.exports = {
         });
 
         // ===========================
-        // COLETOR DE BOTÕES
+        // COLETOR
         // ===========================
-        const coletor = msg.createMessageComponentCollector({
-            time: 15000
-        });
+        const coletor = msg.createMessageComponentCollector({ time: 15000 });
 
         coletor.on("collect", async (i) => {
 
@@ -109,26 +109,38 @@ module.exports = {
                 });
             }
 
-            // CONFIRMAR
+            // ===========================
+            // CONFIRMAR EXCLUSÃO
+            // ===========================
             if (i.customId === "confirmar_delete") {
                 coletor.stop("confirmado");
 
                 const pastaCloud = `jbot/${tema.nomeLower}`;
 
+                // 1) Deletar imagens e pasta Cloudinary
                 try {
-                    // 1) Apagar arquivos da pasta
                     await cloudinary.api.delete_resources_by_prefix(`${pastaCloud}/`);
-
-                    // 2) Apagar pasta
                     await cloudinary.api.delete_folder(pastaCloud);
-
                 } catch (err) {
                     console.error("Erro Cloudinary:", err);
                 }
 
-                // 3) Apagar do MongoDB
+                // 2) Deletar emoji da insígnia
+                try {
+                    const nomeEmoji = `insig_${tema.nomeLower}`;
+                    const emoji = interaction.guild.emojis.cache.find(e => e.name === nomeEmoji);
+
+                    if (emoji) {
+                        await emoji.delete("Insígnia do tema deletada");
+                    }
+                } catch (err) {
+                    console.error("Erro ao deletar emoji:", err);
+                }
+
+                // 3) Deletar do MongoDB
                 await Tema.deleteOne({ _id: tema._id });
 
+                // 4) Confirmação final
                 return i.update({
                     embeds: [
                         new EmbedBuilder()
@@ -136,7 +148,8 @@ module.exports = {
                             .setTitle("🗑 Tema Deletado com Sucesso!")
                             .setDescription(
                                 `O tema **${nomeExibir}** foi deletado.\n` +
-                                `A pasta **${pastaCloud}** também foi removida do Cloudinary.`
+                                `A pasta **${pastaCloud}** foi removida.\n` +
+                                `A insígnia \`insig_${tema.nomeLower}\` também foi deletada do servidor.`
                             )
                     ],
                     components: []

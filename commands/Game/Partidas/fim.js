@@ -1,5 +1,5 @@
 const { EmbedBuilder } = require("discord.js");
-const { encerrarPartida, partidasAtivas } = require("../play");
+const { encerrarPartida, partidasAtivas } = require("../../Game/Partidas/play");
 const Tema = require("../../../models/Tema");
 const { BANNER_PADRAO } = require("../../Utility/banners");
 

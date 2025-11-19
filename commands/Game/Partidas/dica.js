@@ -1,6 +1,6 @@
 const { EmbedBuilder } = require("discord.js");
-const { partidasAtivas } = require("../play");
-const Perfil = require("../../../models/Perfil");
+const { partidasAtivas } = require("../Partidas/play");
+const Perfil = require("../../..//models/Perfil");
 
 module.exports = {
     name: "dica",

@@ -1,6 +1,6 @@
 const { EmbedBuilder } = require("discord.js");
-const Tema = require("../../models/Tema");
-const { BANNER_PADRAO } = require("../../commands/Utility/banners");
+const Tema = require("../../../models/Tema");
+const { BANNER_PADRAO } = require("../../Utility/banners");
 
 const partidasAtivas = new Map();
 
@@ -149,7 +149,7 @@ const temaEncontrado = filtrados[0];
         .setDescription("🎮 **Iniciando nova partida...**")
         .addFields(
             { name: "Tema", value: `**${temaNomeExibir}**`, inline: true },
-            { name: "Palavras", value: `**🖼 ${temaEncontrado.imagens.length}**`, inline: true }
+            { name: "Palavras", value: `**🖼 ${temaEncontrado.imagens.length}**`, inline: true },
         )
         .setFooter({ text: "⏳ Primeira imagem em 10s" })
         .setImage(bannerInicio);
