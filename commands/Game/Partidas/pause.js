@@ -1,5 +1,5 @@
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
-const { partidasAtivas, iniciarRodada } = require("../../Game/Partidas/play");
+const { partidasAtivas, iniciarRodada } = require("./play");
 
 module.exports = {
     name: "pause",

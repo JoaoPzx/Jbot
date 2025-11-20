@@ -64,7 +64,7 @@ module.exports = {
         // ===========================
         const confirmEmbed = new EmbedBuilder()
             .setColor("#ff4d4d")
-            .setTitle("🗑 Confirmar Exclusão do Tema?")
+            .setTitle("<:deleteTema:1440818346760339656> Confirmar Exclusão do Tema?")
             .setDescription(
                 `Tem certeza que deseja deletar o tema **${nomeExibir}**?\n` +
                 `Isso apagará imagens, pasta do Cloudinary e sua insígnia (emoji).`
@@ -86,7 +86,7 @@ module.exports = {
         const msg = await interaction.reply({
             embeds: [confirmEmbed],
             components: [botoes],
-            ephemeral: true
+            ephemeral: false
         });
 
         // ===========================
@@ -125,17 +125,30 @@ module.exports = {
                     console.error("Erro Cloudinary:", err);
                 }
 
-                // 2) Deletar emoji da insígnia
-                try {
-                    const nomeEmoji = `insig_${tema.nomeLower}`;
-                    const emoji = interaction.guild.emojis.cache.find(e => e.name === nomeEmoji);
+// ===============================
+// DELETAR EMOJI DA INSÍGNIA
+// ===============================
+try {
+    const nomeEmoji = `insig_${tema.nomeLower}`;
+    const emojiByName = interaction.guild.emojis.cache.find(e => e.name === nomeEmoji);
 
-                    if (emoji) {
-                        await emoji.delete("Insígnia do tema deletada");
-                    }
-                } catch (err) {
-                    console.error("Erro ao deletar emoji:", err);
-                }
+    let emojiById = null;
+    if (tema.insigniaEmojiId) {
+        emojiById = interaction.guild.emojis.cache.get(tema.insigniaEmojiId);
+    }
+
+    const emoji = emojiById || emojiByName;
+
+    if (emoji) {
+        await emoji.delete("Insígnia removida porque o tema foi deletado.");
+        console.log(`Emoji deletado: ${emoji.name} (${emoji.id})`);
+    } else {
+        console.log(`Nenhum emoji encontrado para o tema: ${tema.nomeLower}`);
+    }
+
+} catch (err) {
+    console.error("Erro ao deletar emoji da insígnia:", err);
+}
 
                 // 3) Deletar do MongoDB
                 await Tema.deleteOne({ _id: tema._id });
@@ -145,7 +158,7 @@ module.exports = {
                     embeds: [
                         new EmbedBuilder()
                             .setColor("Green")
-                            .setTitle("🗑 Tema Deletado com Sucesso!")
+                            .setTitle("<:bin:1440818365575729173> Tema Deletado com Sucesso!")
                             .setDescription(
                                 `O tema **${nomeExibir}** foi deletado.\n` +
                                 `A pasta **${pastaCloud}** foi removida.\n` +

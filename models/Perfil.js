@@ -12,10 +12,13 @@ const PerfilSchema = new mongoose.Schema({
 
     insignias: { type: [String], default: [] },
 
-    inventario: {
-        type: [String],
-        default: []
+    inventario: [
+    {
+        nome: { type: String, required: true },
+        quantidade: { type: Number, default: 0 }
     }
+]
+
 });
 
 module.exports = mongoose.model("Perfil", PerfilSchema);

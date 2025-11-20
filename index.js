@@ -58,27 +58,34 @@ function loadPrefixCommands(dir) {
 loadPrefixCommands(path.join(__dirname, "commands"));
 console.log("Prefix commands carregados (recursivo).");
 
+function loadSlashCommands(dir) {
+  const files = fs.readdirSync(dir);
 
-// ======================================================
-//      SLASH COMMANDS — ./commands/slash
-// ======================================================
-const slashPath = path.join(__dirname, 'commands', 'slash');
-if (fs.existsSync(slashPath)) {
-  const slashFiles = fs.readdirSync(slashPath).filter(f => f.endsWith('.js'));
+  for (const file of files) {
+    const fullPath = path.join(dir, file);
+    const stat = fs.lstatSync(fullPath);
 
-  for (const file of slashFiles) {
-    const filePath = path.join(slashPath, file);
-    const command = require(filePath);
+    // Se for pasta → entrar nela
+    if (stat.isDirectory()) {
+      loadSlashCommands(fullPath);
+      continue;
+    }
 
-    if (command.data && command.execute) {
-      client.slashCommands.set(command.data.name, command);
-    } else {
-      console.warn(`Arquivo slash inválido: ${file}`);
+    // Arquivo JS → registrar
+    if (file.endsWith(".js")) {
+      const command = require(fullPath);
+
+      if (command.data && command.execute) {
+        client.slashCommands.set(command.data.name, command);
+      } else {
+        console.warn(`Arquivo de slash inválido: ${file}`);
+      }
     }
   }
 }
 
-
+loadSlashCommands(path.join(__dirname, "commands", "slash"));
+console.log("Slash commands carregados (recursivo).");
 
 // ======================================================
 //                   EVENTS & LISTENERS

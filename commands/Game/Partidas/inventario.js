@@ -7,6 +7,7 @@ module.exports = {
     description: "Mostra os itens que você possui no inventário.",
 
     async execute(message) {
+
         const userId = message.author.id;
 
         let perfil = await Perfil.findOne({ userId });
@@ -14,27 +15,23 @@ module.exports = {
             perfil = await Perfil.create({ userId, moedas: 0, inventario: [] });
         }
 
-        // Garantir que inventário exista
+        // Garantir formato correto do inventário
         if (!Array.isArray(perfil.inventario)) {
             perfil.inventario = [];
             await perfil.save();
         }
 
-        // Mapear itens da loja para exibir nome e emoji
+        // ============================
+        // TABELA DE ITENS (com emoji)
+        // ============================
         const tabelaItens = {
-            dica: { nome: "Dica", emoji: "💡" },
-
-            // deixe preparado para itens futuros:
-            // superdica: { nome: "Super Dica", emoji: "✨" }
+            dica:  { emoji: "💡" },
+            nitro: { emoji: "⚡" },
+            vida:  { emoji: "❤️" },
+            tempo: { emoji: "⏳" },
+            skip:  { emoji: "⏭️" }
         };
 
-        // Contar quantidades
-        const contagem = {};
-        for (const item of perfil.inventario) {
-            contagem[item] = (contagem[item] || 0) + 1;
-        }
-
-        // Criar a embed
         const embed = new EmbedBuilder()
             .setColor("#00c8ff")
             .setTitle(`🎒 Inventário de ${message.author.username}`)
@@ -42,34 +39,34 @@ module.exports = {
             .setFooter({ text: "Use ;loja para comprar itens!" })
             .setTimestamp();
 
-        // Mostrar saldo
-        embed.addFields({
-            name: "💰 Saldo",
-            value: `**<:carteira:1440068592354725888> ${perfil.moedas} moedas**`,
-            inline: false
-        });
-
-        // Inventário vazio
+        // Se vazio
         if (perfil.inventario.length === 0) {
             embed.addFields({
                 name: "📦 Inventário vazio",
                 value: "Você não possui nenhum item. Use `;loja` para comprar!",
+                inline: false
             });
 
             return message.reply({ embeds: [embed] });
         }
 
-        // Criar listagem organizada
-        let textoItens = "";
-        for (const key of Object.keys(contagem)) {
-            const info = tabelaItens[key] || { nome: key, emoji: "📦" };
-            textoItens += `${info.emoji} **${info.nome}** — ${contagem[key]} unidade(s)\n`;
+        // ============================
+        // ADICIONAR ITENS INLINE
+        // ============================
+        const fields = [];
+
+        for (const item of perfil.inventario) {
+
+            const emoji = tabelaItens[item.nome]?.emoji || "📦";
+
+            fields.push({
+                name: `${emoji} x${item.quantidade}`,
+                value: `\u200b`,
+                inline: true
+            });
         }
 
-        embed.addFields({
-            name: "🧭 Itens",
-            value: textoItens
-        });
+        embed.addFields(fields);
 
         return message.reply({ embeds: [embed] });
     }

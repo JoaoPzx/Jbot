@@ -1,109 +1,146 @@
-const { EmbedBuilder } = require("discord.js");
+const { EmbedBuilder, inlineCode } = require("discord.js");
 const Perfil = require("../../../models/Perfil");
 
 module.exports = {
     name: "loja",
-    description: "Loja de itens do bot. Use ;loja comprar <item>",
+    description: "Loja de itens do bot.",
 
     async execute(message, args) {
 
-        const acao = args[0];
-        const itemArg = args[1];
-
-        // Lista de itens disponíveis na loja
+        // Lista de itens da loja
         const itens = {
             dica: {
                 nome: "💡 Dica",
                 preco: 5,
-                descricao: "Revela uma dica da resposta durante a partida."
+                desc: "Revela a **primeira e última letra** da resposta.",
+                aliases: ["d"]
+            },
+
+            nitro: {
+                nome: "⚡ Nitro",
+                preco: 50,
+                desc: "Reduz o intervalo entre imagens de **10s → 5s** durante toda a partida.",
+                aliases: ["n"]
+            },
+
+            tempo: {
+                nome: "⏰ Tempo",
+                preco: 25,
+                desc: "Adiciona +2 segundos ao tempo de acerto da partida.",
+                aliases: ["t"]
             }
         };
 
-        // Carregar perfil do usuário
+        // Carregar perfil do jogador
         let perfil = await Perfil.findOne({ userId: message.author.id });
-        if (!perfil) {
-            perfil = await Perfil.create({
-                userId: message.author.id,
-                moedas: 0,
-                inventario: []
-            });
+        if (!perfil) perfil = await Perfil.create({ userId: message.author.id });
+
+        // ==================================================
+        // 🛈 ;loja info
+        // ==================================================
+        if (args[0] && args[0].toLowerCase() === "info") {
+
+            const embed = new EmbedBuilder()
+                .setColor("#3498db")
+                .setTitle("ℹ️ Informações dos Itens da Loja")
+                .setDescription("Veja abaixo como cada item funciona:\n");
+
+            for (const key of Object.keys(itens)) {
+                embed.addFields({
+                    name: itens[key].nome,
+                    value: itens[key].desc,
+                    inline: false
+                });
+            }
+
+            return message.reply({ embeds: [embed] });
         }
 
-        // ================================
-        // MOSTRAR LOJA
-        // ================================
-        if (!acao) {
+        // ==================================================
+        // 🛒 Mostrar LOJA (sem argumentos)
+        // ==================================================
+        if (!args.length) {
+
             const embed = new EmbedBuilder()
-                .setColor("#2ecc71")
-                .setTitle("🛒 Loja do Bot")
-                .setDescription("Use **`;loja comprar <item>`** para adquirir um item.\n\nItens disponíveis:")
+                .setColor("Purple")
+                .setTitle("🏪 LOJA JBOT")
+                .setDescription("Bem-vindo(a) a Loja de itens do JBot, confira os nossos itens e seus valores:")
                 .addFields(
-                    Object.keys(itens).map(key => ({
-                        name: `${itens[key].nome} — ${itens[key].preco} moedas`,
-                        value: itens[key].descricao
-                    }))
+                    Object.keys(itens).map(key => ({name: `${itens[key].nome}`, value: `**💵 ${itens[key].preco} Moedas**`, inline: true}))
                 );
 
             return message.reply({ embeds: [embed] });
         }
 
-        // ================================
-        // COMPRA DE ITEM
-        // ================================
-        if (acao.toLowerCase() === "comprar") {
+        // ==================================================
+        // 🛍️ COMPRA DE ITEM
+        // ==================================================
 
-            if (!itemArg) {
-                const embed = new EmbedBuilder()
-                    .setColor("Yellow")
-                    .setDescription("⚠️ Use: `;loja comprar <item>`");
-                return message.reply({ embeds: [embed] });
-            }
+        const argItemBruto = args[0].toLowerCase();
+        const quantidade = parseInt(args[1]) || 1;
 
-            const key = itemArg.toLowerCase();
-            const item = itens[key];
+        // Procurar item por nome ou alias
+        const keyItem = Object.keys(itens).find(
+            k =>
+                k === argItemBruto ||
+                itens[k].aliases.includes(argItemBruto)
+        );
 
-            if (!item) {
-                const embed = new EmbedBuilder()
-                    .setColor("Red")
-                    .setDescription("❌ Item não encontrado na loja.");
-                return message.reply({ embeds: [embed] });
-            }
-
-            // Verificar moedas (campo correto: perfil.moedas)
-            if (perfil.moedas < item.preco) {
-                const embed = new EmbedBuilder()
-                    .setColor("Red")
-                    .setDescription(
-                        `❌ Você não tem moedas suficientes!\n` +
-                        `💰 Custa **${item.preco} moedas**, mas você tem apenas **${perfil.moedas}**.`
-                    );
-                return message.reply({ embeds: [embed] });
-            }
-
-            // Compra: desconta e adiciona ao inventário
-            perfil.moedas -= item.preco;
-            perfil.inventario.push(key);
-            await perfil.save();
-
-            const embed = new EmbedBuilder()
-                .setColor("Green")
-                .setTitle("✔️ Compra realizada!")
-                .setDescription(`Você comprou **${item.nome}** por **${item.preco} moedas**!`)
-                .addFields({
-                    name: "Saldo restante",
-                    value: `**<:carteira:1440068592354725888> ${perfil.moedas} moedas**`,
-                    inline: true
-                });
-
-            return message.reply({ embeds: [embed] });
+        if (!keyItem) {
+            return message.reply({
+                embeds: [
+                    new EmbedBuilder()
+                        .setColor("Red")
+                        .setDescription("❌ Item não encontrado.\nUse `;loja` para ver os itens.")
+                ]
+            });
         }
 
-        // ================================
-        // ARGUMENTO INVÁLIDO
-        // ================================
+        const item = itens[keyItem];
+        const custoTotal = item.preco * quantidade;
+
+        // Verificar saldo
+        if (perfil.moedas < custoTotal) {
+            return message.reply({
+                embeds: [
+                    new EmbedBuilder()
+                        .setColor("Red")
+                        .setDescription(
+                            `❌ Moedas insuficientes!\n` +
+                            `💰 Total: **${custoTotal} moedas**\n` +
+                            `Você possui apenas **${perfil.moedas} moedas**.`
+                        )
+                ]
+            });
+        }
+
+        // Descontar moedas
+        perfil.moedas -= custoTotal;
+
+        // Adicionar ao inventário com quantidade
+        let itemInv = perfil.inventario.find(i => i.nome === keyItem);
+
+        if (!itemInv) {
+            perfil.inventario.push({
+                nome: keyItem,
+                quantidade
+            });
+        } else {
+            itemInv.quantidade += quantidade;
+        }
+
+        await perfil.save();
+
+        // Embed de confirmação
         const embed = new EmbedBuilder()
-            .setColor("Red")
-            .setDescription("❌ Comando inválido.\nUse `;loja` para ver os itens.");
+            .setColor("Green")
+            .setTitle("✔️ Compra realizada!")
+            .addFields(
+                {name: "🛍 Item", value: `**${quantidade}** ${item.nome}(s)`, inline: true},
+                {name: "💵 Preço", value: `**${custoTotal}** Moedas`, inline: true},
+                {name: "💰 Saldo", value: `**${perfil.moedas}** Moedas`, inline: true}
+            )
+
         return message.reply({ embeds: [embed] });
     }
 };

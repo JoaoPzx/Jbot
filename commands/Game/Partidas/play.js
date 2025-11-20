@@ -140,7 +140,10 @@ const temaEncontrado = filtrados[0];
 
     const bannerInicio = validarBanner(temaEncontrado.banner);
 
+    partida.usar = false;
+
     const embedInicio = new EmbedBuilder()
+    
         .setColor(corDaPartida)
         .setAuthor({
             name: `Solicitado por ${message.author.username}`,
@@ -156,7 +159,11 @@ const temaEncontrado = filtrados[0];
 
     await message.channel.send({ embeds: [embedInicio] });
 
-    partida.timeout = setTimeout(() => iniciarRodada(message, partida), 10000);
+    partida.podeUsarTempoAgora = true;
+    partida.podeUsarNitroAgora = true;
+
+
+    partida.timeout = setTimeout(() => iniciarRodada(message, partida), partida.nitro ? 5000 : 10000);
 }
 
 /* =====================================================
@@ -182,9 +189,24 @@ async function iniciarRodada(message, partida) {
     partida.itemAtual = item;
     partida.dicaUsada = false;
 
-    const tempoSegundos = calcularTempo(partida.nivel);
-    const tempoFormatado = formatarTempo(tempoSegundos);
-    const tempoMs = tempoSegundos * 1000;
+    let tempoSegundos = calcularTempo(partida.nivel);
+
+// aplicar buff global +3s se existir
+if (partida.tempoBoostNiveisRestantes > 0) {
+    tempoSegundos += partida.tempoExtraGlobal;
+    partida.tempoBoostNiveisRestantes--;
+
+    if (partida.tempoBoostNiveisRestantes <= 0) {
+        partida.tempoExtraGlobal = 0;
+    }
+}
+
+const tempoFormatado = formatarTempo(tempoSegundos);
+const tempoMs = tempoSegundos * 1000;
+
+    partida.podeUsarNitroAgora = false;
+
+
 
     const embedRodada = new EmbedBuilder()
         .setColor(partida.cor)
@@ -196,6 +218,9 @@ async function iniciarRodada(message, partida) {
         .setImage(item.url);
 
     await message.channel.send({ embeds: [embedRodada] });
+    partida.podeUsarTempoAgora = false;
+    partida.podeUsarNitroAgora = false;
+
 
     const collector = message.channel.createMessageCollector({
         filter: m => !m.author.bot,
@@ -223,17 +248,46 @@ async function iniciarRodada(message, partida) {
                 .setColor(partida.cor)
                 .setAuthor({
                     name: `${msg.author.username} acertou ${item.resposta}!`,
-                    iconURL: msg.author.displayAvatarURL({ dynamic: true })
+                    iconURL: message.client.user.displayAvatarURL({ dynamic: true })
                 })
-                .setDescription(`🏆 **RANKING**\n${rankingTexto}`)
-                .setFooter({ text: "⏳ Próxima imagem em 5s" });
+            // Espaço especial que o Discord NÃO remove
+const SP = " "; // U+2006 Six-Per-Em Space
+
+        let tituloRanking = `🏆 RANKING`;
+        let extras = [];
+
+        if (partida.tempoBoostNiveisRestantes > 0) {
+    extras.push(`⏰ x${partida.tempoBoostNiveisRestantes}`);
+}
+
+        if (partida.nitro) {
+    extras.push(`⚡ x1`);
+}
+
+        if (extras.length > 0) {
+    tituloRanking += `${SP}${SP}${SP}${SP}` + extras.join(`${SP}${SP}${SP}${SP}`);
+}
+
+            embedAcerto.setDescription(`**${tituloRanking}**\n${rankingTexto}`);
+
+            embedAcerto.setThumbnail(`${message.author.displayAvatarURL({ dynamic: true })}`)
+                
+            embedAcerto.setFooter({text: `⏳ Próxima imagem em ${partida.nitro ? "5s" : "10s"}`});
                 
             await message.channel.send({ embeds: [embedAcerto] });
+
+            partida.podeUsarTempoAgora = true;
+            partida.podeUsarNitroAgora = true;
+
 
             partida.nivel++;
             partida.rodadaEmCurso = false;
 
-            partida.timeout = setTimeout(() => iniciarRodada(message, partida), 5000);
+            partida.timeout = setTimeout(
+    () => iniciarRodada(message, partida),
+    partida.nitro ? 5000 : 10000
+);
+
         }
     });
 
