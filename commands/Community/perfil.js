@@ -223,6 +223,7 @@ module.exports = {
         const invW = 320, invH = insH;
         // right stacked small boxes for pontos/moedas (inside area, not external)
         const rightColW = 185, rightColH = Math.floor((insH - 18) / 2);
+        
 
         // positions
         const insX = startX;
@@ -291,32 +292,54 @@ module.exports = {
             }
         }
 
-        // Inventário title + content
-        ctx.fillStyle = theme.textMain;
-        ctx.font = "700 26px 'SF Pro Display'";
-        ctx.fillText("Inventário:", invX + 1, invY + -8);
+        // -------------------------------------------------------------------------
+// INVENTÁRIO (atualizado para converter { nome, quantidade } → "emoji xN")
+// -------------------------------------------------------------------------
 
-        ctx.font = "24px 'SF Pro Display'";
-        ctx.fillStyle = theme.textMuted;
-        const inventario = Array.isArray(perfil.inventario) ? perfil.inventario : [];
-        if (inventario.length) {
-            let cursorX = invX + 18;
-            let cursorY = invY + 78;
-            const iconSize = 30;
-            const spacing = 12;
-            const maxRowWidth = invW - 36;
-            for (let i = 0; i < inventario.length; i++) {
-                const token = inventario[i];
-                const w = ctx.measureText(token).width + spacing;
-                if (cursorX + w > invX + 18 + maxRowWidth) {
-                    cursorX = invX + 18;
-                    cursorY += iconSize + 12;
-                    if (cursorY > invY + invH - 36) break;
-                }
-                ctx.fillText(token, cursorX, cursorY + 20);
-                cursorX += w;
-            }
+ctx.fillStyle = theme.textMain;
+ctx.font = "700 26px 'SF Pro Display'";
+ctx.fillText("Inventário:", invX + 1, invY + -8);
+
+ctx.font = "24px 'SF Pro Display'";
+ctx.fillStyle = theme.textMuted;
+
+// mapa de emojis do inventário
+const mapaItens = {
+    dica: "💡",
+    nitro: "⚡",
+    tempo: "⏰"
+};
+
+// inventário salvo no perfil
+const inventarioBruto = Array.isArray(perfil.inventario) ? perfil.inventario : [];
+
+// converter inventário para tokens prontos: "emoji xQuantidade"
+const inventarioConvertido = inventarioBruto.map(item => {
+    const emoji = mapaItens[item.nome] || "📦";
+    return `${emoji} x${item.quantidade}`;
+});
+
+if (inventarioConvertido.length) {
+    let cursorX = invX + 12;
+    let cursorY = invY + 25;
+    const spacing = 15;
+    const maxWidth = invW - -99;
+
+    for (const token of inventarioConvertido) {
+        const w = ctx.measureText(token).width + spacing;
+
+        if (cursorX + w > invX + maxWidth) {
+            cursorX = invX + 18;
+            cursorY += 30 + 12;
+
+            if (cursorY > invY + invH - 36) break;
         }
+
+        ctx.fillText(token, cursorX, cursorY + 20);
+        cursorX += w;
+    }
+}
+
 
         // Points and Coins in right stacked boxes (inside area)
         ctx.font = "700 18px 'SF Pro Display'";
