@@ -10,24 +10,45 @@ module.exports = {
         // Lista de itens da loja
         const itens = {
             dica: {
-                nome: "💡 Dica",
+                nome: "<:icon_dica:1441174865032904745> Dica",
                 preco: 5,
                 desc: "Revela a **primeira e última letra** da resposta.",
                 aliases: ["d"]
             },
 
+            tempo: {
+                nome: "<:icon_tempo:1441174907445837907> Tempo",
+                preco: 30,
+                desc: "Adiciona +2 segundos ao tempo de acerto da partida.",
+                aliases: ["t"]
+            },
+
             nitro: {
-                nome: "⚡ Nitro",
+                nome: "<:icon_nitro:1441175068960100504> Nitro",
                 preco: 50,
                 desc: "Reduz o intervalo entre imagens de **10s → 5s** durante toda a partida.",
                 aliases: ["n"]
             },
 
-            tempo: {
-                nome: "⏰ Tempo",
-                preco: 25,
-                desc: "Adiciona +2 segundos ao tempo de acerto da partida.",
-                aliases: ["t"]
+            pulo: {
+                nome: "<:icon_pulo:1441182320462790786> Pulo",
+                preco: 70,
+                desc: "Pula a imagem de uma rodada da partida.",
+                aliases: ["s"]
+            },
+
+            combo: {
+                nome: "<:icon_combo:1441177424124448868> Combo",
+                preco: 100,
+                desc: "Aumenta a pontuação do jogador progressivamente (+1, +2, +3...).",
+                aliases: ["c"]
+            },
+
+            vida: {
+                nome: "💜 Combo",
+                preco: 100,
+                desc: "Aumenta a pontuação do jogador progressivamente (+1, +2, +3...).",
+                aliases: ["v"]
             }
         };
 
@@ -63,10 +84,10 @@ module.exports = {
 
             const embed = new EmbedBuilder()
                 .setColor("Purple")
-                .setTitle("🏪 LOJA JBOT")
-                .setDescription("Bem-vindo(a) a Loja de itens do JBot, confira os nossos itens e seus valores:")
+                .setTitle("LOJA DE ITENS JBOT")
+                .setDescription("<:shop100:1441161458175180921> Bem-vindo(a) a Loja de itens do JBot, confira os nossos itens e seus valores:")
                 .addFields(
-                    Object.keys(itens).map(key => ({name: `${itens[key].nome}`, value: `**💵 ${itens[key].preco} Moedas**`, inline: true}))
+                    Object.keys(itens).map(key => ({name: `${itens[key].nome}`, value: `**<:dolar12:1441176775022346333> ${itens[key].preco} Moedas**`, inline: true}))
                 );
 
             return message.reply({ embeds: [embed] });

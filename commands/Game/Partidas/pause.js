@@ -69,6 +69,7 @@ module.exports = {
         // PAUSANDO
         // =========================
         partida.pausada = true;
+        partida.itensLiberados = true;
 
         // Cancela timers existentes
         if (partida.timeout) clearTimeout(partida.timeout);
@@ -92,6 +93,8 @@ module.exports = {
         partida.despausarTimer = setTimeout(() => {
             if (partida.pausada) {
                 partida.pausada = false;
+                partida.itensLiberados = false;
+
 
                 const embedTimeout = new EmbedBuilder()
                     .setColor("#e74c3c")

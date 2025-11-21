@@ -71,41 +71,28 @@ async function execute(message, args) {
         });
     }
 
-    // Normaliza e ordena temas alfabeticamente
-const ordenados = temas.sort((a, b) =>
-    (a.nomeOriginal || a.nome).localeCompare(b.nomeOriginal || b.nome)
-);
-
-// 1️⃣ Filtrar temas que começam com a entrada
-let filtrados = ordenados.filter(t =>
-    (t.nomeOriginal || t.nome).toLowerCase().startsWith(entrada)
-);
-
-// 2️⃣ Se nenhum começar, filtrar por includes()
-if (!filtrados.length) {
-    filtrados = ordenados.filter(t =>
-        (t.nomeOriginal || t.nome).toLowerCase().includes(entrada)
+    const ordenados = temas.sort((a, b) =>
+        (a.nomeOriginal || a.nome).localeCompare(b.nomeOriginal || b.nome)
     );
-}
 
-// 3️⃣ Se mesmo assim não houver resultados → erro
-if (!filtrados.length) {
-    return message.reply({
-        embeds: [embedErro(`Nenhum tema encontrado para **${entradaRaw}**.`)],
-        allowedMentions: { repliedUser: false }
-    });
-}
+    let filtrados = ordenados.filter(t =>
+        (t.nomeOriginal || t.nome).toLowerCase().startsWith(entrada)
+    );
 
-// 4️⃣ Selecionar o primeiro da lista (correto alfabeticamente)
-const temaEncontrado = filtrados[0];
+    if (!filtrados.length) {
+        filtrados = ordenados.filter(t =>
+            (t.nomeOriginal || t.nome).toLowerCase().includes(entrada)
+        );
+    }
 
-
-    if (!temaEncontrado) {
+    if (!filtrados.length) {
         return message.reply({
             embeds: [embedErro(`Nenhum tema encontrado para **${entradaRaw}**.`)],
             allowedMentions: { repliedUser: false }
         });
     }
+
+    const temaEncontrado = filtrados[0];
 
     if (!temaEncontrado.imagens.length) {
         return message.reply({
@@ -133,7 +120,11 @@ const temaEncontrado = filtrados[0];
         temaNomeExibir,
         inicio: Date.now(),
         rodadaEmCurso: false,
-        rodadaTerminada: false
+        rodadaTerminada: false,
+
+        // 🔥 corrigido — inicialização correta do buff
+        tempoExtraGlobal: 0,
+        tempoBoostNiveisRestantes: 0
     };
 
     partidasAtivas.set(message.channel.id, partida);
@@ -143,7 +134,6 @@ const temaEncontrado = filtrados[0];
     partida.usar = false;
 
     const embedInicio = new EmbedBuilder()
-    
         .setColor(corDaPartida)
         .setAuthor({
             name: `Solicitado por ${message.author.username}`,
@@ -152,7 +142,7 @@ const temaEncontrado = filtrados[0];
         .setDescription("🎮 **Iniciando nova partida...**")
         .addFields(
             { name: "Tema", value: `**${temaNomeExibir}**`, inline: true },
-            { name: "Palavras", value: `**🖼 ${temaEncontrado.imagens.length}**`, inline: true },
+            { name: "Palavras", value: `**🖼 ${temaEncontrado.imagens.length}**`, inline: true }
         )
         .setFooter({ text: "⏳ Primeira imagem em 10s" })
         .setImage(bannerInicio);
@@ -162,12 +152,14 @@ const temaEncontrado = filtrados[0];
     partida.podeUsarTempoAgora = true;
     partida.podeUsarNitroAgora = true;
 
-
-    partida.timeout = setTimeout(() => iniciarRodada(message, partida), partida.nitro ? 5000 : 10000);
+    partida.timeout = setTimeout(
+        () => iniciarRodada(message, partida),
+        partida.nitro ? 5000 : 10000
+    );
 }
 
 /* =====================================================
-   VALIDAÇÃO DO BANNER
+   VALIDAR BANNER
 ===================================================== */
 function validarBanner(banner) {
     return banner && banner.trim() !== "" ? banner : BANNER_PADRAO;
@@ -189,24 +181,36 @@ async function iniciarRodada(message, partida) {
     partida.itemAtual = item;
     partida.dicaUsada = false;
 
+    // -------------------------------------------------
+    // 🔥 CORREÇÃO DO SISTEMA DE TEMPO + BUFF (+3s)
+    // -------------------------------------------------
+
+    // Garantir integridade
+    if (!partida.tempoBoostNiveisRestantes || partida.tempoBoostNiveisRestantes < 0) {
+        partida.tempoBoostNiveisRestantes = 0;
+    }
+
+    // Se ainda há buff, corrigir tempoExtraGlobal
+    if (partida.tempoBoostNiveisRestantes > 0) {
+        partida.tempoExtraGlobal = 3;
+    }
+
     let tempoSegundos = calcularTempo(partida.nivel);
 
-// aplicar buff global +3s se existir
-if (partida.tempoBoostNiveisRestantes > 0) {
-    tempoSegundos += partida.tempoExtraGlobal;
-    partida.tempoBoostNiveisRestantes--;
+    // Aplicar buff
+    if (partida.tempoBoostNiveisRestantes > 0) {
+        tempoSegundos += partida.tempoExtraGlobal;
+        partida.tempoBoostNiveisRestantes--;
 
-    if (partida.tempoBoostNiveisRestantes <= 0) {
-        partida.tempoExtraGlobal = 0;
+        if (partida.tempoBoostNiveisRestantes <= 0) {
+            partida.tempoExtraGlobal = 0; // fim do efeito
+        }
     }
-}
 
-const tempoFormatado = formatarTempo(tempoSegundos);
-const tempoMs = tempoSegundos * 1000;
+    const tempoFormatado = formatarTempo(tempoSegundos);
+    const tempoMs = tempoSegundos * 1000;
 
     partida.podeUsarNitroAgora = false;
-
-
 
     const embedRodada = new EmbedBuilder()
         .setColor(partida.cor)
@@ -218,9 +222,9 @@ const tempoMs = tempoSegundos * 1000;
         .setImage(item.url);
 
     await message.channel.send({ embeds: [embedRodada] });
+
     partida.podeUsarTempoAgora = false;
     partida.podeUsarNitroAgora = false;
-
 
     const collector = message.channel.createMessageCollector({
         filter: m => !m.author.bot,
@@ -239,7 +243,8 @@ const tempoMs = tempoSegundos * 1000;
 
             msg.react("⭐").catch(() => {});
 
-            partida.ranking[msg.author.id] = (partida.ranking[msg.author.id] || 0) + 1;
+            partida.ranking[msg.author.id] =
+                (partida.ranking[msg.author.id] || 0) + 1;
 
             const rankingOrdenado = montarRanking(partida);
             const rankingTexto = formatarRanking(rankingOrdenado);
@@ -249,44 +254,42 @@ const tempoMs = tempoSegundos * 1000;
                 .setAuthor({
                     name: `${msg.author.username} acertou ${item.resposta}!`,
                     iconURL: message.client.user.displayAvatarURL({ dynamic: true })
-                })
-            // Espaço especial que o Discord NÃO remove
-const SP = " "; // U+2006 Six-Per-Em Space
+                });
 
-        let tituloRanking = `🏆 RANKING`;
-        let extras = [];
+            const SP = " ";
 
-        if (partida.tempoBoostNiveisRestantes > 0) {
-    extras.push(`⏰ x${partida.tempoBoostNiveisRestantes}`);
-}
+            let tituloRanking = `🏆 RANKING`;
+            let extras = [];
 
-        if (partida.nitro) {
-    extras.push(`⚡ x1`);
-}
+            if (partida.tempoBoostNiveisRestantes > 0) {
+                extras.push(`⏰ x${partida.tempoBoostNiveisRestantes}`);
+            }
 
-        if (extras.length > 0) {
-    tituloRanking += `${SP}${SP}${SP}${SP}` + extras.join(`${SP}${SP}${SP}${SP}`);
-}
+            if (partida.nitro) {
+                extras.push(`⚡ x1`);
+            }
+
+            if (extras.length > 0) {
+                tituloRanking += `${SP}${SP}${SP}${SP}` + extras.join(`${SP}${SP}${SP}${SP}`);
+            }
 
             embedAcerto.setDescription(`**${tituloRanking}**\n${rankingTexto}`);
 
-            embedAcerto.setThumbnail(`${message.author.displayAvatarURL({ dynamic: true })}`)
-                
-            embedAcerto.setFooter({text: `⏳ Próxima imagem em ${partida.nitro ? "5s" : "10s"}`});
-                
+            embedAcerto.setThumbnail(msg.author.displayAvatarURL({ dynamic: true }))
+                .setFooter({ text: `⏳ Próxima imagem em ${partida.nitro ? "5s" : "10s"}` });
+
             await message.channel.send({ embeds: [embedAcerto] });
 
             partida.podeUsarTempoAgora = true;
             partida.podeUsarNitroAgora = true;
 
-
             partida.nivel++;
             partida.rodadaEmCurso = false;
 
             partida.timeout = setTimeout(
-    () => iniciarRodada(message, partida),
-    partida.nitro ? 5000 : 10000
-);
+                () => iniciarRodada(message, partida),
+                partida.nitro ? 5000 : 10000
+            );
 
         }
     });
@@ -305,89 +308,85 @@ const SP = " "; // U+2006 Six-Per-Em Space
             ? formatarRanking(rankingOrdenado)
             : "Ninguém pontuou.";
 
-const temaDB = await Tema.findById(partida.tema._id);
+        const temaDB = await Tema.findById(partida.tema._id);
 
-// ===== RECORDISTA ATUAL =====
-let recordistaLinha;
-if (temaDB.record?.userId && temaDB.record?.pontos > 0) {
-    recordistaLinha = `<@${temaDB.record.userId}> — **${temaDB.record.pontos} pts**`;
-} else {
-    recordistaLinha = `<@${message.client.user.id}> — **0 pts**`;
-}
+        //  RECORDISTA ATUAL
+        let recordistaLinha;
+        if (temaDB.record?.userId && temaDB.record?.pontos > 0) {
+            recordistaLinha = `<@${temaDB.record.userId}> — **${temaDB.record.pontos} pts**`;
+        } else {
+            recordistaLinha = `<@${message.client.user.id}> — **0 pts**`;
+        }
 
-// ===== EMBED FINAL (ajustado com 3 fields lado a lado) =====
-const embedFim = new EmbedBuilder()
-    .setColor(partida.cor)
-    .setAuthor({
-        name: `A resposta era: ${item.resposta}`,
-        iconURL: message.client.user.displayAvatarURL()
-    })
-    .setImage(themeBanner)
-    .addFields(
-        { name: "Tema", value: `**${partida.temaNomeExibir}**`, inline: true },
-        { name: "Nível atingido", value: `**🧩 ${partida.nivel}**`, inline: true },
-        { name: "Recordista", value: `🏆 ${recordistaLinha}`, inline: true }
-    )
-    .addFields(
-        { name: "🏆 Ranking Final", value: rankingTexto }
-    );
+        const embedFim = new EmbedBuilder()
+            .setColor(partida.cor)
+            .setAuthor({
+                name: `A resposta era: ${item.resposta}`,
+                iconURL: message.client.user.displayAvatarURL()
+            })
+            .setImage(themeBanner)
+            .addFields(
+                { name: "Tema", value: `**${partida.temaNomeExibir}**`, inline: true },
+                { name: "Nível atingido", value: `**🧩 ${partida.nivel}**`, inline: true },
+                { name: "Recordista", value: `🏆 ${recordistaLinha}`, inline: true }
+            )
+            .addFields({
+                name: "🏆 Ranking Final",
+                value: rankingTexto
+            });
 
-// enviar
-await message.channel.send({ embeds: [embedFim] });
+        await message.channel.send({ embeds: [embedFim] });
 
+        // --------- SISTEMA DE RECORDE ----------
+        if (rankingOrdenado.length > 0) {
+            const melhorJogadorId = rankingOrdenado[0][0];
+            const melhorPontuacao = rankingOrdenado[0][1];
 
+            const temaDB2 = await Tema.findById(partida.tema._id);
 
-// === RECORDISTA ATUAL DO TEMA ===
-    
-        // === SISTEMA DE RECORDE ===
-if (rankingOrdenado.length > 0) {
-    const melhorJogadorId = rankingOrdenado[0][0];
-    const melhorPontuacao = rankingOrdenado[0][1];
+            if (
+                !temaDB2.record?.userId ||
+                melhorPontuacao > temaDB2.record.pontos
+            ) {
+                temaDB2.record = {
+                    userId: melhorJogadorId,
+                    pontos: melhorPontuacao,
+                    data: new Date()
+                };
+                await temaDB2.save();
 
-    const temaDB = await Tema.findById(partida.tema._id);
+                const embedRecorde = new EmbedBuilder()
+                    .setColor("#FFD700")
+                    .setTitle("🏆 NOVO RECORDE ATINGIDO!")
+                    .setThumbnail("https://i.ibb.co/3mKpcBQq/medal-1.png")
+                    .setDescription(
+                        `🔥 **<@${melhorJogadorId}> Quebrou o recorde!**\n\n` +
+                        `Pontuação: **${melhorPontuacao} pts**\n` +
+                        `Tema: **${partida.temaNomeExibir}**\n\n` +
+                        `✨ *Uma nova lenda foi criada...*`
+                    );
 
-    if (!temaDB.record?.userId || melhorPontuacao > temaDB.record.pontos) {
+                await message.channel.send({ embeds: [embedRecorde] });
+            }
 
-        temaDB.record = {
-            userId: melhorJogadorId,
-            pontos: melhorPontuacao,
-            data: new Date()
-        };
-        await temaDB.save();
+            // === ACÚMULO DE PONTOS POR JOGADOR ===
+            const temaAtualizado = await Tema.findById(partida.tema._id);
 
-        const embedRecorde = new EmbedBuilder()
-            .setColor("#FFD700")
-            .setTitle("🏆 NOVO RECORDE ATINGIDO!")
-            .setThumbnail("https://i.ibb.co/3mKpcBQq/medal-1.png")
-            .setDescription(
-                `🔥 **<@${melhorJogadorId}> Quebrou o recorde!**\n\n` +
-                `Pontuação: **${melhorPontuacao} pts**\n` +
-                `Tema: **${partida.temaNomeExibir}**\n\n` +
-                `✨ *Uma nova lenda foi criada...*`
-            );
+            let registro = temaAtualizado.pontuacoes.find(p => p.userId === melhorJogadorId);
 
-        await message.channel.send({ embeds: [embedRecorde] });
-    }
+            if (!registro) {
+                temaAtualizado.pontuacoes.push({
+                    userId: melhorJogadorId,
+                    total: melhorPontuacao,
+                    partidas: 1
+                });
+            } else {
+                registro.total += melhorPontuacao;
+                registro.partidas += 1;
+            }
 
-    // === SISTEMA DE ACÚMULO DE PONTOS POR JOGADOR (NOVO) ===
-    const temaAtualizado = await Tema.findById(partida.tema._id);
-
-    let registro = temaAtualizado.pontuacoes.find(p => p.userId === melhorJogadorId);
-
-    if (!registro) {
-        temaAtualizado.pontuacoes.push({
-            userId: melhorJogadorId,
-            total: melhorPontuacao,
-            partidas: 1
-        });
-    } else {
-        registro.total += melhorPontuacao;
-        registro.partidas += 1;
-    }
-
-    await temaAtualizado.save();
-}
-
+            await temaAtualizado.save();
+        }
     });
 }
 
@@ -395,8 +394,7 @@ if (rankingOrdenado.length > 0) {
    Ranking helpers
 ===================================================== */
 function montarRanking(partida) {
-    return Object.entries(partida.ranking)
-        .sort((a, b) => b[1] - a[1]);
+    return Object.entries(partida.ranking).sort((a, b) => b[1] - a[1]);
 }
 
 function formatarRanking(lista) {
@@ -406,7 +404,7 @@ function formatarRanking(lista) {
 }
 
 /* =====================================================
-   Exportações FINAL
+   EXPORTAÇÕES
 ===================================================== */
 module.exports = {
     name: "play",

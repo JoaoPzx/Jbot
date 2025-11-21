@@ -6,8 +6,40 @@ require('dotenv').config();
 const { connect } = require('./database');
 const fs = require('fs');
 const path = require('path');
+const Canvas = require("canvas");
 
-connect(); // conecta ao MongoDB Atlas
+// ======================================================
+// 🔥 REGISTRO DAS FONTES SF PRO DISPLAY (DEFINITIVO)
+// ======================================================
+
+// ============================================
+// Registro oficial e correto da SF Pro Display
+// ============================================
+
+Canvas.registerFont(
+  path.join(__dirname, "assets", "fonts", "SFProDisplay-Regular.ttf"),
+  { family: "SF Pro Display", weight: "400" }
+);
+
+Canvas.registerFont(
+  path.join(__dirname, "assets", "fonts", "SFPRODISPLAYMEDIUM.ttf"),
+  { family: "SF Pro Display", weight: "500" }
+);
+
+Canvas.registerFont(
+  path.join(__dirname, "assets", "fonts", "SFProDisplay-Bold.ttf"),
+  { family: "SF Pro Display", weight: "700" }
+);
+
+console.log("✔ SF Pro Display (Regular, Medium, Bold) registrada com sucesso!");
+
+
+
+// ======================================================
+// 🔥 CONECTAR AO MONGO
+// ======================================================
+
+connect();
 
 const client = new Client({
   intents: [
@@ -19,17 +51,17 @@ const client = new Client({
 });
 
 // --- suas configs antigas ---
-const canalSorteioID = '1437599327093657600'; // substitua pelo ID do canal do sorteio
+const canalSorteioID = '1437599327093657600';
 const prefix = process.env.PREFIX || ';';
 
 // --- Coleções ---
-client.commands = new Collection();       // comandos por prefixo
-client.slashCommands = new Collection();  // comandos slash
-
+client.commands = new Collection();
+client.slashCommands = new Collection();
 
 // ======================================================
-//      🔥 CARREGAR COMANDOS PREFIX — RECURSIVO 🔥
+//      🔥 CARREGAR COMANDOS PREFIX — RECURSIVO
 // ======================================================
+
 function loadPrefixCommands(dir) {
   const files = fs.readdirSync(dir);
 
@@ -37,13 +69,11 @@ function loadPrefixCommands(dir) {
     const fullPath = path.join(dir, file);
     const stat = fs.lstatSync(fullPath);
 
-    // Se for pasta → entrar nela
     if (stat.isDirectory()) {
       if (file !== "slash") loadPrefixCommands(fullPath);
       continue;
     }
 
-    // Arquivos JS → registrar comando
     if (file.endsWith(".js")) {
       const command = require(fullPath);
       command.filePath = fullPath;
@@ -58,6 +88,10 @@ function loadPrefixCommands(dir) {
 loadPrefixCommands(path.join(__dirname, "commands"));
 console.log("Prefix commands carregados (recursivo).");
 
+// ======================================================
+//       🔥 CARREGAR COMANDOS SLASH — RECURSIVO
+// ======================================================
+
 function loadSlashCommands(dir) {
   const files = fs.readdirSync(dir);
 
@@ -65,13 +99,11 @@ function loadSlashCommands(dir) {
     const fullPath = path.join(dir, file);
     const stat = fs.lstatSync(fullPath);
 
-    // Se for pasta → entrar nela
     if (stat.isDirectory()) {
       loadSlashCommands(fullPath);
       continue;
     }
 
-    // Arquivo JS → registrar
     if (file.endsWith(".js")) {
       const command = require(fullPath);
 
@@ -129,13 +161,11 @@ client.on('messageCreate', async (message) => {
 // Handler de SLASH + BOTÕES
 client.on('interactionCreate', async (interaction) => {
   try {
-    // AUTOCOMPLETE
     if (interaction.isAutocomplete()) {
       const cmd = client.slashCommands.get(interaction.commandName);
       if (cmd?.autocomplete) {
-        try {
-          return await cmd.autocomplete(interaction);
-        } catch (err) {
+        try { return await cmd.autocomplete(interaction); }
+        catch (err) {
           console.error("Erro no autocomplete:", err);
           return interaction.respond([]);
         }
@@ -143,11 +173,8 @@ client.on('interactionCreate', async (interaction) => {
       return;
     }
 
-    // BOTÕES
     if (interaction.isButton()) {
-
       if (interaction.customId === "despausar_partida") {
-
         const partida = partidasAtivas.get(interaction.channel.id);
 
         if (!partida || !partida.pausada) {
@@ -161,7 +188,6 @@ client.on('interactionCreate', async (interaction) => {
           });
         }
 
-        // Remove pausa
         partida.pausada = false;
         clearTimeout(partida.despausarTimer);
 
@@ -179,7 +205,6 @@ client.on('interactionCreate', async (interaction) => {
         });
 
         setTimeout(() => iniciarRodada(interaction.message, partida), 1000);
-
         return;
       }
 
@@ -202,7 +227,6 @@ client.on('interactionCreate', async (interaction) => {
       return;
     }
 
-    // SLASH COMMANDS
     if (interaction.isChatInputCommand()) {
       const cmd = client.slashCommands.get(interaction.commandName);
       if (!cmd)
@@ -213,7 +237,6 @@ client.on('interactionCreate', async (interaction) => {
 
   } catch (err) {
     console.error('Erro em interactionCreate:', err);
-
     if (interaction.replied || interaction.deferred) {
       try { await interaction.editReply({ content: '❌ Erro interno ao executar.', embeds: [], components: [] }); } catch {}
     } else {

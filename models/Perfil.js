@@ -14,6 +14,10 @@ const PerfilSchema = new mongoose.Schema({
     pontos: { type: Number, default: 0 },
     moedas: { type: Number, default: 0 },
 
+    comboBonus: { type: Number, default: 1 },
+    comboItems: { type: Number, default: 0 }, // quantidade de itens combo no inventário
+
+
     insignias: { type: [String], default: [] },
 
     inventario: {

@@ -1,24 +1,10 @@
 /**
  * commands/Community/perfil.js
- * Versão final adaptada (LARGURA = 1200 px) conforme pedido.
- *
- * Dimensões:
- *  - Canvas: 1200 x 780
- *  - Top area height: 390
- *  - Bottom wallpaper: 390
- *
- * Requisitos:
- *  - node-canvas
- *  - fontes SF Pro em ./assets/fonts/
- *  - model Perfil em ../../models/Perfil
- *
- * Comportamento:
- *  - remove coluna direita inteira
- *  - caixas translúcidas maiores (Insígnias e Inventário)
- *  - pontos e moedas empilhados ao lado direito do inventário (dentro da área útil)
- *  - nickname abaixo do avatar
- *  - bio ocupando faixa central entre boxes e wallpaper
- *  - não exibe "Nenhuma insígnia"/"Nenhum item" quando arrays vazios (fica em branco)
+ * Layout ORIGINAL restaurado e corrigido.
+ * - Insígnias e Inventário lado a lado
+ * - Caixa do avatar, bio e wallpaper funcionando
+ * - PNGs do inventário funcionando
+ * - 5 itens + 1 slot livre
  */
 
 const { AttachmentBuilder } = require("discord.js");
@@ -27,41 +13,10 @@ const fs = require("fs");
 const path = require("path");
 const Perfil = require("../../models/Perfil");
 
-// ---------------- fonts ----------------
-const fontsFolder = path.join(__dirname, "../../assets/fonts");
-const tryNames = (list) => {
-    for (const n of list) {
-        const p = path.join(fontsFolder, n);
-        if (fs.existsSync(p)) return p;
-    }
-    return null;
-};
-const regCandidates = ["SFPRODISPLAYREGULAR.OTF","SFPRODISPLAYREGULAR.otf","SFProDisplayRegular.otf","SFProDisplay-Regular.otf"];
-const medCandidates = ["SFPRODISPLAYMEDIUM.OTF","SFPRODISPLAYMEDIUM.otf","SFProDisplayMedium.otf","SFProDisplay-Medium.otf"];
-const boldCandidates= ["SFPRODISPLAYBOLD.OTF","SFPRODISPLAYBOLD.otf","SFProDisplayBold.otf","SFProDisplay-Bold.otf"];
 
-const fontRegularPath = tryNames(regCandidates);
-const fontMediumPath  = tryNames(medCandidates);
-const fontBoldPath    = tryNames(boldCandidates);
-
-if (fontRegularPath) console.log("Font regular found:", fontRegularPath);
-if (fontMediumPath)  console.log("Font medium found:", fontMediumPath);
-if (fontBoldPath)    console.log("Font bold found:", fontBoldPath);
-
-try {
-    if (fontRegularPath) Canvas.registerFont(fontRegularPath, { family: "SF Pro Display", weight: "400" });
-    if (fontMediumPath)  Canvas.registerFont(fontMediumPath,  { family: "SF Pro Display", weight: "500" });
-    if (fontBoldPath)    Canvas.registerFont(fontBoldPath,    { family: "SF Pro Display", weight: "700" });
-    if (fontRegularPath || fontMediumPath || fontBoldPath) {
-        console.log("✓ SF Pro Display fonts registered (partial ok if some missing)");
-    } else {
-        console.warn("⚠️ SF Pro Display fonts not found. Canvas will fallback to system fonts.");
-    }
-} catch (e) {
-    console.warn("Erro registrando fontes:", e);
-}
-
-// ---------------- utilities ----------------
+// =============================
+// Utils
+// =============================
 function roundRect(ctx, x, y, w, h, r = 12) {
     if (w < 2 * r) r = w / 2;
     if (h < 2 * r) r = h / 2;
@@ -84,14 +39,11 @@ function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
     let line = "";
     for (let n = 0; n < words.length; n++) {
         const testLine = line + words[n] + " ";
-        const metrics = ctx.measureText(testLine);
-        if (metrics.width > maxWidth && n > 0) {
+        if (ctx.measureText(testLine).width > maxWidth && n > 0) {
             ctx.fillText(line.trim(), x, y);
             line = words[n] + " ";
             y += lineHeight;
-        } else {
-            line = testLine;
-        }
+        } else line = testLine;
     }
     if (line) ctx.fillText(line.trim(), x, y);
     return y;
@@ -101,20 +53,25 @@ async function safeLoadImage(src) {
     if (!src) return null;
     try {
         return await Canvas.loadImage(src);
-    } catch (e) {
+    } catch {
         return null;
     }
 }
 
-// ---------------- command ----------------
+// =============================
+// COMMAND
+// =============================
 module.exports = {
     name: "perfil",
-    description: "Gera perfil (layout personalizado, largura reduzida para 1200).",
+    description: "Exibe seu perfil com layout padronizado.",
 
-    async execute(message, args) {
+    async execute(message) {
+
+        const iconMoeda = await safeLoadImage(path.join(__dirname, "../../../assets/icons/moeda.png"));
+
         const target = message.mentions.users.first() || message.author;
+        
 
-        // load or create profile
         let perfil = await Perfil.findOne({ userId: target.id });
         if (!perfil) {
             perfil = await Perfil.create({
@@ -128,299 +85,246 @@ module.exports = {
             });
         }
 
-        // dims (width reduced to 1200)
+        // =============================
+        // DIMENSÕES
+        // =============================
         const WIDTH = 1200;
         const HEIGHT = 780;
-        const TOP = 390; // top area height
-        const DIVIDER = 4;
-        const PADDING = 18;
-        const RADIUS = 24;
+        const TOP = 390;
 
-        // theme
+        const canvas = Canvas.createCanvas(WIDTH, HEIGHT);
+        const ctx = canvas.getContext("2d");
+
+        // =============================
+        // TEMA
+        // =============================
         const theme = {
             bg: "#071018",
             cardFill: "rgba(0,0,0,0.28)",
-            glass: "rgba(255,255,255,0.03)",
-            panelStroke: "rgba(255,255,255,0.06)",
             textMain: "#E8F1F6",
-            textMuted: "#B7C2C8",
-            accent: "#9fb6c8",
-            border: "rgba(180,200,215,0.10)",
-            divider: "rgba(255,255,255,0.06)"
+            textMuted: "#b7c2c8",
         };
 
-        const canvas = Canvas.createCanvas(WIDTH, HEIGHT);
-        const ctx = canvas.getContext("2d", { alpha: false });
-
-        // clear background
         ctx.fillStyle = theme.bg;
         ctx.fillRect(0, 0, WIDTH, HEIGHT);
 
-        // outer rounded card
-        ctx.save();
-        roundRect(ctx, 10, 10, WIDTH - 20, HEIGHT - 20, RADIUS + 6);
-        ctx.fillStyle = theme.cardFill;
-        ctx.fill();
-        ctx.restore();
-
-        // outer stroke
-        ctx.lineWidth = 3;
-        ctx.strokeStyle = theme.border;
-        roundRect(ctx, 10, 10, WIDTH - 20, HEIGHT - 20, RADIUS + 6);
-        ctx.stroke();
-
-        // top glass block
-        const topX = 20, topY = 20, topW = WIDTH - 40, topH = TOP - 24;
-        ctx.save();
-        roundRect(ctx, topX, topY, topW, topH, RADIUS);
-        const gTop = ctx.createLinearGradient(topX, topY, topX, topY + topH);
-        gTop.addColorStop(0, "rgba(255,255,255,0.02)");
-        gTop.addColorStop(1, "rgba(0,0,0,0.06)");
-        ctx.fillStyle = gTop;
-        ctx.fill();
-        ctx.restore();
-
-        // ---------------- Avatar ----------------
+        // =============================
+        // AVATAR
+        // =============================
         const avatarSize = 240;
         const avatarX = 52;
         const avatarY = 56;
 
-        const avatarImg = await safeLoadImage(target.displayAvatarURL({ extension: "png", size: 1024 }));
+        const avatarImg = await safeLoadImage(
+            target.displayAvatarURL({ extension: "png", size: 1024 })
+        );
 
-        if (avatarImg) {
-            ctx.save();
-            ctx.beginPath();
-            ctx.arc(avatarX + avatarSize / 2, avatarY + avatarSize / 2, avatarSize / 2, 0, Math.PI * 2);
-            ctx.closePath();
-            ctx.clip();
-            ctx.drawImage(avatarImg, avatarX, avatarY, avatarSize, avatarSize);
-            ctx.restore();
-        } else {
-            ctx.fillStyle = "rgba(255,255,255,0.04)";
-            ctx.beginPath();
-            ctx.arc(avatarX + avatarSize / 2, avatarY + avatarSize / 2, avatarSize / 2, 0, Math.PI * 2);
-            ctx.fill();
-        }
-
-        // avatar borders
+        ctx.save();
         ctx.beginPath();
-        ctx.arc(avatarX + avatarSize / 2, avatarY + avatarSize / 2, avatarSize / 2 + 6, 0, Math.PI * 2);
-        ctx.lineWidth = 6;
-        ctx.strokeStyle = "rgba(0,0,0,0.45)";
-        ctx.stroke();
+        ctx.arc(
+            avatarX + avatarSize / 2,
+            avatarY + avatarSize / 2,
+            avatarSize / 2,
+            0,
+            Math.PI * 2
+        );
+        ctx.closePath();
+        ctx.clip();
+        ctx.drawImage(avatarImg, avatarX, avatarY, avatarSize, avatarSize);
+        ctx.restore();
 
-        ctx.beginPath();
-        ctx.arc(avatarX + avatarSize / 2, avatarY + avatarSize / 2, avatarSize / 2 + 10, 0, Math.PI * 2);
-        ctx.lineWidth = 4;
-        ctx.strokeStyle = "rgba(159,182,200,0.10)";
-        ctx.stroke();
+        // =============================
+        // POSIÇÕES DO LAYOUT ORIGINAL
+        // =============================
+        const startX = avatarX + avatarSize + 36;
 
-        // ---------------- Top boxes layout (wider boxes and repositioning) ----------------
-        const startX = avatarX + avatarSize + 36; // left edge for boxes
-        // make Insígnias and Inventário taller, per request (stretched down)
-        const insW = 320, insH = 230;
-        const gap = 10;
-        const invW = 320, invH = insH;
-        // right stacked small boxes for pontos/moedas (inside area, not external)
-        const rightColW = 185, rightColH = Math.floor((insH - 18) / 2);
-        
+        const insW = 260;
+        const insH = 230;
 
-        // positions
+        // Insígnias
         const insX = startX;
         const insY = 65;
 
-        const invX = insX + insW + gap;
+        // Inventário
+        const invX = insX + insW + 10;
         const invY = insY;
+        const invW = 260;
+        const invH = 230;
 
-        const rightX = invX + invW + gap;
+        // Coluna da direita
+        const rightX = invX + invW + 10;
         const rightY = insY;
+        const rightW = 300;
+        const rightH = 95;
 
-        // draw glass boxes
-        function drawGlass(x, y, w, h, r = 16) {
+        // =============================
+        // DESENHAR CAIXAS
+        // =============================
+        function drawGlass(x, y, w, h, r = 18) {
             ctx.save();
             roundRect(ctx, x, y, w, h, r);
-            ctx.fillStyle = "rgba(0,0,0,0.36)";
+            ctx.fillStyle = "rgba(0,0,0,0.34)";
             ctx.fill();
-            ctx.lineWidth = 1.5;
-            ctx.strokeStyle = "rgba(255,255,255,0.04)";
-            roundRect(ctx, x, y, w, h, r);
+            ctx.strokeStyle = "rgba(255,255,255,0.06)";
+            ctx.lineWidth = 2;
             ctx.stroke();
-
-            // subtle top highlight
-            const hg = ctx.createLinearGradient(x, y, x, y + 40);
-            hg.addColorStop(0, "rgba(255,255,255,0.02)");
-            hg.addColorStop(1, "rgba(255,255,255,0.00)");
-            ctx.fillStyle = hg;
-            roundRect(ctx, x, y, w, h, r);
-            ctx.fill();
             ctx.restore();
         }
 
-        drawGlass(insX, insY, insW, insH, 18);
-        drawGlass(invX, invY, invW, invH, 18);
-        drawGlass(rightX, rightY, rightColW, rightColH, 12);
-        drawGlass(rightX, rightY + rightColH + 18, rightColW, rightColH, 12);
+        drawGlass(insX, insY, insW, insH);
+        drawGlass(invX, invY, invW, invH);
+        drawGlass(rightX, rightY, rightW, rightH);
+        drawGlass(rightX, rightY + rightH + 7, rightW, rightH);
+        drawGlass(rightX, rightY + rightH * 2 + 14, rightW, rightH);
 
-        // --------------- Titles and content ----------------
-        // Insígnias title
+        // =============================
+        // TÍTULO INSÍGNIAS
+        // =============================
+        ctx.font = "26px 'SF Pro Display Bold'";
         ctx.fillStyle = theme.textMain;
-        ctx.font = "700 26px 'SF Pro Display'";
-        ctx.fillText("Insígnias:", insX + 1, insY + -8);
+        ctx.fillText("Insígnias:", insX + 1, insY - 8);
 
-        // Insígnias content: if empty -> leave blank (no "Nenhuma insígnia")
-        ctx.font = "24px 'SF Pro Display'";
+        // Render insígnias
+        ctx.font = "22px 'SF Pro Display'";
         ctx.fillStyle = theme.textMuted;
-        const insignias = Array.isArray(perfil.insignias) ? perfil.insignias : [];
-        if (insignias.length) {
-            // draw as grid or wrapped lines
-            let cursorX = insX + 18;
-            let cursorY = insY + 78;
-            const iconSize = 30;
-            const spacing = 12;
-            const maxRowWidth = insW - 36;
-            for (let i = 0; i < insignias.length; i++) {
-                const token = insignias[i];
-                const w = ctx.measureText(token).width + spacing;
-                if (cursorX + w > insX + 18 + maxRowWidth) {
-                    cursorX = insX + 18;
-                    cursorY += iconSize + 12;
-                    if (cursorY > insY + insH - 56) break;
-                }
-                // draw token (emoji/text)
-                ctx.fillText(token, cursorX, cursorY + 20);
-                cursorX += w;
+
+        const insignias = perfil.insignias || [];
+        let ix = insX + 18;
+        let iy = insY + 70;
+
+        for (let token of insignias) {
+            ctx.fillText(token, ix, iy);
+            ix += ctx.measureText(token).width + 16;
+            if (ix > insX + insW - 30) {
+                ix = insX + 18;
+                iy += 36;
             }
         }
 
-        // -------------------------------------------------------------------------
-// INVENTÁRIO (atualizado para converter { nome, quantidade } → "emoji xN")
-// -------------------------------------------------------------------------
+        // =============================
+        // INVENTÁRIO TÍTULO
+        // =============================
+        ctx.font = "26px 'SF Pro Display Bold'";
+        ctx.fillStyle = theme.textMain;
+        ctx.fillText("Inventário:", invX + 1, invY - 8);
 
-ctx.fillStyle = theme.textMain;
-ctx.font = "700 26px 'SF Pro Display'";
-ctx.fillText("Inventário:", invX + 1, invY + -8);
+        // =============================
+        // ÍCONES PNG DO INVENTÁRIO
+        // =============================
+        // 5 itens + espaço para o sexto
+        const iconMap = {
+            dica: "assets/icons/dica.png",
+            tempo: "assets/icons/tempo.png",
+            nitro: "assets/icons/nitro.png",
+            combo: "assets/icons/combo.png",
+            pulo: "assets/icons/pulo.png",
+        };
 
-ctx.font = "24px 'SF Pro Display'";
-ctx.fillStyle = theme.textMuted;
+        const invItens = perfil.inventario || [];
 
-// mapa de emojis do inventário
-const mapaItens = {
-    dica: "💡",
-    nitro: "⚡",
-    tempo: "⏰"
-};
+        let pos = [
+            [invX + 7,  invY + 10],
+            [invX + 130, invY + 10],
+            [invX + 7,  invY + 90],
+            [invX + 130, invY + 90],
+            [invX + 7,  invY + 170],
+            // espaço para o 6º item depois
+        ];
 
-// inventário salvo no perfil
-const inventarioBruto = Array.isArray(perfil.inventario) ? perfil.inventario : [];
+        ctx.font = "22px 'SF Pro Display'";
+        ctx.fillStyle = theme.textMuted;
 
-// converter inventário para tokens prontos: "emoji xQuantidade"
-const inventarioConvertido = inventarioBruto.map(item => {
-    const emoji = mapaItens[item.nome] || "📦";
-    return `${emoji} x${item.quantidade}`;
-});
+        for (let i = 0; i < invItens.length && i < 5; i++) {
+            const item = invItens[i];
+            const iconPath = iconMap[item.nome];
 
-if (inventarioConvertido.length) {
-    let cursorX = invX + 12;
-    let cursorY = invY + 25;
-    const spacing = 15;
-    const maxWidth = invW - -99;
+            if (iconPath && fs.existsSync(iconPath)) {
+                const icon = await Canvas.loadImage(iconPath);
+                const [px, py] = pos[i];
 
-    for (const token of inventarioConvertido) {
-        const w = ctx.measureText(token).width + spacing;
-
-        if (cursorX + w > invX + maxWidth) {
-            cursorX = invX + 18;
-            cursorY += 30 + 12;
-
-            if (cursorY > invY + invH - 36) break;
+                ctx.drawImage(icon, px, py, 55, 55); // ícone
+                ctx.fillText(`x${item.quantidade}`, px + 54, py + 28);
+            }
         }
 
-        ctx.fillText(token, cursorX, cursorY + 20);
-        cursorX += w;
-    }
+        // =============================
+        // COLUNA DIREITA — PONTOS / MOEDAS
+        // =============================
+
+        ctx.font = "700 20px 'SF Pro Display'";
+        ctx.fillStyle = theme.textMain;
+        ctx.fillText("Pontos:", rightX + 12, rightY + 26);
+
+        ctx.font = "22px 'SF Pro Display Medium'";
+        ctx.fillStyle = theme.textMuted;
+        ctx.fillText(String(perfil.pontos || 0), rightX + 12, rightY + 56);
+
+    // Título
+        ctx.font = "700 22px 'SF Pro Display'";
+        ctx.fillStyle = theme.textMain;
+        ctx.fillText("Moedas:", rightX + 14, rightY + rightH + 10 + 28);
+
+// Ícone + texto
+        if (iconMoeda) {
+        ctx.drawImage(
+        iconMoeda,
+        rightX + 14,                        // posição X do ícone
+        rightY + rightH + 28 + 14,       // posição Y do ícone
+        26, 26                               // tamanho do ícone
+    );
 }
 
+// Valor das moedas
+ctx.font = "22px 'SF Pro Display Medium'";
+ctx.fillStyle = theme.textMuted;
+ctx.fillText(
+    String(perfil.moedas || 0),
+    rightX + 75 + 32,                        // deslocar texto para direita do ícone
+    rightY + rightH + 5 + 34
+);
 
-        // Points and Coins in right stacked boxes (inside area)
-        ctx.font = "700 18px 'SF Pro Display'";
+
+        // =============================
+        // Nickname
+        // =============================
+        ctx.font = "34px 'SF Pro Display Bold'";
         ctx.fillStyle = theme.textMain;
-        ctx.fillText("Pontos:", rightX + 14, rightY + 28);
-        ctx.font = "600 22px 'SF Pro Display'";
-        ctx.fillStyle = theme.textMuted;
-        ctx.fillText(String(perfil.pontos || 0), rightX + 14, rightY + 28 + 36);
+        const nick = target.username;
+        ctx.fillText(nick, avatarX + 40, avatarY + avatarSize + 48);
 
-        ctx.font = "700 18px 'SF Pro Display'";
-        ctx.fillStyle = theme.textMain;
-        ctx.fillText("Moedas:", rightX + 14, rightY + rightColH + 18 + 28);
-        ctx.font = "600 22px 'SF Pro Display'";
-        ctx.fillStyle = theme.textMuted;
-        ctx.fillText(String(perfil.moedas || 0), rightX + 14, rightY + rightColH + 18 + 28 + 36);
+        // =============================
+        // BIO BOX
+        // =============================
+        const bioX = insX;
+        const bioY = insY + insH + 20;
+        const bioW = rightX + rightW - insX;
+        const bioH = 70;
 
-        // ---------------- nickname under avatar ----------------
-        ctx.font = "700 34px 'SF Pro Display'";
-        ctx.fillStyle = theme.textMain;
-        const nickname = target.username;
-        const nickWidth = ctx.measureText(nickname).width;
-        const nickX = avatarX + avatarSize / 2 - nickWidth / 2;
-        ctx.fillText(nickname, nickX, avatarY + avatarSize + 48);
+        drawGlass(bioX, bioY, bioW, bioH);
 
-        // ---------------- big bio row (full width between boxes and wallpaper) ----------------
-        const bioRowX = insX;
-        const bioRowY = insY + insH + 15;
-        const bioRowW = (rightX + rightColW) - insX; // fit to rightmost stacked boxes edge
-        const bioRowH = 70;
-        // draw glass row
+        ctx.font = "25px 'SF Pro Display'";
+        ctx.fillStyle = "#00cde1";
+        wrapText(ctx, perfil.bio, bioX + 20, bioY + 40, bioW - 40, 26);
+
+        // =============================
+        // WALLPAPER
+        // =============================
         ctx.save();
-        roundRect(ctx, bioRowX, bioRowY, bioRowW, bioRowH, 12);
-        ctx.fillStyle = "rgba(0,0,0,0.34)";
-        ctx.fill();
-        ctx.lineWidth = 1.2;
-        ctx.strokeStyle = "rgba(255,255,255,0.03)";
-        roundRect(ctx, bioRowX, bioRowY, bioRowW, bioRowH, 12);
-        ctx.stroke();
-        ctx.restore();
-
-        ctx.font = "400 20px 'SF Pro Display'";
-        ctx.fillStyle = theme.textMuted;
-        const fullBio = perfil.bio || "";
-        wrapText(ctx, fullBio, bioRowX + 18, bioRowY + 42, bioRowW - 36, 26);
-
-        // ---------------- Wallpaper area (bottom) ----------------
-        ctx.save();
-        roundRect(ctx, 20, TOP + DIVIDER, WIDTH - 40, HEIGHT - TOP - 40, RADIUS - 6);
+        roundRect(ctx, 20, TOP, WIDTH - 40, HEIGHT - TOP - 20, 16);
         ctx.clip();
 
         if (perfil.wallpaper) {
             const wp = await safeLoadImage(perfil.wallpaper);
-            if (wp) {
-                // cover logic
-                const targetW = WIDTH - 40;
-                const targetH = HEIGHT - TOP - 40;
-                const ratio = Math.max(targetW / wp.width, targetH / wp.height);
-                const drawW = wp.width * ratio;
-                const drawH = wp.height * ratio;
-                const dx = 20 + (targetW - drawW) / 2;
-                const dy = TOP + DIVIDER + (targetH - drawH) / 2;
-                ctx.drawImage(wp, dx, dy, drawW, drawH);
-            } else {
-                ctx.fillStyle = "rgba(0,0,0,0.22)";
-                ctx.fillRect(20, TOP + DIVIDER, WIDTH - 40, HEIGHT - TOP - 40);
-            }
-        } else {
-            ctx.fillStyle = "rgba(0,0,0,0.22)";
-            ctx.fillRect(20, TOP + DIVIDER, WIDTH - 40, HEIGHT - TOP - 40);
+            if (wp) ctx.drawImage(wp, 20, TOP, WIDTH - 40, HEIGHT - TOP - 20);
         }
         ctx.restore();
 
-        // final stroke
-        ctx.lineWidth = 4;
-        ctx.strokeStyle = theme.border;
-        roundRect(ctx, 10, 10, WIDTH - 20, HEIGHT - 20, RADIUS + 6);
-        ctx.stroke();
-
-        // export
+        // =============================
+        // ENVIAR
+        // =============================
         const buffer = canvas.toBuffer("image/png");
         const attachment = new AttachmentBuilder(buffer, { name: "perfil.png" });
+
         return message.reply({ files: [attachment] });
     }
 };

@@ -24,6 +24,22 @@ module.exports = {
         }
 
         // ===========================
+        // BLOQUEAR USO ANTES DO FIM DO EFEITO
+        // ===========================
+        if (partida.tempoBoostNiveisRestantes && partida.tempoBoostNiveisRestantes > 0) {
+            return message.reply({
+                embeds: [
+                    new EmbedBuilder()
+                        .setColor("Red")
+                        .setDescription(
+                            `❌ O item **Tempo (+3s)** já está ativo!\n` +
+                            `⏳ Faltam **${partida.tempoBoostNiveisRestantes} níveis** para o efeito acabar.`
+                        )
+                ]
+            });
+        }
+
+        // ===========================
         // VERIFICAR SE PODE USAR AGORA
         // ===========================
         if (!partida.podeUsarTempoAgora) {
@@ -67,7 +83,7 @@ module.exports = {
         // ATIVAR BOOST DE TEMPO
         // ===========================
         partida.tempoExtraGlobal = 3;                  // +3s fixo
-        partida.tempoBoostNiveisRestantes = 30;        // dura 30 níveis
+        partida.tempoBoostNiveisRestantes = 30;        // dura 30 rodadas
 
         const embed = new EmbedBuilder()
             .setColor("#3498db")

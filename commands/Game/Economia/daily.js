@@ -69,7 +69,7 @@ module.exports = {
             .addFields(
                 {
                     name: "Valor Recebido",
-                    value: `**<:cofrinho:1440081499465453609> ${amount} moedas**`,
+                    value: `**<:dollar12:1441160561973923982> ${amount} moedas**`,
                     inline: true
                 },
                 {

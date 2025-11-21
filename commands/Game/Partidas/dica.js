@@ -1,6 +1,5 @@
 const { EmbedBuilder } = require("discord.js");
-const { partidasAtivas } = require("../Partidas/play");
-const Perfil = require("../../..//models/Perfil");
+const validarItem = require("../../Utility/validarItem");
 
 module.exports = {
     name: "dica",
@@ -8,65 +7,22 @@ module.exports = {
     description: "Mostra uma dica sobre a resposta atual.",
 
     async execute(message) {
-        const partida = partidasAtivas.get(message.channel.id);
 
-        if (!partida || !partida.rodadaEmCurso) {
-            return message.reply({
-                embeds: [
-                    new EmbedBuilder()
-                        .setColor("#ff4d4d")
-                        .setDescription("❌ Não há uma rodada ativa no momento.")
-                ]
-            });
+        // Middleware já verifica tudo (pausa, rodada, item, inventário, etc)
+        const contexto = await validarItem(message, "dica");
+        if (!contexto || contexto.reply) return contexto;
+
+        const { partida, perfil, item } = contexto;
+
+        // Consumir item
+        item.quantidade--;
+        if (item.quantidade <= 0) {
+            perfil.inventario = perfil.inventario.filter(i => i.nome !== "dica");
         }
-
-        // Carregar perfil
-        let perfil = await Perfil.findOne({ userId: message.author.id });
-
-        if (!perfil) {
-            perfil = await Perfil.create({
-                userId: message.author.id,
-                inventario: [],
-                moedas: 0
-            });
-        }
-
-        // Garantir que inventário existe
-        if (!Array.isArray(perfil.inventario)) {
-            perfil.inventario = [];
-            await perfil.save();
-        }
-
-        // Verificar se possui item "dica"
-        if (!perfil.inventario.includes("dica")) {
-            return message.reply({
-                embeds: [
-                    new EmbedBuilder()
-                        .setColor("#ff4d4d")
-                        .setDescription("❌ Você não tem **dicas** no inventário!\nUse `;loja` para comprar.")
-                ]
-            });
-        }
-
-        // Remover 1 dica do inventário
-        const index = perfil.inventario.indexOf("dica");
-        if (index !== -1) perfil.inventario.splice(index, 1);
         await perfil.save();
 
         // Criar a dica
-        const item = partida.itemAtual;
-
-        if (!item || !item.resposta) {
-            return message.reply({
-                embeds: [
-                    new EmbedBuilder()
-                        .setColor("#ff4d4d")
-                        .setDescription("❌ Não foi possível gerar a dica dessa rodada.")
-                ]
-            });
-        }
-
-        const resposta = String(item.resposta).toUpperCase();
+        const resposta = String(partida.itemAtual.resposta).toUpperCase();
         const letras = resposta.split("");
 
         const dicaFormatada = letras
