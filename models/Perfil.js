@@ -13,6 +13,8 @@ const PerfilSchema = new mongoose.Schema({
 
     pontos: { type: Number, default: 0 },
     moedas: { type: Number, default: 0 },
+    lastDaily: { type: Date, default: null },
+
 
     comboBonus: { type: Number, default: 1 },
     comboItems: { type: Number, default: 0 }, // quantidade de itens combo no inventário

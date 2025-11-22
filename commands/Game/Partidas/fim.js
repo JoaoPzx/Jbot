@@ -95,7 +95,7 @@ module.exports = {
                 iconURL: message.client.user.displayAvatarURL()
             })
             .setTitle("🛑 Partida Finalizada!")
-            .setImage(bannerFinal)
+            .setImage("https://i.ibb.co/HphDW8sq/You-Lose-Game-Over-GIF-by-Universal-Music-Africa.gif")
             .addFields(
                 { name: "Tema", value: `**${nomeTema}**`, inline: true },
                 { name: "Nível atingido", value: `🧩 **${nivel}**`, inline: true },
@@ -127,7 +127,7 @@ module.exports = {
                     .setThumbnail("https://i.ibb.co/3mKpcBQq/medal-1.png")
                     .setDescription(
                         `🔥 **<@${melhorJogadorId}> Quebrou o recorde!**\n\n` +
-                        `Pontuação: **${melhorPontuacao} pts**\n` +
+                        `Pontuação: **<:badgejbot:1441489105929371768> ${melhorPontuacao} pts**\n` +
                         `Tema: **${nomeTema}**\n\n` +
                         `✨ *Uma nova lenda foi criada...*`
                     );

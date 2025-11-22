@@ -15,53 +15,57 @@ module.exports = {
             perfil = await Perfil.create({ userId, moedas: 0, inventario: [] });
         }
 
-        // Garantir formato correto do inventário
+        // Garantir que inventario é um array
         if (!Array.isArray(perfil.inventario)) {
             perfil.inventario = [];
             await perfil.save();
         }
 
         // ============================
-        // TABELA DE ITENS (com emoji)
+        // TABELA DE ITENS PADRÃO
         // ============================
         const tabelaItens = {
-            dica:  { emoji: "💡" },
-            nitro: { emoji: "⚡" },
-            vida:  { emoji: "❤️" },
-            tempo: { emoji: "⏳" },
-            skip:  { emoji: "⏭️" }
+            dica:  { nome: "Dica",  emoji: "<:icon_dica:1441174865032904745>" },
+            tempo: { nome: "Tempo", emoji: "<:icon_tempo:1441174907445837907>" },
+            nitro: { nome: "Nitro", emoji: "<:icon_nitro:1441530028658790430>" },
+            skip:  { nome: "Pulo",  emoji: "<:icon_pulo:1441182320462790786>" },
+            combo: { nome: "Combo", emoji: "<:icon_combo:1441177424124448868>" },
+            vida:  { nome: "Vida",  emoji: "❤️" }
         };
 
+        // ============================
+        // CRIAR MAPA DE QUANTIDADES
+        // ============================
+        const qtd = {};
+
+        for (const key of Object.keys(tabelaItens)) {
+            qtd[key] = 0;
+        }
+
+        // Preencher com dados reais
+        for (const item of perfil.inventario) {
+            if (qtd.hasOwnProperty(item.nome)) {
+                qtd[item.nome] = item.quantidade;
+            }
+        }
+
+        // ============================
+        // MONTAR EMBED
+        // ============================
         const embed = new EmbedBuilder()
             .setColor("#00c8ff")
-            .setTitle(`🎒 Inventário de ${message.author.username}`)
+            .setTitle(`<:bag1:1441541837847265430> Inventário de ${message.author.username}`)
             .setThumbnail(message.author.displayAvatarURL({ dynamic: true }))
             .setFooter({ text: "Use ;loja para comprar itens!" })
             .setTimestamp();
 
-        // Se vazio
-        if (perfil.inventario.length === 0) {
-            embed.addFields({
-                name: "📦 Inventário vazio",
-                value: "Você não possui nenhum item. Use `;loja` para comprar!",
-                inline: false
-            });
-
-            return message.reply({ embeds: [embed] });
-        }
-
-        // ============================
-        // ADICIONAR ITENS INLINE
-        // ============================
         const fields = [];
 
-        for (const item of perfil.inventario) {
-
-            const emoji = tabelaItens[item.nome]?.emoji || "📦";
-
+        for (const key of Object.keys(tabelaItens)) {
+            const item = tabelaItens[key];
             fields.push({
-                name: `${emoji} x${item.quantidade}`,
-                value: `\u200b`,
+                name: `${item.nome}`,
+                value: `${item.emoji} **${qtd[key]}**`,
                 inline: true
             });
         }

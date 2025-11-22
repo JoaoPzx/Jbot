@@ -31,7 +31,7 @@ Canvas.registerFont(
   { family: "SF Pro Display", weight: "700" }
 );
 
-console.log("✔ SF Pro Display (Regular, Medium, Bold) registrada com sucesso!");
+console.log("✔ SF Pro Display (Regular, Medium, Bold,) registrada com sucesso!");
 
 
 

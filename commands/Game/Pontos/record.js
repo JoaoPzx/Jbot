@@ -75,9 +75,9 @@ module.exports = {
             .setTitle("<:tacadeourorec:1439651590435770500> Recorde Oficial do Tema")
             .addFields(
                 { name: "Tema", value: nomeFinal, inline: true },
-                { name: "Recordista", value: `\<:medalrec:1439649790853124217> <@${tema.record.userId}>`, inline: true },
-                { name: "Pontuação", value: `**\<:pontuacao:1439652408807395369> ${tema.record.pontos} pontos**`, inline: true },
-                { name: "Quando", value: `\<:calendariodemesa:1439655247579447326> ${data}`, inline: true }
+                { name: "Recordista", value: `<:medalrec:1439649790853124217> <@${tema.record.userId}>`, inline: true },
+                { name: "Pontuação", value: `**<:badgejbot:1441489105929371768> ${tema.record.pontos} pontos**`, inline: true },
+                { name: "Quando", value: `<:calendariodemesa:1439655247579447326> ${data}`, inline: true }
             )
             .setThumbnail("https://i.ibb.co/bfYzcsm/medalha-de-ouro.png")
             .setFooter({ text: `Solicitado por ${message.author.username}`, iconURL: message.author.displayAvatarURL()  });

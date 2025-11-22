@@ -14,6 +14,8 @@ const path = require("path");
 const Perfil = require("../../models/Perfil");
 
 
+
+
 // =============================
 // Utils
 // =============================
@@ -60,7 +62,7 @@ async function safeLoadImage(src) {
 
 // =============================
 // COMMAND
-// =============================
+// ============================= 
 module.exports = {
     name: "perfil",
     description: "Exibe seu perfil com layout padronizado.",
@@ -68,7 +70,6 @@ module.exports = {
     async execute(message) {
 
         const iconMoeda = await safeLoadImage(path.join(__dirname, "../../../assets/icons/moeda.png"));
-
         const target = message.mentions.users.first() || message.author;
         
 
@@ -80,7 +81,7 @@ module.exports = {
                 wallpaper: null,
                 insignias: [],
                 inventario: [],
-                pontos: 0,
+                total: 0,
                 moedas: 0
             });
         }
@@ -155,7 +156,7 @@ module.exports = {
         const rightX = invX + invW + 10;
         const rightY = insY;
         const rightW = 300;
-        const rightH = 95;
+        const rightH = 72;
 
         // =============================
         // DESENHAR CAIXAS
@@ -232,7 +233,7 @@ module.exports = {
         ];
 
         ctx.font = "22px 'SF Pro Display'";
-        ctx.fillStyle = theme.textMuted;
+        ctx.fillStyle = "WHITE";
 
         for (let i = 0; i < invItens.length && i < 5; i++) {
             const item = invItens[i];
@@ -244,27 +245,29 @@ module.exports = {
 
                 ctx.drawImage(icon, px, py, 55, 55); // ícone
                 ctx.fillText(`x${item.quantidade}`, px + 54, py + 28);
+                ctx.fillStyle = "WHITE"
             }
         }
 
-        // =============================
-        // COLUNA DIREITA — PONTOS / MOEDAS
-        // =============================
+        // ============================================
+        // COLUNA DIREITA — PONTOS / MOEDAS / CASAMENTO
+        // ============================================
 
         ctx.font = "700 20px 'SF Pro Display'";
         ctx.fillStyle = theme.textMain;
-        ctx.fillText("Pontos:", rightX + 12, rightY + 26);
+        ctx.fillText("Pontos:", rightX + 10, rightY + 31);
 
-        ctx.font = "22px 'SF Pro Display Medium'";
-        ctx.fillStyle = theme.textMuted;
-        ctx.fillText(String(perfil.pontos || 0), rightX + 12, rightY + 56);
+        ctx.font = "20px 'SF Pro Display Medium'";
+        ctx.fillStyle = "WHITE";
+        ctx.fillText(String(perfil.pontos || 0), rightX + 86, rightY + 33);
 
     // Título
-        ctx.font = "700 22px 'SF Pro Display'";
+        ctx.font = "700 20px 'SF Pro Display'";
         ctx.fillStyle = theme.textMain;
-        ctx.fillText("Moedas:", rightX + 14, rightY + rightH + 10 + 28);
+        ctx.fillText("Moedas:", rightX + 10, rightY + rightH + 22 + 28);
 
 // Ícone + texto
+
         if (iconMoeda) {
         ctx.drawImage(
         iconMoeda,
@@ -275,13 +278,19 @@ module.exports = {
 }
 
 // Valor das moedas
-ctx.font = "22px 'SF Pro Display Medium'";
-ctx.fillStyle = theme.textMuted;
-ctx.fillText(
-    String(perfil.moedas || 0),
-    rightX + 75 + 32,                        // deslocar texto para direita do ícone
-    rightY + rightH + 5 + 34
-);
+        ctx.font = "20px 'SF Pro Display Medium'";
+        ctx.fillStyle = "WHITE";
+        ctx.fillText(String(perfil.moedas || 0),rightX + 63 + 32, rightY + rightH + 17 + 34);                      // deslocar texto para direita do ícone
+
+// Casamento
+        ctx.font = "700 20px 'SF Pro Display'";
+        ctx.fillStyle = theme.textMain;
+        ctx.fillText("Casamento:", rightX + 10, rightY + 199);
+
+        ctx.font = "20px 'SF Pro Display Medium'";
+        ctx.fillStyle = "WHITE";
+        ctx.fillText(String(perfil.moedas || 0),rightX + 95 + 32, rightY + rightH + 94 + 34); 
+        
 
 
         // =============================
@@ -290,7 +299,7 @@ ctx.fillText(
         ctx.font = "34px 'SF Pro Display Bold'";
         ctx.fillStyle = theme.textMain;
         const nick = target.username;
-        ctx.fillText(nick, avatarX + 40, avatarY + avatarSize + 48);
+        ctx.fillText(nick, avatarX + 62, avatarY + avatarSize + 48);
 
         // =============================
         // BIO BOX
@@ -303,8 +312,8 @@ ctx.fillText(
         drawGlass(bioX, bioY, bioW, bioH);
 
         ctx.font = "25px 'SF Pro Display'";
-        ctx.fillStyle = "#00cde1";
-        wrapText(ctx, perfil.bio, bioX + 20, bioY + 40, bioW - 40, 26);
+        ctx.fillStyle = "#ffffff";
+        wrapText(ctx, perfil.bio, bioX + 20, bioY + 43, bioW - 40, 26);
 
         // =============================
         // WALLPAPER

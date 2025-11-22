@@ -1,4 +1,4 @@
-const { EmbedBuilder, inlineCode } = require("discord.js");
+const { EmbedBuilder, inlineCode, IntentsBitField } = require("discord.js");
 const Perfil = require("../../../models/Perfil");
 
 module.exports = {
@@ -10,42 +10,48 @@ module.exports = {
         // Lista de itens da loja
         const itens = {
             dica: {
-                nome: "<:icon_dica:1441174865032904745> Dica",
+                nome: "Dica",
+                emoji: "<:icon_dica:1441174865032904745>",
                 preco: 5,
                 desc: "Revela a **primeira e última letra** da resposta.",
                 aliases: ["d"]
             },
 
             tempo: {
-                nome: "<:icon_tempo:1441174907445837907> Tempo",
+                nome: "Tempo",
+                emoji: "<:icon_tempo:1441174907445837907>",
                 preco: 30,
-                desc: "Adiciona +2 segundos ao tempo de acerto da partida.",
+                desc: "Adiciona +3 segundos ao tempo de acerto da partida.",
                 aliases: ["t"]
             },
 
             nitro: {
-                nome: "<:icon_nitro:1441175068960100504> Nitro",
+                nome: "Nitro",
+                emoji: "<:icon_nitro:1441530028658790430>",
                 preco: 50,
                 desc: "Reduz o intervalo entre imagens de **10s → 5s** durante toda a partida.",
                 aliases: ["n"]
             },
 
             pulo: {
-                nome: "<:icon_pulo:1441182320462790786> Pulo",
+                nome: "Pulo",
+                emoji: "<:icon_pulo:1441182320462790786>",
                 preco: 70,
                 desc: "Pula a imagem de uma rodada da partida.",
                 aliases: ["s"]
             },
 
             combo: {
-                nome: "<:icon_combo:1441177424124448868> Combo",
+                nome: "Combo",
+                emoji: "<:icon_combo:1441177424124448868>",
                 preco: 100,
                 desc: "Aumenta a pontuação do jogador progressivamente (+1, +2, +3...).",
                 aliases: ["c"]
             },
 
             vida: {
-                nome: "💜 Combo",
+                nome: "vida",
+                emoji: "💜",
                 preco: 100,
                 desc: "Aumenta a pontuação do jogador progressivamente (+1, +2, +3...).",
                 aliases: ["v"]
@@ -87,7 +93,7 @@ module.exports = {
                 .setTitle("LOJA DE ITENS JBOT")
                 .setDescription("<:shop100:1441161458175180921> Bem-vindo(a) a Loja de itens do JBot, confira os nossos itens e seus valores:")
                 .addFields(
-                    Object.keys(itens).map(key => ({name: `${itens[key].nome}`, value: `**<:dolar12:1441176775022346333> ${itens[key].preco} Moedas**`, inline: true}))
+                    Object.keys(itens).map(key => ({name: `${itens[key].nome}`, value: `**<:coin1:1441491987537727669> ${itens[key].preco} Moedas**`, inline: true}))
                 );
 
             return message.reply({ embeds: [embed] });
@@ -155,11 +161,12 @@ module.exports = {
         // Embed de confirmação
         const embed = new EmbedBuilder()
             .setColor("Green")
-            .setTitle("✔️ Compra realizada!")
+            .setTitle("Compra realizada!")
+            .setDescription(`<:compras:1441605176392945835> ${message.author} aqui estão os seus itens!`)
             .addFields(
-                {name: "🛍 Item", value: `**${quantidade}** ${item.nome}(s)`, inline: true},
-                {name: "💵 Preço", value: `**${custoTotal}** Moedas`, inline: true},
-                {name: "💰 Saldo", value: `**${perfil.moedas}** Moedas`, inline: true}
+                {name: "Produto", value: `${item.emoji} **${quantidade}** ${item.nome}(s)`, inline: true},
+                {name: "Preço", value: `**<:coin1:1441491987537727669> ${custoTotal}** Moedas`, inline: true},
+                {name: "Saldo", value: `**<:carteira:1440068592354725888> ${perfil.moedas}** Moedas`, inline: true}
             )
 
         return message.reply({ embeds: [embed] });
