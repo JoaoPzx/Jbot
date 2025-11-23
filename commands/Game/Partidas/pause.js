@@ -7,49 +7,56 @@ module.exports = {
     description: "Pausa ou retoma a partida.",
 
     async execute(message) {
-    // Aceitar apenas ";p" ou o prefixo que você usa
-    const conteudo = message.content.trim().toLowerCase();
-    if (conteudo !== ";p" && conteudo !== ";pause") {
-        return; // ignora qualquer outra variação
-    }
 
-    const partida = partidasAtivas.get(message.channel.id);
+        const conteudo = message.content.trim().toLowerCase();
+        if (conteudo !== ";p" && conteudo !== ";pause") return;
 
+        const partida = partidasAtivas.get(message.channel.id);
 
-        // Nenhuma partida no canal
         if (!partida) {
-            const embed = new EmbedBuilder()
-                .setColor("#ff4d4d")
-                .setDescription("❌ Não existe uma partida ativa neste canal.");
-            return message.reply({ embeds: [embed] });
+            return message.reply({
+                embeds: [
+                    new EmbedBuilder()
+                        .setColor("#ff4d4d")
+                        .setDescription("❌ Não existe uma partida ativa neste canal.")
+                ]
+            });
         }
 
-        // Apenas o criador da partida pode pausar ou retomar
+        // Apenas o criador pode pausar/despausar
         if (message.author.id !== partida.autorId) {
-            const embed = new EmbedBuilder()
-                .setColor("#ff4d4d")
-                .setDescription("❌ Apenas quem iniciou a partida pode pausar ou retomá-la.");
-            return message.reply({ embeds: [embed] });
+            return message.reply({
+                embeds: [
+                    new EmbedBuilder()
+                        .setColor("#ff4d4d")
+                        .setDescription("❌ Apenas quem iniciou a partida pode pausar ou retomá-la.")
+                ]
+            });
         }
 
-        // Não pode pausar durante contagem de rodada
+        // Bloqueia pausa durante imagem da rodada
         if (!partida.pausada && partida.rodadaEmCurso) {
-            const embed = new EmbedBuilder()
-                .setColor("#ff4d4d")
-                .setTitle("⏳ Não é possível pausar agora")
-                .setDescription("Você só pode pausar **após alguém acertar**, durante o intervalo da rodada.");
-            return message.reply({ embeds: [embed] });
+            return message.reply({
+                embeds: [
+                    new EmbedBuilder()
+                        .setColor("#ff4d4d")
+                        .setTitle("⏳ Não é possível pausar agora")
+                        .setDescription("Você só pode pausar **após alguém acertar**, durante o intervalo da rodada.")
+                ]
+            });
         }
 
-        // =========================
-        // TENTANDO DESPAUSAR
-        // =========================
+        // =========================================================
+        // =====================  RETOMAR  ==========================
+        // =========================================================
         if (partida.pausada) {
+
             partida.pausada = false;
 
-            if (partida.despausarTimer) {
-                clearTimeout(partida.despausarTimer);
-                partida.despausarTimer = null;
+            // Cancela timer de expiração da pausa
+            if (partida.pauseExpireTimeout) {
+                clearTimeout(partida.pauseExpireTimeout);
+                partida.pauseExpireTimeout = null;
             }
 
             const retomado = new EmbedBuilder()
@@ -58,22 +65,19 @@ module.exports = {
 
             await message.reply({ embeds: [retomado] });
 
-            // Retoma rodada após 1s
             return setTimeout(() => {
                 partida.rodadaEmCurso = true;
                 iniciarRodada(message, partida);
             }, 1000);
         }
 
-        // =========================
-        // PAUSANDO
-        // =========================
+        // =========================================================
+        // ======================  PAUSAR  ==========================
+        // =========================================================
         partida.pausada = true;
-        partida.itensLiberados = true;
 
         // Cancela timers existentes
         if (partida.timeout) clearTimeout(partida.timeout);
-        if (partida.despausarTimer) clearTimeout(partida.despausarTimer);
         if (partida.coletor) partida.coletor.stop("paused");
 
         const embedPause = new EmbedBuilder()
@@ -89,23 +93,32 @@ module.exports = {
 
         await message.reply({ embeds: [embedPause], components: [botao] });
 
-        // Inicia timer de 5 min (300.000ms)
-        partida.despausarTimer = setTimeout(() => {
-            if (partida.pausada) {
-                partida.pausada = false;
-                partida.itensLiberados = false;
+        // =========================================================
+        // ========== TIMER DE EXPIRAÇÃO (5 MINUTOS) ===============
+        // =========================================================
+        partida.pauseExpireTimeout = setTimeout(async () => {
 
+    if (!partida.pausada) return;
 
-                const embedTimeout = new EmbedBuilder()
-                    .setColor("#e74c3c")
-                    .setTitle("⏰ Pausa expirada")
-                    .setDescription("O limite máximo de pausa (**5 minutos**) foi atingido.");
+    partida.pausada = false;
 
-                message.channel.send({ embeds: [embedTimeout] });
+    const embedTimeout = new EmbedBuilder()
+        .setColor("#e74c3c")
+        .setTitle("⏰ Pausa expirada")
+        .setDescription(
+            "O limite máximo de pausa (**5 minutos**) foi atingido.\n" +
+            "A partida foi retomada automaticamente."
+        );
 
-                partida.rodadaEmCurso = true;
-                iniciarRodada(message, partida);
-            }
-        }, 300000);
+    await message.channel.send({
+        content: `⛔ <@${partida.autorId}>`, // <- MENÇÃO REAL AQUI
+        embeds: [embedTimeout]
+    });
+
+    partida.rodadaEmCurso = true;
+    iniciarRodada(message, partida);
+
+}, 1 * 30 * 1000);
+ // 5 minutos
     }
 };

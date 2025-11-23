@@ -48,13 +48,14 @@ function dificuldadePorNivel(nivel) {
    - 37..69 => 3
    - ...
    - 268..300 => 10
+   - acima de 300 permanece 10
 ===================================================== */
 function getComboBonusByLevel(level) {
     if (!level || level < 1) level = 1;
     if (level <= 3) return 1;
 
     const restante = level - 3; // 1..297
-    const faixa = Math.ceil(restante / 33); // 1..9 (for 1..297)
+    const faixa = Math.ceil(restante / 33); // 1..9 (para 1..297)
     const bonus = faixa + 1; // 2..10
     return Math.min(bonus, 10);
 }
@@ -129,7 +130,7 @@ async function execute(message, args) {
         autorId: message.author.id,
         tema: temaEncontrado,
         nivel: 1,
-        ranking: {},
+        ranking: {},          // agora guarda PONTOS, não só acertos
         cor: corDaPartida,
         coletor: null,
         timeout: null,
@@ -142,6 +143,9 @@ async function execute(message, args) {
 
         // Combos do canal (map userId -> true)
         combos: {},
+
+        // referência do embed da rodada (imagem) – usado pelo ;combo
+        embedRodada: null,
 
         // 🔥 Buff de tempo extra (fixo em +3s durante 30 níveis)
         tempoExtraGlobal: 0,
@@ -162,7 +166,11 @@ async function execute(message, args) {
             name: `Solicitado por ${message.author.username}`,
             iconURL: message.author.displayAvatarURL({ dynamic: true })
         })
-        .setDescription("🎮 **Iniciando nova partida...**\n\n🟢 **ATENÇÃO:** use `;combo` agora para ativar seu combo nesta partida (apenas durante os próximos 10s).")
+        .setDescription(
+            "🎮 **Iniciando nova partida...**\n\n" +
+            "🟢 **ATENÇÃO:** use `;combo` agora para ativar seu combo nesta partida " +
+            "(apenas durante os próximos 10s)."
+        )
         .addFields(
             { name: "Tema", value: `**${temaNomeExibir}**`, inline: true },
             { name: "Palavras", value: `**🖼 ${temaEncontrado.imagens.length}**`, inline: true }
@@ -235,7 +243,11 @@ async function iniciarRodada(message, partida) {
         )
         .setImage(item.url);
 
-    await message.channel.send({ embeds: [embedRodada] });
+    // ⬇️ AQUI: registramos o embed da rodada para o comando ;combo saber qual embed é proibido
+    const msgRodada = await message.channel.send({ embeds: [embedRodada] });
+    partida.embedImagemId = msgRodada.id;
+
+
 
     const collector = message.channel.createMessageCollector({
         filter: m => !m.author.bot,
@@ -256,7 +268,7 @@ async function iniciarRodada(message, partida) {
             // CÁLCULO DE PONTOS:
             // - se jogador ativou combo nesta partida:
             //     níveis 1..3 => ganha 1 (base)
-            //     níveis >=4 => ganha = getComboBonusByLevel(partida.nivel) (substitui o 1)
+            //     níveis >=4 => ganha = getComboBonusByLevel(partida.nivel)
             // - se não ativou combo => ganha 1
             let ganho;
             const possuiComboAtivo = Boolean(partida.combos && partida.combos[msg.author.id]);
@@ -268,16 +280,18 @@ async function iniciarRodada(message, partida) {
                 else ganho = getComboBonusByLevel(partida.nivel);
             }
 
+            // Atualiza pontos globais do jogador (Perfil)
             perfil.pontos = (perfil.pontos || 0) + ganho;
             await perfil.save();
+
+            // Atualiza ranking da PARTIDA usando os PONTOS (não mais só acertos)
+            partida.ranking[msg.author.id] =
+                (partida.ranking[msg.author.id] || 0) + ganho;
 
             partida.rodadaTerminada = true;
             collector.stop("acertou");
 
             msg.react("<:badgejbot:1441489105929371768>").catch(() => {});
-
-            partida.ranking[msg.author.id] =
-                (partida.ranking[msg.author.id] || 0) + 1;
 
             const rankingOrdenado = montarRanking(partida);
             const rankingTexto = formatarRanking(rankingOrdenado, partida);
@@ -289,8 +303,10 @@ async function iniciarRodada(message, partida) {
                     iconURL: message.client.user.displayAvatarURL({ dynamic: true })
                 });
 
-            embedAcerto.setDescription(`🏆 **RANKING**\n${rankingTexto}`);
-            embedAcerto.setFooter({ text: `⏳ Próxima imagem em ${partida.nitro ? "5s" : "10s"}` });
+            embedAcerto
+                .setDescription(`🏆 **RANKING**\n${rankingTexto}`)
+                .setThumbnail(message.author.displayAvatarURL({ dynamic: true }))
+                .setFooter({ text: `⏳ Próxima imagem em ${partida.nitro ? "5s" : "10s"}` });
 
             await message.channel.send({ embeds: [embedAcerto] });
 
@@ -300,6 +316,9 @@ async function iniciarRodada(message, partida) {
             partida.nivel++;
             partida.rodadaEmCurso = false;
 
+            // limpamos referência do embed da rodada anterior (opcional, mas seguro)
+            partida.embedRodada = null;
+
             partida.timeout = setTimeout(
                 () => iniciarRodada(message, partida),
                 partida.nitro ? 5000 : 10000
@@ -308,6 +327,9 @@ async function iniciarRodada(message, partida) {
     });
 
     collector.on("end", async (_, motivo) => {
+        // limpeza da referência do embed da rodada, independente do motivo
+        partida.embedRodada = null;
+
         if (partida.encerrada || motivo === "acertou" || partida.pausada) return;
 
         partida.rodadaTerminada = true;
@@ -377,8 +399,8 @@ async function iniciarRodada(message, partida) {
 
 /* =====================================================
    FUNÇÕES AUXILIARES DE RANKING
-   - formatarRanking agora adiciona o (+X) ao lado do jogador
-     quando ele possui combo ativo nesta partida (opção A)
+   - agora o ranking mostra PONTOS (já com combo aplicado)
+   - (+X) aparece a partir do nível 4 para quem tem combo
 ===================================================== */
 function montarRanking(partida) {
     return Object.entries(partida.ranking).sort((a, b) => b[1] - a[1]);
@@ -389,6 +411,7 @@ function formatarRanking(lista, partida) {
         .map((r, i) => {
             const userId = r[0];
             const pontos = r[1];
+
             let sufixo = "";
 
             if (partida.combos && partida.combos[userId]) {
@@ -397,7 +420,9 @@ function formatarRanking(lista, partida) {
                 if (bonus > 1) sufixo = ` (+${bonus})`;
             }
 
-            return `${i + 1}. <@${userId}> — **${pontos} ponto(s)**${sufixo}`;
+            const label = pontos === 1 ? "ponto" : "pontos";
+
+            return `${i + 1}. <@${userId}> — **${pontos} ${label}**${sufixo}`;
         })
         .join("\n");
 }
@@ -423,5 +448,6 @@ module.exports = {
     },
     calcularTempo,
     formatarTempo,
-    iniciarRodada
+    iniciarRodada,
+    getComboBonusByLevel
 };

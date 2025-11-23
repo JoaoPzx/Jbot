@@ -8,8 +8,12 @@ const ItemSchema = new mongoose.Schema({
 const PerfilSchema = new mongoose.Schema({
     userId: { type: String, required: true, unique: true },
 
+    casamento: { type: String, default: null },
+
+
     bio: { type: String, default: "Olá! Eu ainda não personalizei meu perfil." },
     wallpaper: { type: String, default: null },
+    cor: { type: String, default: "preto" },
 
     pontos: { type: Number, default: 0 },
     moedas: { type: Number, default: 0 },

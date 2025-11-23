@@ -30,7 +30,7 @@ module.exports = {
             nitro: { nome: "Nitro", emoji: "<:icon_nitro:1441530028658790430>" },
             skip:  { nome: "Pulo",  emoji: "<:icon_pulo:1441182320462790786>" },
             combo: { nome: "Combo", emoji: "<:icon_combo:1441177424124448868>" },
-            vida:  { nome: "Vida",  emoji: "❤️" }
+            vida:  { nome: "Resposta",  emoji: "<:icon_resposta:1441904668748939374>" },
         };
 
         // ============================

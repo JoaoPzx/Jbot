@@ -17,6 +17,17 @@ module.exports = async function validarItem(message, nomeDoItem) {
         });
     }
 
+    // ❗ BLOQUEIA APENAS O COMBO NO EMBED DE ACERTO
+    if (nomeDoItem === "combo" && partida.ultimoEmbed === "acerto") {
+        return message.reply({
+            embeds: [
+                new EmbedBuilder()
+                    .setColor("#ff4d4d")
+                    .setDescription("❌ Você **não pode usar Combo** no embed de acerto.")
+            ]
+        });
+    }
+
     // Regras de pausa
     const itensPermitidosNaPausa = ["tempo", "nitro", "combo"];
 
@@ -63,7 +74,7 @@ module.exports = async function validarItem(message, nomeDoItem) {
         });
     }
 
-    // Validar inventário
+    // Garantir estrutura
     if (!Array.isArray(perfil.inventario)) perfil.inventario = [];
 
     const entrada = perfil.inventario.find(i => i.nome === nomeDoItem);
@@ -78,7 +89,7 @@ module.exports = async function validarItem(message, nomeDoItem) {
         });
     }
 
-    // Se tudo OK → retornar objeto com dados (evita repetir consulta)
+    // Sucesso! retorna dados para o item
     return {
         partida,
         perfil,

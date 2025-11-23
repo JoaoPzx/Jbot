@@ -17,6 +17,14 @@ module.exports = {
                 aliases: ["d"]
             },
 
+            resposta: {
+                nome: "Resposta",
+                emoji: "<:icon_resposta:1441904668748939374>",
+                preco: 20,
+                desc: "Revela a **resposta** da imagem da Rodada.",
+                aliases: ["r"]
+            },
+
             tempo: {
                 nome: "Tempo",
                 emoji: "<:icon_tempo:1441174907445837907>",
@@ -49,13 +57,6 @@ module.exports = {
                 aliases: ["c"]
             },
 
-            vida: {
-                nome: "vida",
-                emoji: "💜",
-                preco: 100,
-                desc: "Aumenta a pontuação do jogador progressivamente (+1, +2, +3...).",
-                aliases: ["v"]
-            }
         };
 
         // Carregar perfil do jogador
@@ -93,7 +94,7 @@ module.exports = {
                 .setTitle("LOJA DE ITENS JBOT")
                 .setDescription("<:shop100:1441161458175180921> Bem-vindo(a) a Loja de itens do JBot, confira os nossos itens e seus valores:")
                 .addFields(
-                    Object.keys(itens).map(key => ({name: `${itens[key].nome}`, value: `**<:coin1:1441491987537727669> ${itens[key].preco} Moedas**`, inline: true}))
+                    Object.keys(itens).map(key => ({name: `${itens[key].emoji} ${itens[key].nome}`, value: `**<:coin1:1441491987537727669> ${itens[key].preco} Moedas**`, inline: true}))
                 );
 
             return message.reply({ embeds: [embed] });
@@ -164,7 +165,7 @@ module.exports = {
             .setTitle("Compra realizada!")
             .setDescription(`<:compras:1441605176392945835> ${message.author} aqui estão os seus itens!`)
             .addFields(
-                {name: "Produto", value: `${item.emoji} **${quantidade}** ${item.nome}(s)`, inline: true},
+                {name: "Produto", value: `${item.emoji} **${quantidade}** ${item.nome}`, inline: true},
                 {name: "Preço", value: `**<:coin1:1441491987537727669> ${custoTotal}** Moedas`, inline: true},
                 {name: "Saldo", value: `**<:carteira:1440068592354725888> ${perfil.moedas}** Moedas`, inline: true}
             )

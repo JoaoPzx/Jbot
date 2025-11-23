@@ -1,6 +1,13 @@
 // index.js
-const { EmbedBuilder, Collection, Client, IntentsBitField } = require('discord.js');
+const { 
+    EmbedBuilder, 
+    Collection, 
+    Client, 
+    IntentsBitField 
+} = require('discord.js');
+
 const { partidasAtivas, iniciarRodada } = require("./commands/Game/Partidas/play");
+const Perfil = require("./models/Perfil"); // IMPORTAÇÃO CORRETA
 
 require('dotenv').config();
 const { connect } = require('./database');
@@ -11,10 +18,6 @@ const Canvas = require("canvas");
 // ======================================================
 // 🔥 REGISTRO DAS FONTES SF PRO DISPLAY (DEFINITIVO)
 // ======================================================
-
-// ============================================
-// Registro oficial e correto da SF Pro Display
-// ============================================
 
 Canvas.registerFont(
   path.join(__dirname, "assets", "fonts", "SFProDisplay-Regular.ttf"),
@@ -33,8 +36,6 @@ Canvas.registerFont(
 
 console.log("✔ SF Pro Display (Regular, Medium, Bold,) registrada com sucesso!");
 
-
-
 // ======================================================
 // 🔥 CONECTAR AO MONGO
 // ======================================================
@@ -50,16 +51,15 @@ const client = new Client({
   ]
 });
 
-// --- suas configs antigas ---
 const canalSorteioID = '1437599327093657600';
 const prefix = process.env.PREFIX || ';';
 
-// --- Coleções ---
+// Coleções
 client.commands = new Collection();
 client.slashCommands = new Collection();
 
 // ======================================================
-//      🔥 CARREGAR COMANDOS PREFIX — RECURSIVO
+// 🔥 CARREGAR COMANDOS PREFIX — RECURSIVO
 // ======================================================
 
 function loadPrefixCommands(dir) {
@@ -89,7 +89,7 @@ loadPrefixCommands(path.join(__dirname, "commands"));
 console.log("Prefix commands carregados (recursivo).");
 
 // ======================================================
-//       🔥 CARREGAR COMANDOS SLASH — RECURSIVO
+// 🔥 CARREGAR COMANDOS SLASH — RECURSIVO
 // ======================================================
 
 function loadSlashCommands(dir) {
@@ -120,7 +120,7 @@ loadSlashCommands(path.join(__dirname, "commands", "slash"));
 console.log("Slash commands carregados (recursivo).");
 
 // ======================================================
-//                   EVENTS & LISTENERS
+// EVENTS & LISTENERS
 // ======================================================
 
 client.on('clientReady', () => {
@@ -158,9 +158,16 @@ client.on('messageCreate', async (message) => {
   }
 });
 
-// Handler de SLASH + BOTÕES
+// ======================================================
+// 🔥 INTERACTION CREATE — CORRIGIDO E OTIMIZADO
+// ======================================================
+
 client.on('interactionCreate', async (interaction) => {
   try {
+
+    // -------------------------
+    // AUTOCOMPLETE
+    // -------------------------
     if (interaction.isAutocomplete()) {
       const cmd = client.slashCommands.get(interaction.commandName);
       if (cmd?.autocomplete) {
@@ -173,7 +180,167 @@ client.on('interactionCreate', async (interaction) => {
       return;
     }
 
+    // -------------------------
+    // BOTÕES
+    // -------------------------
     if (interaction.isButton()) {
+
+      // ====================================================
+      // 🔥 /perfil-editar — BOTÕES (COR / WALLPAPER / BIO)
+      // ====================================================
+
+      // ===== COR DO PERFIL =====
+
+      // BOTÃO: Aceitar casamento
+if (interaction.customId === "aceitar_casamento") {
+
+    const pedido = interaction.client.pedidosCasamento?.get(interaction.user.id);
+    if (!pedido) {
+        return interaction.reply({ content: "❌ Não há nenhum pedido pendente!", ephemeral: true });
+    }
+
+    const userA = pedido.de;
+    const userB = pedido.para;
+
+    await Perfil.findOneAndUpdate({ userId: userA }, { casamento: userB });
+    await Perfil.findOneAndUpdate({ userId: userB }, { casamento: userA });
+
+    interaction.client.pedidosCasamento.delete(userB);
+
+    return interaction.update({
+        content: `🎉 **PEDIDO ACEITO!**  
+❤️ <@${userA}> e <@${userB}> agora estão oficialmente casados! 💍`,
+        components: []
+    });
+}
+
+// BOTÃO: Recusar casamento
+if (interaction.customId === "recusar_casamento") {
+
+    const pedido = interaction.client.pedidosCasamento?.get(interaction.user.id);
+    if (!pedido) {
+        return interaction.reply({ content: "❌ Não há nenhum pedido pendente!", ephemeral: true });
+    }
+
+    interaction.client.pedidosCasamento.delete(interaction.user.id);
+
+    return interaction.update({
+        content: `❌ O pedido de casamento foi recusado.`,
+        components: []
+    });
+}
+
+
+      if (interaction.customId === "editar_cor") {
+        const { ActionRowBuilder, StringSelectMenuBuilder } = require("discord.js");
+
+        const menu = new StringSelectMenuBuilder()
+          .setCustomId("select_cor")
+          .setPlaceholder("Selecione uma cor...")
+          .addOptions([
+            { label: "Preto", value: "preto" },
+            { label: "Branco", value: "branco" },
+            { label: "Azul", value: "azul" },
+            { label: "Rosa", value: "rosa" },
+            { label: "Vermelho", value: "vermelho" },
+            { label: "Roxo", value: "roxo" },
+          ]);
+
+        return interaction.reply({
+          content: "🎨 Escolha a nova cor do seu perfil:",
+          components: [new ActionRowBuilder().addComponents(menu)],
+          ephemeral: true
+        });
+      }
+
+      // ==============================================
+      // ===== WALLPAPER — APENAS ANEXO / ARRASTAR ====
+      // ==============================================
+      if (interaction.customId === "editar_wallpaper") {
+
+        await interaction.reply({
+          content: "📸 **Envie agora seu novo wallpaper.**\n\nArraste uma imagem ou anexe um arquivo.\n❌ *Links não são aceitos.*\n⏳ Você tem **1 minuto**.",
+          flags: 64
+        });
+
+        const filter = (msg) =>
+          msg.author.id === interaction.user.id;
+
+        const collector = interaction.channel.createMessageCollector({
+          filter,
+          max: 1,
+          time: 60_000
+        });
+
+        collector.on("collect", async (msg) => {
+
+          const attachment = msg.attachments.first();
+
+          if (!attachment) {
+            return interaction.followUp({
+              content: "❌ Você precisa **anexar uma imagem verdadeira**.",
+              flags: 64
+            });
+          }
+
+          if (!attachment.contentType?.startsWith("image/")) {
+            return interaction.followUp({
+              content: "❌ O arquivo enviado **não é uma imagem válida**.",
+              flags: 64
+            });
+          }
+
+          await Perfil.updateOne(
+            { userId: interaction.user.id },
+            { $set: { wallpaper: attachment.url } },
+            { upsert: true }
+          );
+
+          return interaction.followUp({
+            content: "🖼 **Wallpaper atualizado com sucesso!**",
+            flags: 64
+          });
+        });
+
+        collector.on("end", (collected) => {
+          if (collected.size === 0) {
+            interaction.followUp({
+              content: "⌛ Tempo esgotado! Clique novamente em *Wallpaper* para tentar novamente.",
+              flags: 64
+            });
+          }
+        });
+
+        return;
+      }
+
+      // ===== BIOGRAFIA =====
+      if (interaction.customId === "editar_bio") {
+        const {
+          ModalBuilder,
+          TextInputBuilder,
+          TextInputStyle,
+          ActionRowBuilder
+        } = require("discord.js");
+
+        const modal = new ModalBuilder()
+          .setCustomId("modal_bio")
+          .setTitle("Editar Biografia");
+
+        const input = new TextInputBuilder()
+          .setCustomId("bio_input")
+          .setLabel("Digite sua nova biografia")
+          .setStyle(TextInputStyle.Paragraph)
+          .setMaxLength(180);
+
+        modal.addComponents(new ActionRowBuilder().addComponents(input));
+
+        return interaction.showModal(modal);
+      }
+
+      // ====================================================
+      // 🔥 SISTEMA DE PARTIDAS — DESPAUSAR
+      // ====================================================
       if (interaction.customId === "despausar_partida") {
         const partida = partidasAtivas.get(interaction.channel.id);
 
@@ -208,6 +375,7 @@ client.on('interactionCreate', async (interaction) => {
         return;
       }
 
+      // ===== CONFIRMAR AÇÃO =====
       if (interaction.customId === "confirmar_acao") {
         const texto = interaction.message.embeds[0]?.description ?? "Ação concluída.";
         const embed2 = new EmbedBuilder()
@@ -227,22 +395,81 @@ client.on('interactionCreate', async (interaction) => {
       return;
     }
 
+    // -------------------------
+    // SELECT MENU (/perfil-editar)
+    // -------------------------
+    if (interaction.isStringSelectMenu()) {
+
+      if (interaction.customId === "select_cor") {
+        const selected = interaction.values[0];
+
+        await Perfil.updateOne(
+          { userId: interaction.user.id },
+          { $set: { cor: selected } }
+        );
+
+        return interaction.update({
+          content: `🎨 **Cor atualizada para:** \`${selected}\``,
+          components: []
+        });
+      }
+    }
+    // -------------------------
+    // MODAIS (/perfil-editar)
+    // -------------------------
+    if (interaction.isModalSubmit()) {
+
+      // ===== SALVAR BIOGRAFIA =====
+      if (interaction.customId === "modal_bio") {
+
+        const bio = interaction.fields.getTextInputValue("bio_input");
+
+        await Perfil.updateOne(
+          { userId: interaction.user.id },
+          { $set: { bio } }
+        );
+
+        return interaction.reply({
+          content: "📌 **Biografia atualizada com sucesso!**",
+          flags: 64
+        });
+      }
+
+      return;
+    }
+
+    // -------------------------
+    // SLASH COMMANDS
+    // -------------------------
     if (interaction.isChatInputCommand()) {
       const cmd = client.slashCommands.get(interaction.commandName);
       if (!cmd)
-        return interaction.reply({ content: 'Comando não registrado no bot.', ephemeral: true });
+        return interaction.reply({ content: 'Comando não registrado no bot.', flags: 64 });
 
       return await cmd.execute(interaction);
     }
 
   } catch (err) {
     console.error('Erro em interactionCreate:', err);
+
     if (interaction.replied || interaction.deferred) {
-      try { await interaction.editReply({ content: '❌ Erro interno ao executar.', embeds: [], components: [] }); } catch {}
+      try { 
+        await interaction.editReply({ 
+          content: '❌ Erro interno ao executar.', 
+          embeds: [], 
+          components: [] 
+        }); 
+      } catch {}
     } else {
-      try { await interaction.reply({ content: '❌ Erro interno ao executar.', ephemeral: true }); } catch {}
+      try { 
+        await interaction.reply({ 
+          content: '❌ Erro interno ao executar.', 
+          flags: 64 
+        }); 
+      } catch {}
     }
   }
 });
 
 client.login(process.env.TOKEN);
+
