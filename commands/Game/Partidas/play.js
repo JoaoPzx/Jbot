@@ -35,10 +35,10 @@ function embedErro(txt) {
    DIFICULDADE POR NÍVEL
 ===================================================== */
 function dificuldadePorNivel(nivel) {
-    if (nivel <= 100) return "Fácil";
-    if (nivel <= 200) return "Médio";
-    if (nivel <= 300) return "Difícil";
-    return "Extremo";
+    if (nivel <= 100) return "<:facil:1442299292021948476> Fácil";
+    if (nivel <= 200) return "<:medio:1442299319872127147> Médio";
+    if (nivel <= 300) return "<:dificil:1442299352000233586> Difícil";
+    return "<:extremo:1442299371008954519> Extremo";
 }
 
 /* =====================================================
@@ -166,19 +166,17 @@ async function execute(message, args) {
             name: `Solicitado por ${message.author.username}`,
             iconURL: message.author.displayAvatarURL({ dynamic: true })
         })
-        .setDescription(
-            "🎮 **Iniciando nova partida...**\n\n" +
-            "🟢 **ATENÇÃO:** use `;combo` agora para ativar seu combo nesta partida " +
-            "(apenas durante os próximos 10s)."
-        )
+        .setDescription("🎮 **Iniciando nova partida...**")
         .addFields(
             { name: "Tema", value: `**${temaNomeExibir}**`, inline: true },
-            { name: "Palavras", value: `**🖼 ${temaEncontrado.imagens.length}**`, inline: true }
+            { name: "Palavras", value: `**<:imagemjbot:1440425616359952445> ${temaEncontrado.imagens.length}**`, inline: true }
         )
-        .setFooter({ text: "⏳ Primeira imagem em 10s" })
+        .setFooter({ text: "Primeira imagem em 10s", iconURL: "https://i.ibb.co/ZpnWwHT9/sand-clock.png" })
         .setImage(bannerInicio);
 
     await message.channel.send({ embeds: [embedInicio] });
+    partida.ultimoEmbed = "inicio";
+
 
     // primeira rodada em 10s — durante esse tempo os jogadores podem usar ;combo
     partida.timeout = setTimeout(
@@ -237,16 +235,16 @@ async function iniciarRodada(message, partida) {
     const embedRodada = new EmbedBuilder()
         .setColor(partida.cor)
         .addFields(
-            { name: "Nível", value: `**🧩 ${partida.nivel}**`, inline: true },
-            { name: "Tempo", value: `**⏰ ${tempoFormatado}**`, inline: true },
-            { name: "Dificuldade", value: `**🧠 ${dificuldadePorNivel(partida.nivel)}**`, inline: true }
+            { name: "Nível", value: `**<:levelup:1442272592789639239> ${partida.nivel}**`, inline: true },
+            { name: "Tempo", value: `**<:alarme:1440073671443091526> ${tempoFormatado}**`, inline: true },
+            { name: "Dificuldade", value: `**${dificuldadePorNivel(partida.nivel)}**`, inline: true }
         )
         .setImage(item.url);
 
     // ⬇️ AQUI: registramos o embed da rodada para o comando ;combo saber qual embed é proibido
     const msgRodada = await message.channel.send({ embeds: [embedRodada] });
-    partida.embedImagemId = msgRodada.id;
-
+    partida.embedRodada = msgRodada;
+    partida.ultimoEmbed = "imagem";
 
 
     const collector = message.channel.createMessageCollector({
@@ -291,24 +289,40 @@ async function iniciarRodada(message, partida) {
             partida.rodadaTerminada = true;
             collector.stop("acertou");
 
-            msg.react("<:badgejbot:1441489105929371768>").catch(() => {});
+            msg.react("<:pontos:1442182692748791889>").catch(() => {});
 
             const rankingOrdenado = montarRanking(partida);
-            const rankingTexto = formatarRanking(rankingOrdenado, partida);
+            const rankingTexto = rankingOrdenado
+                .map((r, i) => {
+            const medalha =
+            i === 0 ? "<:podio1:1442253692542648441>" :
+            i === 1 ? "<:podio2:1442253730245378099>" :
+            i === 2 ? "<:podio3:1442253772402196621>" :
+            "<:podio:1442253851091800205>";
 
-            const embedAcerto = new EmbedBuilder()
-                .setColor(partida.cor)
-                .setAuthor({
-                    name: `${msg.author.username} acertou ${item.resposta}!`,
-                    iconURL: message.client.user.displayAvatarURL({ dynamic: true })
-                });
+            const userId = r[0];
+            const pontos = r[1];
+            const label = pontos === 1 ? "ponto" : "pontos";
 
-            embedAcerto
-                .setDescription(`🏆 **RANKING**\n${rankingTexto}`)
-                .setThumbnail(message.author.displayAvatarURL({ dynamic: true }))
-                .setFooter({ text: `⏳ Próxima imagem em ${partida.nitro ? "5s" : "10s"}` });
+            return `${medalha} <@${userId}> — **${pontos} ${label}**`;
+        })
+        .join("\n");
 
-            await message.channel.send({ embeds: [embedAcerto] });
+        const embedAcerto = new EmbedBuilder()
+        .setColor(partida.cor)
+        .setAuthor({
+        name: `${msg.author.username} acertou ${item.resposta}!`,
+        iconURL: message.client.user.displayAvatarURL({ dynamic: true })
+        })
+        .setTitle("<:ranking:1442253471356289284> RANKING")
+        .setDescription( `${rankingTexto}`)
+        .setThumbnail(msg.author.displayAvatarURL({ dynamic: true }))
+        .setFooter({ text: `Próxima imagem em ${partida.nitro ? "5s" : "10s"}`, iconURL: "https://i.ibb.co/ZpnWwHT9/sand-clock.png" });
+
+        await message.channel.send({ embeds: [embedAcerto] });
+        partida.ultimoEmbed = "acerto";
+
+
 
             partida.podeUsarTempoAgora = true;
             partida.podeUsarNitroAgora = true;
@@ -327,73 +341,160 @@ async function iniciarRodada(message, partida) {
     });
 
     collector.on("end", async (_, motivo) => {
-        // limpeza da referência do embed da rodada, independente do motivo
-        partida.embedRodada = null;
 
-        if (partida.encerrada || motivo === "acertou" || partida.pausada) return;
+    // Se já foi encerrada em outro fluxo → NÃO DUPLICA EMBED
+    if (partida.encerrada) return;
 
-        partida.rodadaTerminada = true;
-        partida.encerrada = true;
-        partidasAtivas.delete(message.channel.id);
+    // Se foi pulo, apenas ignora
+    if (motivo === "pulado") return;
 
-        const themeBanner = validarBanner(partida.tema.banner);
+    // Se acertou ou pausou, não envia embed final
+    if (motivo === "acertou" || partida.pausada) return;
 
-        const rankingOrdenado = montarRanking(partida);
-        const rankingTexto = rankingOrdenado.length
-            ? formatarRanking(rankingOrdenado, partida)
-            : "Ninguém pontuou.";
+    // Marca como encerrada
+    partida.encerrada = true;
 
-        const temaDB = await Tema.findById(partida.tema._id);
+    // Remove da lista
+    partidasAtivas.delete(message.channel.id);
 
-        // ===== RECORDISTA ATUAL =====
-        let recordistaLinha;
-        if (temaDB.record?.userId && temaDB.record?.pontos > 0) {
-            recordistaLinha = `<@${temaDB.record.userId}> — **${temaDB.record.pontos} pts**`;
-        } else {
-            recordistaLinha = `<@${message.client.user.id}> — **0 pts**`;
+    const temaDB = await Tema.findById(partida.tema._id);
+
+    // ===== RECORDISTA ATUAL =====
+    let recordistaLinha;
+    if (temaDB.record?.userId && temaDB.record?.pontos > 0) {
+        recordistaLinha = `**<@${temaDB.record.userId}> - ${temaDB.record.pontos} pontos**`;
+    } else {
+        recordistaLinha = `**<@${message.client.user.id}> - 0 pontos**`;
+    }
+
+    const rankingOrdenado = montarRanking(partida);
+
+    // ===== RECORDE DO TEMA =====
+    if (rankingOrdenado.length > 0) {
+        const melhorJogadorId = rankingOrdenado[0][0];
+        const melhorPontuacao = rankingOrdenado[0][1];
+
+        // Salva recorde completo
+        if (!temaDB.record || melhorPontuacao > temaDB.record.pontos) {
+            temaDB.record = {
+                userId: melhorJogadorId,
+                pontos: melhorPontuacao,
+                nivel: partida.nivel,
+                data: new Date()
+            };
+            await temaDB.save();
         }
+    }
 
-        // ===== EMBED FINAL =====
-        const embedFim = new EmbedBuilder()
-            .setColor(partida.cor)
-            .setAuthor({
-                name: `A resposta era: ${partida.itemAtual.resposta}`,
-                iconURL: message.client.user.displayAvatarURL()
-            })
-            .setImage(themeBanner)
-            .addFields(
-                { name: "Tema", value: `**${partida.temaNomeExibir}**`, inline: true },
-                { name: "Nível atingido", value: `**🧩 ${partida.nivel}**`, inline: true },
-                { name: "Recordista", value: `🏆 ${recordistaLinha}`, inline: true }
-            )
-            .addFields(
-                { name: "🏆 Ranking Final", value: rankingTexto }
-            );
+    let tempoTotal = "Indisponível";
+    if (partida.inicio) {
+        const duracao = Date.now() - partida.inicio;
+        const s = Math.floor((duracao / 1000) % 60);
+        const m = Math.floor((duracao / 1000 / 60) % 60);
+        const h = Math.floor(duracao / 1000 / 60 / 60);
+        tempoTotal = (h ? `${h}h ` : "") + (m ? `${m}m ` : "") + `${s}s`;
+    }
 
-        await message.channel.send({ embeds: [embedFim] });
+    // ===== EMBED FINAL =====
 
-        // === atualizar recorde/pontuações do tema (mantive seu código) ===
-        if (rankingOrdenado.length > 0) {
-            const melhorJogadorId = rankingOrdenado[0][0];
-            const melhorPontuacao = rankingOrdenado[0][1];
+    
 
-            const temaAtualizado = await Tema.findById(partida.tema._id);
+const embedFim = new EmbedBuilder()
+    .setColor(partida.cor)
+    .setAuthor({
+        name: `A resposta era: ${partida.itemAtual.resposta}`,
+        iconURL: message.client.user.displayAvatarURL()
+    })
+    .setImage("https://i.ibb.co/HphDW8sq/You-Lose-Game-Over-GIF-by-Universal-Music-Africa.gif")
+    .addFields(
+        // === LINHA 1 ===
+        {
+            name: "Tema",
+            value: `**${partida.temaNomeExibir}**`,
+            inline: true
+        },
+        {
+            name: "Nível atingido",
+            value: `**<:levelup:1442272592789639239> ${partida.nivel}**`,
+            inline: true
+        },
+        {
+            name: "Ganhador",
+            value:
+                rankingOrdenado.length === 0
+                    ? "<:nada:1442277644346593462> Sem vencedor"
+                    : (() => {
+                          const [vencedorId, pontos] = rankingOrdenado[0];
+                          const plural = pontos === 1 ? "ponto" : "pontos";
+                          return `<:vencedor:1442267461545361629> <@${vencedorId}> - **${pontos} ${plural}**`;
+                      })(),
+            inline: true
+        },
 
-            let registro = temaAtualizado.pontuacoes.find(p => p.userId === melhorJogadorId);
-
-            if (!registro) {
-                temaAtualizado.pontuacoes.push({
-                    userId: melhorJogadorId,
-                    total: melhorPontuacao,
-                    partidas: 1
-                });
-            } else {
-                registro.total += melhorPontuacao;
-                registro.partidas += 1;
-            }
-
-            await temaAtualizado.save();
+        // === LINHA 2 ===
+        {
+            name: "Recordista",
+            value: `<:estrela1:1442253518361853962> **${recordistaLinha}**`,
+            inline: true
+        },
+        {
+            name: "Nível Recorde",
+            value: `**<:levelup:1442272592789639239> ${temaDB.record?.nivel || 0}**`,
+            inline: true
+        },
+        {
+            name: "Duração",
+            value: `**<:duration:1442275100056617021> ${tempoTotal}**`,
+            inline: true
         }
+    );
+
+await message.channel.send({ embeds: [embedFim] });
+
+
+
+
+// ============================================================
+// === ATUALIZAÇÃO DO RECORDE E PONTUAÇÃO ACUMULADA DO TEMA ===
+// ============================================================
+if (rankingOrdenado.length > 0) {
+
+    const melhorJogadorId = rankingOrdenado[0][0];
+    const melhorPontuacao = rankingOrdenado[0][1];
+
+    const temaAtualizado = await Tema.findById(partida.tema._id);
+
+    // =============================
+    // 🔥 ATUALIZAÇÃO DO RECORDE DO TEMA
+    // (AQUI você personaliza livremente)
+    // =============================
+    temaAtualizado.record = {
+        userId: melhorJogadorId,
+        pontos: melhorPontuacao,
+        nivel: partida.nivel,      // <-- novo campo
+        data: new Date()
+    };
+
+    // =============================
+    // 🔥 SISTEMA DE PONTUAÇÃO ACUMULADA
+    // =============================
+    let registro = temaAtualizado.pontuacoes.find(p => p.userId === melhorJogadorId);
+
+    if (!registro) {
+        temaAtualizado.pontuacoes.push({
+            userId: melhorJogadorId,
+            total: melhorPontuacao,
+            partidas: 1
+        });
+    } else {
+        registro.total += melhorPontuacao;
+        registro.partidas += 1;
+    }
+
+    await temaAtualizado.save();
+}
+
+
     });
 }
 
@@ -438,6 +539,13 @@ module.exports = {
     encerrarPartida: function (channelId) {
         const partida = partidasAtivas.get(channelId);
         if (!partida) return false;
+
+        // Garante que nenhuma pausa antiga vaze para esta partida
+        if (partida.pauseExpireTimeout) {
+        clearTimeout(partida.pauseExpireTimeout);
+        partida.pauseExpireTimeout = null;
+}
+
 
         partida.encerrada = true;
         if (partida.coletor) partida.coletor.stop("fim_manual");

@@ -1,4 +1,10 @@
-const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
+const { 
+    EmbedBuilder, 
+    ActionRowBuilder, 
+    ButtonBuilder, 
+    ButtonStyle 
+} = require("discord.js");
+
 const { partidasAtivas, iniciarRodada } = require("./play");
 
 module.exports = {
@@ -13,6 +19,9 @@ module.exports = {
 
         const partida = partidasAtivas.get(message.channel.id);
 
+        // =====================================================
+        // SEM PARTIDA
+        // =====================================================
         if (!partida) {
             return message.reply({
                 embeds: [
@@ -23,7 +32,9 @@ module.exports = {
             });
         }
 
-        // Apenas o criador pode pausar/despausar
+        // =====================================================
+        // APENAS O CRIADOR PODE PAUSAR / RETOMAR
+        // =====================================================
         if (message.author.id !== partida.autorId) {
             return message.reply({
                 embeds: [
@@ -34,7 +45,10 @@ module.exports = {
             });
         }
 
-        // Bloqueia pausa durante imagem da rodada
+        // =====================================================
+        // NÃO PODE PAUSAR DURANTE A IMAGEM
+        // (somente após acerto, no intervalo da rodada)
+        // =====================================================
         if (!partida.pausada && partida.rodadaEmCurso) {
             return message.reply({
                 embeds: [
@@ -53,7 +67,7 @@ module.exports = {
 
             partida.pausada = false;
 
-            // Cancela timer de expiração da pausa
+            // Cancela timer de expiração (se houver)
             if (partida.pauseExpireTimeout) {
                 clearTimeout(partida.pauseExpireTimeout);
                 partida.pauseExpireTimeout = null;
@@ -65,6 +79,7 @@ module.exports = {
 
             await message.reply({ embeds: [retomado] });
 
+            // Retoma a rodada após 1s
             return setTimeout(() => {
                 partida.rodadaEmCurso = true;
                 iniciarRodada(message, partida);
@@ -74,11 +89,18 @@ module.exports = {
         // =========================================================
         // ======================  PAUSAR  ==========================
         // =========================================================
+
         partida.pausada = true;
 
-        // Cancela timers existentes
+        // Cancela timers da rodada
         if (partida.timeout) clearTimeout(partida.timeout);
         if (partida.coletor) partida.coletor.stop("paused");
+
+        // Cancela timer antigo de pausa, se existir
+        if (partida.pauseExpireTimeout) {
+            clearTimeout(partida.pauseExpireTimeout);
+            partida.pauseExpireTimeout = null;
+        }
 
         const embedPause = new EmbedBuilder()
             .setColor("#f1c40f")
@@ -91,34 +113,38 @@ module.exports = {
                 .setStyle(ButtonStyle.Success)
         );
 
-        await message.reply({ embeds: [embedPause], components: [botao] });
+        await message.reply({
+            embeds: [embedPause],
+            components: [botao]
+        });
 
         // =========================================================
-        // ========== TIMER DE EXPIRAÇÃO (5 MINUTOS) ===============
+        // ====== TIMER DE EXPIRAÇÃO AUTOMÁTICA (5 MINUTOS) ========
         // =========================================================
+
         partida.pauseExpireTimeout = setTimeout(async () => {
 
-    if (!partida.pausada) return;
+            // Se já retomou, cancela
+            if (!partida.pausada) return;
 
-    partida.pausada = false;
+            partida.pausada = false;
 
-    const embedTimeout = new EmbedBuilder()
-        .setColor("#e74c3c")
-        .setTitle("⏰ Pausa expirada")
-        .setDescription(
-            "O limite máximo de pausa (**5 minutos**) foi atingido.\n" +
-            "A partida foi retomada automaticamente."
-        );
+            const embedTimeout = new EmbedBuilder()
+                .setColor("#e74c3c")
+                .setTitle("⏰ Pausa expirada")
+                .setDescription(
+                    "O limite máximo de pausa (**5 minutos**) foi atingido.\n" +
+                    "A partida foi retomada automaticamente."
+                );
 
-    await message.channel.send({
-        content: `⛔ <@${partida.autorId}>`, // <- MENÇÃO REAL AQUI
-        embeds: [embedTimeout]
-    });
+            await message.channel.send({
+                content: `⛔ <@${partida.autorId}>`,
+                embeds: [embedTimeout]
+            });
 
-    partida.rodadaEmCurso = true;
-    iniciarRodada(message, partida);
+            partida.rodadaEmCurso = true;
+            iniciarRodada(message, partida);
 
-}, 1 * 30 * 1000);
- // 5 minutos
+        }, 5 * 60 * 1000);
     }
 };

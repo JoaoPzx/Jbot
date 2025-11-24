@@ -1,4 +1,4 @@
-const { EmbedBuilder, inlineCode, IntentsBitField } = require("discord.js");
+const { EmbedBuilder } = require("discord.js");
 const Perfil = require("../../../models/Perfil");
 
 module.exports = {
@@ -11,71 +11,76 @@ module.exports = {
         const itens = {
             dica: {
                 nome: "Dica",
+                nomePlural: "Dicas",
                 emoji: "<:icon_dica:1441174865032904745>",
                 preco: 5,
-                desc: "Revela a **primeira e última letra** da resposta.",
+                desc: "Revela de **30 a 50%** das letras da resposta.",
                 aliases: ["d"]
             },
 
             resposta: {
                 nome: "Resposta",
+                nomePlural: "Respostas",
                 emoji: "<:icon_resposta:1441904668748939374>",
                 preco: 20,
-                desc: "Revela a **resposta** da imagem da Rodada.",
+                desc: "Revela a **resposta completa** da imagem da rodada.",
                 aliases: ["r"]
             },
 
             tempo: {
                 nome: "Tempo",
+                nomePlural: "Tempos",
                 emoji: "<:icon_tempo:1441174907445837907>",
                 preco: 30,
-                desc: "Adiciona +3 segundos ao tempo de acerto da partida.",
+                desc: "Adiciona **+3 segundos** ao tempo de acerto da partida.",
                 aliases: ["t"]
             },
 
             nitro: {
                 nome: "Nitro",
+                nomePlural: "Nitros",
                 emoji: "<:icon_nitro:1441530028658790430>",
                 preco: 50,
-                desc: "Reduz o intervalo entre imagens de **10s → 5s** durante toda a partida.",
+                desc: "Reduz o intervalo de **10s → 5s** durante toda a partida.",
                 aliases: ["n"]
             },
 
-            pulo: {
-                nome: "Pulo",
+            pular: {
+                nome: "Pular",
+                nomePlural: "Pulos",
                 emoji: "<:icon_pulo:1441182320462790786>",
                 preco: 70,
-                desc: "Pula a imagem de uma rodada da partida.",
+                desc: "**Pula** a imagem da rodada (Máx 5 por partida).",
                 aliases: ["s"]
             },
 
             combo: {
                 nome: "Combo",
+                nomePlural: "Combos",
                 emoji: "<:icon_combo:1441177424124448868>",
                 preco: 100,
-                desc: "Aumenta a pontuação do jogador progressivamente (+1, +2, +3...).",
+                desc: "**Aumenta** a pontuação do jogador progressivamente (+1, +2, +3...).",
                 aliases: ["c"]
             },
-
         };
 
-        // Carregar perfil do jogador
+        // Carregar perfil
         let perfil = await Perfil.findOne({ userId: message.author.id });
         if (!perfil) perfil = await Perfil.create({ userId: message.author.id });
 
+
         // ==================================================
-        // 🛈 ;loja info
+        // ;loja info
         // ==================================================
         if (args[0] && args[0].toLowerCase() === "info") {
-
             const embed = new EmbedBuilder()
                 .setColor("#3498db")
-                .setTitle("ℹ️ Informações dos Itens da Loja")
-                .setDescription("Veja abaixo como cada item funciona:\n");
+                .setTitle("<:informacoes_jbot:1442172090756370625> Informações dos Itens")
+                .setFooter({ text: "Use ;loja <item> <quantidade> para comprar", iconURL: "https://i.ibb.co/N2NncX3f/informacoes.png" });
 
             for (const key of Object.keys(itens)) {
                 embed.addFields({
-                    name: itens[key].nome,
+                    name: `${itens[key].emoji} ${itens[key].nome}`,
                     value: itens[key].desc,
                     inline: false
                 });
@@ -84,34 +89,39 @@ module.exports = {
             return message.reply({ embeds: [embed] });
         }
 
+
+
         // ==================================================
-        // 🛒 Mostrar LOJA (sem argumentos)
+        // MOSTRAR LOJA (sem args)
         // ==================================================
         if (!args.length) {
-
             const embed = new EmbedBuilder()
                 .setColor("Purple")
-                .setTitle("LOJA DE ITENS JBOT")
-                .setDescription("<:shop100:1441161458175180921> Bem-vindo(a) a Loja de itens do JBot, confira os nossos itens e seus valores:")
+                .setTitle("Loja de Itens do JBot")
+                .setDescription("<:shop100:1441161458175180921> Bem-vindo(a) a Loja de itens, confira os nossos itens e seus valores:")
+                .setFooter({ text: "Utilize ;loja <nome do item> <quantidade> para comprar", iconURL: "https://i.ibb.co/N2NncX3f/informacoes.png" })
                 .addFields(
-                    Object.keys(itens).map(key => ({name: `${itens[key].emoji} ${itens[key].nome}`, value: `**<:coin1:1441491987537727669> ${itens[key].preco} Moedas**`, inline: true}))
+                    Object.keys(itens).map(key => ({
+                        name: `${itens[key].emoji} ${itens[key].nome}`,
+                        value: `**<:coin1:1441491987537727669> ${itens[key].preco} Moedas**`,
+                        inline: true
+                    }))
                 );
 
             return message.reply({ embeds: [embed] });
         }
 
-        // ==================================================
-        // 🛍️ COMPRA DE ITEM
-        // ==================================================
 
+
+        // ==================================================
+        // COMPRA
+        // ==================================================
         const argItemBruto = args[0].toLowerCase();
         const quantidade = parseInt(args[1]) || 1;
 
-        // Procurar item por nome ou alias
+        // Encontrar item por nome ou alias
         const keyItem = Object.keys(itens).find(
-            k =>
-                k === argItemBruto ||
-                itens[k].aliases.includes(argItemBruto)
+            k => k === argItemBruto || itens[k].aliases.includes(argItemBruto)
         );
 
         if (!keyItem) {
@@ -125,50 +135,71 @@ module.exports = {
         }
 
         const item = itens[keyItem];
-        const custoTotal = item.preco * quantidade;
+        const precoTotal = item.preco * quantidade;
 
         // Verificar saldo
-        if (perfil.moedas < custoTotal) {
+        if (perfil.moedas < precoTotal) {
             return message.reply({
                 embeds: [
                     new EmbedBuilder()
                         .setColor("Red")
                         .setDescription(
-                            `❌ Moedas insuficientes!\n` +
-                            `💰 Total: **${custoTotal} moedas**\n` +
-                            `Você possui apenas **${perfil.moedas} moedas**.`
+                            `❌ Você não tem moedas suficientes.\n` +
+                            `💰 Preço total: **${precoTotal}**\n` +
+                            `💸 Seu saldo: **${perfil.moedas}**`
                         )
                 ]
             });
         }
 
         // Descontar moedas
-        perfil.moedas -= custoTotal;
+        perfil.moedas -= precoTotal;
 
-        // Adicionar ao inventário com quantidade
+        // Adicionar ao inventário
         let itemInv = perfil.inventario.find(i => i.nome === keyItem);
 
         if (!itemInv) {
-            perfil.inventario.push({
-                nome: keyItem,
-                quantidade
-            });
+            perfil.inventario.push({ nome: keyItem, quantidade });
         } else {
             itemInv.quantidade += quantidade;
         }
 
         await perfil.save();
 
-        // Embed de confirmação
+
+        // ==================================================
+        // PLURAL AUTOMÁTICO
+        // ==================================================
+        const nomeFinal =
+            quantidade === 1
+                ? item.nome
+                : item.nomePlural;
+
+
+        // ==================================================
+        // EMBED DE CONFIRMAÇÃO
+        // ==================================================
         const embed = new EmbedBuilder()
             .setColor("Green")
             .setTitle("Compra realizada!")
-            .setDescription(`<:compras:1441605176392945835> ${message.author} aqui estão os seus itens!`)
+            .setDescription(`<:compras:1442177278099591279> ${message.author}, sua compra foi concluída!`)
             .addFields(
-                {name: "Produto", value: `${item.emoji} **${quantidade}** ${item.nome}`, inline: true},
-                {name: "Preço", value: `**<:coin1:1441491987537727669> ${custoTotal}** Moedas`, inline: true},
-                {name: "Saldo", value: `**<:carteira:1440068592354725888> ${perfil.moedas}** Moedas`, inline: true}
-            )
+                {
+                    name: "Produto",
+                    value: `${item.emoji} **${quantidade} ${nomeFinal}**`,
+                    inline: true
+                },
+                {
+                    name: "Preço Total",
+                    value: `**<:coin1:1441491987537727669> ${precoTotal}**`,
+                    inline: true
+                },
+                {
+                    name: "Saldo Atual",
+                    value: `**<:carteira:1440068592354725888> ${perfil.moedas} moedas**`,
+                    inline: true
+                }
+            );
 
         return message.reply({ embeds: [embed] });
     }

@@ -39,11 +39,25 @@ module.exports = {
                 });
             }
 
+             /* ===============================
+               3) Usuário já ativou combo?
+            ================================== */
+            if (!partida.combos) partida.combos = {};
+            if (partida.combos[userId]) {
+                return message.reply({
+                    embeds: [
+                        new EmbedBuilder()
+                            .setColor("#ff4d4d")
+                            .setDescription("❌ Você já ativou um Combo nesta partida.")
+                    ]
+                });
+            }
+
             /* ===============================
-               3) BLOQUEAR uso no embed da imagem
+               34 BLOQUEAR uso no embed da imagem
                (proibido sempre)
             ================================== */
-            if (partida.embedImagemId) {
+            if (partida.embedRodada) {
                 // se existe um embed de imagem ativo, bloquear
                 if (partida.rodadaEmCurso) {
                     return message.reply({
@@ -57,40 +71,14 @@ module.exports = {
             }
 
             /* ===============================
-               4) SE PAUSADO → permitir usar combo
+               5) SE PAUSADO → permitir usar combo
                   (exceto embed da imagem já bloqueado)
             ================================== */
 
             if (partida.pausada) {
                 // permitido
-            } else {
-                /* ======================================
-                   5) NÃO PAUSADO → só pode ativar antes da primeira rodada
-                ========================================= */
-                if (partida.rodadaEmCurso || partida.nivel > 1) {
-                    return message.reply({
-                        embeds: [
-                            new EmbedBuilder()
-                                .setColor("#ff4d4d")
-                                .setDescription("❌ Você só pode ativar o Combo **nos 10s iniciais**.")
-                        ]
-                    });
-                }
             }
 
-            /* ===============================
-               6) Usuário já ativou combo?
-            ================================== */
-            if (!partida.combos) partida.combos = {};
-            if (partida.combos[userId]) {
-                return message.reply({
-                    embeds: [
-                        new EmbedBuilder()
-                            .setColor("#ff4d4d")
-                            .setDescription("❌ Você já ativou um Combo nesta partida.")
-                    ]
-                });
-            }
 
             /* ===============================
                7) Validar inventário

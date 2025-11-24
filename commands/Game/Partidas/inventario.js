@@ -15,7 +15,7 @@ module.exports = {
             perfil = await Perfil.create({ userId, moedas: 0, inventario: [] });
         }
 
-        // Garantir que inventario é um array
+        // Garantir estrutura
         if (!Array.isArray(perfil.inventario)) {
             perfil.inventario = [];
             await perfil.save();
@@ -25,12 +25,12 @@ module.exports = {
         // TABELA DE ITENS PADRÃO
         // ============================
         const tabelaItens = {
-            dica:  { nome: "Dica",  emoji: "<:icon_dica:1441174865032904745>" },
-            tempo: { nome: "Tempo", emoji: "<:icon_tempo:1441174907445837907>" },
-            nitro: { nome: "Nitro", emoji: "<:icon_nitro:1441530028658790430>" },
-            skip:  { nome: "Pulo",  emoji: "<:icon_pulo:1441182320462790786>" },
-            combo: { nome: "Combo", emoji: "<:icon_combo:1441177424124448868>" },
-            vida:  { nome: "Resposta",  emoji: "<:icon_resposta:1441904668748939374>" },
+            dica:      { nome: "Dica",      emoji: "<:icon_dica:1441174865032904745>" },
+            tempo:     { nome: "Tempo",     emoji: "<:icon_tempo:1441174907445837907>" },
+            nitro:     { nome: "Nitro",     emoji: "<:icon_nitro:1441530028658790430>" },
+            pular:      { nome: "Pular",      emoji: "<:icon_pulo:1441182320462790786>" },
+            combo:     { nome: "Combo",     emoji: "<:icon_combo:1441177424124448868>" },
+            resposta:  { nome: "Resposta",  emoji: "<:icon_resposta:1441904668748939374>" },
         };
 
         // ============================
@@ -42,7 +42,6 @@ module.exports = {
             qtd[key] = 0;
         }
 
-        // Preencher com dados reais
         for (const item of perfil.inventario) {
             if (qtd.hasOwnProperty(item.nome)) {
                 qtd[item.nome] = item.quantidade;
@@ -63,8 +62,9 @@ module.exports = {
 
         for (const key of Object.keys(tabelaItens)) {
             const item = tabelaItens[key];
+
             fields.push({
-                name: `${item.nome}`,
+                name: item.nome,
                 value: `${item.emoji} **${qtd[key]}**`,
                 inline: true
             });

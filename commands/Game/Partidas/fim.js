@@ -36,21 +36,31 @@ module.exports = {
         }
 
         // ============================
-        // INFO
+        // INFO DA PARTIDA
         // ============================
         const tema = await Tema.findById(partida.tema._id);
         const nomeTema = partida.temaNomeExibir;
         const nivel = partida.nivel;
 
         const rankingOrdenado = Object.entries(partida.ranking).sort((a, b) => b[1] - a[1]);
-        const rankingTexto = rankingOrdenado
-            .map(([id, pts], i) => `**${i + 1}. <@${id}> — ${pts} ponto(s)**`)
-            .join("\n") || "Nenhum ponto registrado.";
 
+        // ===== RANKING COM MEDALHAS =====
+        // ===== RANKING APENAS COM O GANHADOR =====
+let rankingTexto;
+
+if (rankingOrdenado.length === 0) {
+    rankingTexto = "<:nada:1442277644346593462> Sem vencedor";
+} else {
+    const [vencedorId, pontos] = rankingOrdenado[0];
+    const plural = pontos === 1 ? "ponto" : "pontos";
+    rankingTexto = `<:vencedor:1442267461545361629> <@${vencedorId}> - **${pontos} ${plural}**`;
+}
+
+        // Melhor jogador da partida
         const melhorJogadorId = rankingOrdenado[0]?.[0] || null;
         const melhorPontuacao = rankingOrdenado[0]?.[1] || 0;
 
-        // Tempo total
+        // Tempo total de partida
         let tempoTotal = "Indisponível";
         if (partida.inicio) {
             const duracao = Date.now() - partida.inicio;
@@ -74,7 +84,7 @@ module.exports = {
         let recordistaTexto;
 
         if (tema.record?.userId && tema.record?.pontos > 0) {
-            recordistaTexto = `🏆 <@${tema.record.userId}> — **${tema.record.pontos} pts**`;
+            recordistaTexto = `<:estrela1:1442253518361853962> <@${tema.record.userId}> - **${tema.record.pontos} pts**`;
         } else {
             tema.record = {
                 userId: message.client.user.id,
@@ -82,11 +92,12 @@ module.exports = {
                 data: new Date()
             };
             await tema.save();
-            recordistaTexto = `🏆 <@${message.client.user.id}> — **0 pts**`;
+            recordistaTexto = `<:estrela1:1442253518361853962> <@${message.client.user.id}> - **0 pts**`;
         }
+        
 
         // ============================
-        // EMBED FINAL (NOVO FORMATO)
+        // EMBED FINAL
         // ============================
         const embedFim = new EmbedBuilder()
             .setColor("#f1c40f")
@@ -94,50 +105,66 @@ module.exports = {
                 name: message.client.user.username,
                 iconURL: message.client.user.displayAvatarURL()
             })
-            .setTitle("🛑 Partida Finalizada!")
+            .setDescription("**<:parar:1442269401255510098> Partida Finalizada!**")
             .setImage("https://i.ibb.co/HphDW8sq/You-Lose-Game-Over-GIF-by-Universal-Music-Africa.gif")
             .addFields(
                 { name: "Tema", value: `**${nomeTema}**`, inline: true },
-                { name: "Nível atingido", value: `🧩 **${nivel}**`, inline: true },
-                { name: "Recordista", value: recordistaTexto, inline: true }
-            )
-            .addFields({
-                name: "🏆 Ranking Final",
-                value: rankingTexto
-            });
+                { name: "Nível atingido", value: `<:levelup:1442272592789639239> **${nivel}**`, inline: true },
+                { name: "Recordista", value: recordistaTexto, inline: true },
+                { name: "Duração", value: `**<:duration:1442275100056617021> ${tempoTotal}**`, inline: true },
+                { name: "Ganhador", value: rankingTexto, inline: true},
+                {name: "Nível Recorde", value: tema.record?.nivel? `**<:levelup:1442272592789639239> ${tema.record.nivel}**`: "Nenhum nível.", inline: true
+    },
+                
+            );
 
         await message.reply({ embeds: [embedFim] });
 
         // ============================
-        // SISTEMA DE RECORDE (SEM ALTERAÇÃO)
+        // SISTEMA DE RECORDE
         // ============================
-        if (melhorJogadorId && melhorPontuacao > 0) {
-            if (!tema.record?.userId || melhorPontuacao > tema.record.pontos) {
+        // ============================
+// SISTEMA DE RECORDE (ATUALIZADO)
+// ============================
+if (melhorJogadorId && melhorPontuacao > 0) {
 
-                tema.record = {
-                    userId: melhorJogadorId,
-                    pontos: melhorPontuacao,
-                    data: new Date()
-                };
-                await tema.save();
+    const ultrapassouRecorde =
+        !tema.record?.userId ||
+        melhorPontuacao > tema.record.pontos ||
+        nivel > (tema.record?.nivel || 0);
 
-                const embedRecorde = new EmbedBuilder()
-                    .setColor("#FFD700")
-                    .setTitle("🏆 **NOVO RECORDE ATINGIDO!**")
-                    .setThumbnail("https://i.ibb.co/3mKpcBQq/medal-1.png")
-                    .setDescription(
-                        `🔥 **<@${melhorJogadorId}> Quebrou o recorde!**\n\n` +
-                        `Pontuação: **<:badgejbot:1441489105929371768> ${melhorPontuacao} pts**\n` +
-                        `Tema: **${nomeTema}**\n\n` +
-                        `✨ *Uma nova lenda foi criada...*`
-                    );
+    if (ultrapassouRecorde) {
 
-                message.channel.send({ embeds: [embedRecorde] });
-            }
-        }
+        // 🔥 SALVAR RECORD COMPLETO
+        tema.record = {
+            userId: melhorJogadorId,
+            pontos: melhorPontuacao,
+            nivel: nivel,         // << NOVO: salva também o nível
+            data: new Date()
+        };
+
+        await tema.save();
+
+        // 🔥 EMBED DE NOVO RECORDE
+        const embedRecorde = new EmbedBuilder()
+            .setColor("#FFD700")
+            .setTitle("NOVO RECORDE ATINGIDO!")
+            .setThumbnail("https://i.ibb.co/3mKpcBQq/medal-1.png")
+            .setDescription(
+                `<:estrela1:1442253518361853962> **<@${melhorJogadorId}> Quebrou o recorde!**\n\n` +
+                `🏅 Pontuação: **<:pontos:1442182692748791889> ${melhorPontuacao} pts**\n` +
+                `🧩 Nível: **${nivel}**\n` +
+                `🎨 Tema: **${nomeTema}**\n\n` +
+                `✨ *Uma nova lenda foi criada...*`
+            );
+
+        message.channel.send({ embeds: [embedRecorde] });
+    }
+}
+
 
         // ============================
-        // 🔥 SISTEMA DE RANK ACUMULADO (NOVO)
+        // SISTEMA DE RANK ACUMULADO
         // ============================
         if (melhorJogadorId && melhorPontuacao > 0) {
             let registro = tema.pontuacoes?.find((p) => p.userId === melhorJogadorId);

@@ -244,6 +244,9 @@ if (interaction.customId === "recusar_casamento") {
             { label: "Rosa", value: "rosa" },
             { label: "Vermelho", value: "vermelho" },
             { label: "Roxo", value: "roxo" },
+            { label: "Dourado", value: "dourado" },
+            { label: "Verde", value: "verde" },
+            { label: "Laranja", value: "laranja" },
           ]);
 
         return interaction.reply({

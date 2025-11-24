@@ -28,6 +28,17 @@ module.exports = async function validarItem(message, nomeDoItem) {
         });
     }
 
+    // Verificar se existe imagem / resposta ativa
+    if (!partida.itemAtual || !partida.itemAtual.resposta) {
+        return message.reply({
+            embeds: [
+                new EmbedBuilder()
+                    .setColor("#ff4d4d")
+                    .setDescription("❌ Não há imagem ativa para usar este item.")
+            ]
+        });
+    }
+
     // Regras de pausa
     const itensPermitidosNaPausa = ["tempo", "nitro", "combo"];
 
@@ -52,16 +63,6 @@ module.exports = async function validarItem(message, nomeDoItem) {
         });
     }
 
-    // Verificar se existe imagem / resposta ativa
-    if (!partida.itemAtual || !partida.itemAtual.resposta) {
-        return message.reply({
-            embeds: [
-                new EmbedBuilder()
-                    .setColor("#ff4d4d")
-                    .setDescription("❌ Não há imagem ativa para usar este item.")
-            ]
-        });
-    }
 
     // Carregar perfil
     let perfil = await Perfil.findOne({ userId: message.author.id });

@@ -5,9 +5,11 @@ const TemaSchema = new mongoose.Schema({
     nomeLower: { type: String, required: true },
     nomeOriginal: { type: String, default: null },
 
+    // 🔥 RECORD DO TEMA (agora com nível)
     record: {
         userId: { type: String, default: null },
         pontos: { type: Number, default: 0 },
+        nivel: { type: Number, default: 0 }, // ⭐ NOVO CAMPO
         data: { type: Date, default: null }
     },
 

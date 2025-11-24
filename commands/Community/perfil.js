@@ -66,38 +66,59 @@ function getTheme(cor) {
     switch ((cor || "").toLowerCase()) {
         case "branco":
             return {
-                bg: "#F5F5F7",
-                cardFill: "rgba(0,0,0,0.08)",
+                bg: "#FFFAFA",
+                cardFill: "#D3D3D3",
                 textMain: "#000000",
                 textMuted: "#000000",
             };
         case "azul":
             return {
-                bg: "#0A1626",
+                bg: "#062069",
                 cardFill: "rgba(0,0,0,0.25)",
                 textMain: "#D9E8FF",
                 textMuted: "#9BB2D1",
             };
         case "rosa":
             return {
-                bg: "#1A0E16",
-                cardFill: "rgba(255,105,180,0.16)",
+                bg: "#AA336A",
+                cardFill: "#1a0e16",
                 textMain: "#FFD6EA",
                 textMuted: "#C7A2B7",
             };
         case "vermelho":
             return {
-                bg: "#1A0C0C",
-                cardFill: "rgba(255,60,60,0.16)",
+                bg: "#8b0000",
+                cardFill: "#1a0c0c",
                 textMain: "#FFD5D5",
                 textMuted: "#C9A1A1",
             };
         case "roxo":
             return {
-                bg: "#170E24",
-                cardFill: "rgba(155,89,182,0.16)",
+                bg: "#4B0082",
+                cardFill: "#170e24",
                 textMain: "#ECD4FF",
                 textMuted: "#B9A2C7",
+            };
+            case "dourado":
+            return {
+                bg: "#b59410",
+                cardFill: "#705714",
+                textMain: "#ffffff",
+                textMuted: "#ffffff",
+            };
+            case "verde":
+            return {
+                bg: "#06402b",
+                cardFill: "#20392c",
+                textMain: "#ffffff",
+                textMuted: "#ffffff",
+            };
+            case "laranja":
+            return {
+                bg: "#DC582A",
+                cardFill: "#A84420",
+                textMain: "#ffffff",
+                textMuted: "#ffffff",
             };
         case "preto":
         default:
@@ -107,6 +128,7 @@ function getTheme(cor) {
                 textMain: "#ffffff",
                 textMuted: "#ffffff",
             };
+        
     }
 }
 
