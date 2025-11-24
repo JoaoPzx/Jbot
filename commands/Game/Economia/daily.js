@@ -22,16 +22,12 @@ module.exports = {
             });
         }
 
-
         const now = Date.now();
         const cooldown = 24 * 60 * 60 * 1000; // 24 horas
 
         // ================================
         // VALIDAR COOLDOWN
         // ================================
-         // ==========================
-        // Verificar cooldown
-        // ==========================
         if (userData.lastDaily && now - userData.lastDaily.getTime() < cooldown) {
             const remaining = cooldown - (now - userData.lastDaily.getTime());
             const hours = Math.floor(remaining / (1000 * 60 * 60));
@@ -50,8 +46,8 @@ module.exports = {
                         value: `**<:alarme:1440073671443091526> ${hours}h ${minutes}m restantes**`,
                         inline: true
                     },
-
-                    {   name: "Usuário", 
+                    {
+                        name: "Usuário",
                         value: `<:user:1440074090663645355> ${message.author}`,
                         inline: true
                     }
@@ -64,7 +60,7 @@ module.exports = {
         // ================================
         // SORTEIO DO DAILY
         // ================================
-        const baseMoedas = Math.floor(Math.random() * (100 - 50 + 1)) + 50; // 50–100 moedas
+        const baseMoedas = Math.floor(Math.random() * (100 - 50 + 1)) + 50; // 50–100
         const porcentagem = Math.floor(Math.random() * (100 - 50 + 1)) + 50; // 50–100%
 
         const bonus = Math.floor(baseMoedas * (porcentagem / 100));
@@ -96,9 +92,7 @@ module.exports = {
                     value: `<:percentual:1441546241820459068> **${porcentagem}% → +${formatarNumero(bonus)} moedas**`,
                     inline: true
                 },
-
-                { name: "", value: "", inline: false },
-
+                { name: "\u200B", value: "\u200B", inline: false },
                 {
                     name: "Ganho Total",
                     value: `<:coin1:1441491987537727669> **${formatarNumero(total)} moedas**`,

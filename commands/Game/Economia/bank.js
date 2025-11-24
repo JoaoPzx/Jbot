@@ -13,8 +13,11 @@ module.exports = {
 
         let perfil = await Perfil.findOne({ userId: target.id });
         if (!perfil) {
-            perfil = await Perfil.create({ userId: target.id });
+            perfil = await Perfil.create({ userId: target.id, moedas: 0 });
         }
+
+        // 🔥 Formatar moedas: 10000 → 10.000
+        const saldoFormatado = perfil.moedas.toLocaleString("pt-BR");
 
         const embed = new EmbedBuilder()
             .setColor("#6FB1FF")
@@ -26,7 +29,7 @@ module.exports = {
             .setDescription(`Aqui estão as informações bancárias de **${target.username}**`)
             .addFields({
                 name: "Saldo",
-                value: `**<:carteira:1440068592354725888> ${perfil.moedas} moedas**`,
+                value: `**<:carteira:1440068592354725888> ${saldoFormatado} moedas**`,
                 inline: true
             })
             .setFooter({ text: "Use as suas moedas com sabedoria!" })

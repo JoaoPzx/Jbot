@@ -9,72 +9,107 @@ module.exports = {
 
     async execute(message, args) {
 
-        // Permissão
         if (!message.member.permissions.has(PermissionFlagsBits.Administrator)) {
-            const embed = new EmbedBuilder()
-                .setColor("#ff4d4d")
-                .setTitle("❌ Erro")
-                .setDescription("Você **não possui permissão** para usar este comando.");
-            return message.reply({ embeds: [embed] });
+            return message.reply({
+                embeds: [
+                    new EmbedBuilder()
+                        .setColor("#ff4d4d")
+                        .setTitle("❌ Erro")
+                        .setDescription("Você **não possui permissão** para usar este comando.")
+                ]
+            });
         }
 
-        // Localizar usuário
         const target = await findUser(message, args[0]);
         const amountStr = args[1];
 
         if (!target) {
-            const embed = new EmbedBuilder()
-                .setColor("#ff4d4d")
-                .setTitle("❌ Erro")
-                .setDescription("Usuário inválido! Use **menção**, **ID** ou **apelido**.");
-            return message.reply({ embeds: [embed] });
+            return message.reply({
+                embeds: [
+                    new EmbedBuilder()
+                        .setColor("#ff4d4d")
+                        .setTitle("❌ Erro")
+                        .setDescription("Usuário inválido! Use **menção**, **ID** ou **apelido**.")
+                ]
+            });
         }
 
-        // Validar número
-        if (!amountStr || !/^\d+$/.test(amountStr)) {
-            const embed = new EmbedBuilder()
-                .setColor("#ff4d4d")
-                .setTitle("❌ Erro")
-                .setDescription("Informe uma **quantia numérica válida**, **sem letras ou símbolos**.");
-            return message.reply({ embeds: [embed] });
+        if (!amountStr) {
+            return message.reply({
+                embeds: [
+                    new EmbedBuilder()
+                        .setColor("#ff4d4d")
+                        .setTitle("❌ Valor inválido")
+                        .setDescription("Informe uma quantia válida. Ex: `2000`, `1k`, `2.5m`.")
+                ]
+            });
         }
 
-        const amount = parseInt(amountStr, 10);
-        if (amount <= 0) {
-            const embed = new EmbedBuilder()
-                .setColor("#ff4d4d")
-                .setTitle("❌ Erro")
-                .setDescription("A quantia deve ser **maior que zero**.");
-            return message.reply({ embeds: [embed] });
+        // 🔥 Conversor de abreviações (1k, 1m, 1b)
+        function parseAmount(str) {
+            str = str.toLowerCase();
+
+            if (/^\d+(\.\d+)?k$/.test(str)) {
+                return Math.round(parseFloat(str) * 1000);
+            }
+            if (/^\d+(\.\d+)?m$/.test(str)) {
+                return Math.round(parseFloat(str) * 1_000_000);
+            }
+            if (/^\d+(\.\d+)?b$/.test(str)) {
+                return Math.round(parseFloat(str) * 1_000_000_000);
+            }
+            if (/^\d+(\.\d+)?$/.test(str)) {
+                return Math.round(parseFloat(str));
+            }
+            return NaN;
         }
 
-        // Carregar perfil
+        const amount = parseAmount(amountStr);
+
+        if (!amount || isNaN(amount) || amount <= 0) {
+            return message.reply({
+                embeds: [
+                    new EmbedBuilder()
+                        .setColor("#ff4d4d")
+                        .setTitle("❌ Valor inválido")
+                        .setDescription("Use valores como: `1000`, `1k`, `2.5m`, `3b`.")
+                ]
+            });
+        }
+
         let userData = await Perfil.findOne({ userId: target.id });
         if (!userData) userData = await Perfil.create({ userId: target.id });
 
-        // Validar saldo
         if (userData.moedas < amount) {
-            const embed = new EmbedBuilder()
-                .setColor("#ff4d4d")
-                .setTitle("❌ Erro")
-                .setDescription(
-                    `O usuário **${target.username}** não possui **${amount} moedas** para remover.\n` +
-                    `Saldo atual: **${userData.moedas} moedas**.`
-                );
-            return message.reply({ embeds: [embed] });
+            const saldoFmt = userData.moedas.toLocaleString("pt-BR");
+            const amountFmt = amount.toLocaleString("pt-BR");
+
+            return message.reply({
+                embeds: [
+                    new EmbedBuilder()
+                        .setColor("#ff4d4d")
+                        .setTitle("❌ Saldo insuficiente")
+                        .setDescription(
+                            `O usuário **${target.username}** não possui **${amountFmt} moedas** para remover.\n` +
+                            `Saldo atual: **${saldoFmt} moedas**.`
+                        )
+                ]
+            });
         }
 
-        // Remover
         userData.moedas -= amount;
         await userData.save();
+
+        const amountFormatted = amount.toLocaleString("pt-BR");
+        const saldoFormatted = userData.moedas.toLocaleString("pt-BR");
 
         const embed = new EmbedBuilder()
             .setColor("#ff6969")
             .setTitle("<:rmjbot:1440431569071243314> Moedas removidas!")
             .addFields(
                 { name: "Usuário", value: `<:user:1440074090663645355> ${target}`, inline: true },
-                { name: "Remoção", value: `**<:perdadedinheiro:1440096747912302753> ${amount} moedas**`, inline: true },
-                { name: "Saldo", value: `**<:carteira:1440068592354725888> ${userData.moedas} moedas**`, inline: true }
+                { name: "Remoção", value: `**<:perdadedinheiro:1440096747912302753> ${amountFormatted} moedas**`, inline: true },
+                { name: "Saldo", value: `**<:carteira:1440068592354725888> ${saldoFormatted} moedas**`, inline: true }
             )
             .setTimestamp();
 
