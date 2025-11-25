@@ -158,12 +158,7 @@ try {
                     embeds: [
                         new EmbedBuilder()
                             .setColor("Green")
-                            .setTitle("<:bin:1440818365575729173> Tema Deletado com Sucesso!")
-                            .setDescription(
-                                `O tema **${nomeExibir}** foi deletado.\n` +
-                                `A pasta **${pastaCloud}** foi removida.\n` +
-                                `A insígnia \`insig_${tema.nomeLower}\` também foi deletada do servidor.`
-                            )
+                            .setDescription("**<:bin:1440818365575729173> Tema Deletado com Sucesso!**")
                     ],
                     components: []
                 });

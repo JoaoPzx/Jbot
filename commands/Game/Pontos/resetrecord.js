@@ -14,7 +14,7 @@ module.exports = {
                         .setColor("#ff4d4d")
                         .setDescription("<:fecharerr:1442682279322325095> Você não tem permissão para usar este comando.")
                 ],
-                allowedMentions: { repliedUser: false }
+                allowedMentions: { repliedUser: true }
             });
         }
 
@@ -25,7 +25,7 @@ module.exports = {
                         .setColor("#ff4d4d")
                         .setDescription("<:fecharerr:1442682279322325095> Uso correto: `;resetrecord <tema>`")
                 ],
-                allowedMentions: { repliedUser: false }
+                allowedMentions: { repliedUser: true }
             });
         }
 
@@ -39,7 +39,7 @@ module.exports = {
                         .setColor("#ff4d4d")
                         .setDescription("<:fecharerr:1442682279322325095> Nenhum tema cadastrado.")
                 ],
-                allowedMentions: { repliedUser: false }
+                allowedMentions: { repliedUser: true }
             });
         }
 
@@ -54,7 +54,7 @@ module.exports = {
                         .setColor("#ff4d4d")
                         .setDescription(`<:fecharerr:1442682279322325095> Nenhum tema encontrado para **${entrada}**.`)
                 ],
-                allowedMentions: { repliedUser: false }
+                allowedMentions: { repliedUser: true }
             });
         }
 
@@ -66,10 +66,10 @@ module.exports = {
             return message.reply({
                 embeds: [
                     new EmbedBuilder()
-                        .setColor("#f1c40f")
-                        .setDescription(`⚠️ O tema **${nomeExibir}** não possui recorde registrado.`)
+                        .setColor("#ffcc00")
+                        .setDescription(`<:avisojf:1442687822208303215> O tema **${nomeExibir}** não possui recorde registrado.`)
                 ],
-                allowedMentions: { repliedUser: false }
+                allowedMentions: { repliedUser: true }
             });
         }
 
@@ -86,12 +86,12 @@ module.exports = {
                 name: message.client.user.username,
                 iconURL: message.client.user.displayAvatarURL()
             })
-            .setTitle("🔁 Recorde Resetado!")
+            .setTitle("<:resetrec:1442956821357920406> Recorde Resetado!")
         .setDescription(
             `O recorde do tema **${nomeExibir}** foi **resetado com sucesso**!\n\n` +
-            `Agora **qualquer jogador** pode conquistar o trono novamente e se tornar o **novo lendário recordista!** ✨`
+            `Agora **qualquer jogador** pode conquistar o trono novamente e se tornar o **novo lendário recordista!** <:estrelasrec:1442956786314252318>`
         );
 
-        return message.reply({ embeds: [embed], allowedMentions: { repliedUser: false } });
+        return message.reply({ embeds: [embed], allowedMentions: { repliedUser: true } });
     }
 };

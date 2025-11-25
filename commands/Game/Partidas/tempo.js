@@ -84,7 +84,7 @@ module.exports = {
         partida.tempoBoostNiveisRestantes = 30;        // dura 30 rodadas
 
         const embed = new EmbedBuilder()
-            .setColor("#ffaa00")
+            .setColor("Green")
             .setDescription(
                 `<:icon_tempo:1441174907445837907> Foi aplicado **+2s** no tempo de acerto por 30 níveis!`
             )

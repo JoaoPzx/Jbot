@@ -10,7 +10,7 @@ function nomeComInsignia(tema) {
 }
 
 module.exports = {
-    name: "temainfo",
+    name: "tema",
     description: "Mostra informações detalhadas sobre um tema.",
 
     async execute(message, args) {
@@ -68,6 +68,9 @@ module.exports = {
         const nomeExibir = nomeComInsignia(tema);
         const totalImagens = tema.imagens?.length ?? 0;
         const criadoPor = tema.criadoPor ? `<@${tema.criadoPor}>` : "Desconhecido";
+        const ultimaImagem = totalImagens > 0
+            ? `\`${tema.imagens[tema.imagens.length - 1].resposta}\``
+            : "Nenhuma imagem";
 
         // ==============================
 // RECORDISTA
@@ -75,10 +78,10 @@ module.exports = {
         let textoRecordista;
 
         if (tema.record?.userId && tema.record?.pontos > 0) {
-        textoRecordista = `👑 <@${tema.record.userId}> — **${tema.record.pontos} pontos**`;
+        textoRecordista = `<@${tema.record.userId}> - **${tema.record.pontos} pontos**`;
         } else {
     // Se não houver recordista → BOT é o recordista padrão
-        textoRecordista = `🤖 <@${message.client.user.id}> — **0 pontos**`;
+        textoRecordista = `<@${message.client.user.id}> - **0 pontos**`;
 }
 
 
@@ -87,14 +90,15 @@ module.exports = {
         // ==============================
         const embed = new EmbedBuilder()
             .setColor("#3498db")
-            .setTitle("📘 Informações do Tema")
+            .setDescription("**<:tema:1440424182759428206> INFORMAÇÕES DO TEMA**")
             .setAuthor({name: message.client.user.username, iconURL: message.client.user.displayAvatarURL()})
             .addFields(
                 { name: "Nome", value: `**${nomeExibir}**`, inline: true },
-                { name: "imagens", value: `🖼 **${totalImagens}**`, inline: true },
-                { name: "Criado por", value: `🧑‍💻 ${criadoPor}`, inline: true },
-                { name: "Recordista", value: textoRecordista, inline: true },
-                { name: "🗓 Criado em", value: `<t:${Math.floor(new Date(tema.dataCriacao).getTime() / 1000)}:d>`, inline: true}
+                { name: "Imagens", value: `<:imagemjbot:1440425616359952445> **${totalImagens}**`, inline: true },
+                { name: "Recordista", value: `<:medalrec:1442253575576354876> ${textoRecordista}`, inline: true },
+                { name: "Criado por", value: `<:criador:1440422996652064838> ${criadoPor}`, inline: true },
+                { name: "Criado em", value: `<:calendariorec:1439655247579447326> <t:${Math.floor(new Date(tema.dataCriacao).getTime() / 1000)}:d>`, inline: true},
+                { name: "Última adição", value: `<:newjbot:1440423555744534699> ${ultimaImagem}`, inline: true }
             )
             .setFooter({text: `Solicitado por ${message.author.username}`,
                 iconURL: message.author.displayAvatarURL()})

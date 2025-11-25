@@ -78,15 +78,15 @@ module.exports = {
 
         // Recordista
         const textoRecordista = (tema.record?.userId && tema.record?.pontos > 0)
-            ? `<@${tema.record.userId}> — **${tema.record.pontos} pontos**`
-            : `<@${interaction.client.user.id}> — **0 pontos**`;
+            ? `<@${tema.record.userId}> - **${tema.record.pontos} pontos**`
+            : `<@${interaction.client.user.id}> - **0 pontos**`;
 
         // ==============================
         // EMBED FINAL
         // ==============================
         const embed = new EmbedBuilder()
             .setColor("#3498db")
-            .setTitle("<:tema:1440424182759428206> Informações do Tema")
+            .setDescription("**<:tema:1440424182759428206> INFORMAÇÕES DO TEMA**")
             .setAuthor({
                 name: interaction.client.user.username,
                 iconURL: interaction.client.user.displayAvatarURL()
@@ -94,8 +94,8 @@ module.exports = {
             .addFields(
                 { name: "Nome", value: `**${nomeExibir}**`, inline: true },
                 { name: "Imagens", value: `<:imagemjbot:1440425616359952445> **${totalImagens}**`, inline: true },
+                { name: "Recordista", value: `<:medalrec:1442253575576354876> ${textoRecordista}`, inline: true },
                 { name: "Criado por", value: `<:criador:1440422996652064838> ${criadoPor}`, inline: true },
-                { name: "Recordista", value: `<:medalrec:1439649790853124217> ${textoRecordista}`, inline: true },
                 { name: "Criado em", value: `<:calendariorec:1439655247579447326> <t:${Math.floor(new Date(tema.dataCriacao).getTime() / 1000)}:d>`, inline: true},
                 { name: "Última adição", value: `<:newjbot:1440423555744534699> ${ultimaImagem}`, inline: true }
             )

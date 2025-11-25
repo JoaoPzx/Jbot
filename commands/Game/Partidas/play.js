@@ -3,6 +3,7 @@ const Tema = require("../../../models/Tema");
 const { BANNER_PADRAO } = require("../../Utility/banners");
 const partidasAtivas = new Map();
 const Perfil = require("../../../models/Perfil");
+const tema = require("../ComandosTema/tema");
 
 /* =====================================================
    SISTEMA DE TEMPO – queda suave e controlada
@@ -169,7 +170,7 @@ async function execute(message, args) {
         .setDescription("🎮 **Iniciando nova partida...**")
         .addFields(
             { name: "Tema", value: `**${temaNomeExibir}**`, inline: true },
-            { name: "Palavras", value: `**<:imagemjbot:1440425616359952445> ${temaEncontrado.imagens.length}**`, inline: true }
+            { name: "Palavras", value: `**<:imagemjbot:1440425616359952445> ${temaEncontrado.imagens.length}**`, inline: true },
         )
         .setFooter({ text: "Primeira imagem em 10s", iconURL: "https://i.ibb.co/ZpnWwHT9/sand-clock.png" })
         .setImage(bannerInicio);
@@ -295,16 +296,16 @@ async function iniciarRodada(message, partida) {
         const rankingTexto = formatarRanking(rankingOrdenado, partida);
 
         // Montagem do título dinâmico com ícones de itens ativos
-let tituloRanking = "<:ranking:1442253471356289284> RANKING";
+let tituloRanking = "<:ranking:1442253471356289284> RANKING⠀";
 
 // ÍCONE DO NITRO (apenas enquanto estiver ativo na partida)
 if (partida.nitro) {
-    tituloRanking += "<:icon_nitro:1441530028658790430>";
+    tituloRanking += "<:icon_nitro:1441530028658790430>⠀";
 }
 
 // ÍCONE DO TEMPO (mostra níveis restantes)
 if (partida.tempoBoostNiveisRestantes && partida.tempoBoostNiveisRestantes > 0) {
-    tituloRanking += `<:icon_tempo:1441174907445837907> (${partida.tempoBoostNiveisRestantes})`;
+    tituloRanking += `<:icon_tempo:1441174907445837907>⠀`;
 }
 
 const embedAcerto = new EmbedBuilder()
@@ -340,12 +341,18 @@ await message.channel.send({ embeds: [embedAcerto] });
 });
     collector.on("end", async (_, motivo) => {
 
+    // Se já foi encerrada em outro fluxo → NÃO DUPLICA EMBED
     if (partida.encerrada) return;
-    if (motivo === "pulado") return;
+
+    // (REMOVIDO: motivo === "pulado")
+
+    // Se acertou ou pausou, não envia embed final
     if (motivo === "acertou" || partida.pausada) return;
 
+    // Marca como encerrada
     partida.encerrada = true;
 
+    // Remove da lista
     partidasAtivas.delete(message.channel.id);
 
     const temaDB = await Tema.findById(partida.tema._id);
@@ -355,7 +362,7 @@ await message.channel.send({ embeds: [embedAcerto] });
     if (temaDB.record?.userId && temaDB.record?.pontos > 0) {
         recordistaLinha = `**<@${temaDB.record.userId}> - ${temaDB.record.pontos} pontos**`;
     } else {
-        recordistaLinha = `**<@${message.client.user.id}> - 0 pontos**`;
+        recordistaLinha = `**<@${message.client.user.id}> - 0 pts**`;
     }
 
     const rankingOrdenado = montarRanking(partida);
@@ -425,7 +432,7 @@ const embedFim = new EmbedBuilder()
         // === LINHA 2 ===
         {
             name: "Recordista",
-            value: `<:estrela1:1442253518361853962> **${recordistaLinha}**`,
+            value: `<:medalrec:1442253575576354876> **${recordistaLinha}**`,
             inline: true
         },
         {

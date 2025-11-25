@@ -2,7 +2,7 @@ const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("
 const Tema = require("../../../models/Tema");
 
 module.exports = {
-    name: "palavras",
+    name: "lista",
     description: "Lista todas as palavras de um tema, com paginação.",
 
     async execute(message, args) {
@@ -78,8 +78,7 @@ module.exports = {
                     name: message.client.user.username,
                     iconURL: message.client.user.displayAvatarURL()
                 })
-                .setTitle(`📝 Palavras do tema: ${nomeFinal}`)
-                .setDescription(`**1 – ${tema.imagens.length}**\n\n${lista}`)
+                .setDescription(`**<:tema:1440424182759428206> LISTA DE IMAGENS DO TEMA ${nomeFinal}**\n\n **1 - ${tema.imagens.length}**\n\n${lista}`)
                 .setFooter({
                     text: `${tema.imagens.length} palavra(s) cadastrada(s) • solicitado por ${message.author.username}`,
                     iconURL: message.author.displayAvatarURL()

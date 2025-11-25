@@ -47,8 +47,8 @@ module.exports = {
                 return message.reply({
                     embeds: [
                         new EmbedBuilder()
-                            .setColor("#ff4d4d")
-                            .setDescription("<:fecharerr:1442682279322325095> Você já ativou o Combo nesta partida.")
+                            .setColor("#ffcc00")
+                            .setDescription("<:avisojf:1442687822208303215> Você já ativou o Combo nesta partida.")
                     ]
                 });
             }
@@ -126,7 +126,7 @@ module.exports = {
             ================================== */
             const bonus = getComboBonusByLevel(partida.nivel);
             const embed = new EmbedBuilder()
-                .setColor("#ffaa00")
+                .setColor("Green")
                 .setDescription(`<:icon_combo:1441177424124448868> Você ativou seu combo, bônus atual: (+${bonus})`);
 
             return message.reply({ embeds: [embed] });

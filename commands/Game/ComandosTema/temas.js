@@ -2,7 +2,7 @@ const { EmbedBuilder } = require("discord.js");
 const Tema = require("../../../models/Tema");
 
 module.exports = {
-    name: "temalista",
+    name: "temas",
     description: "Mostra todos os temas cadastrados e quantidade de imagens.",
 
     async execute(message) {
@@ -24,7 +24,7 @@ module.exports = {
                             name: message.client.user.username,
                             iconURL: message.client.user.displayAvatarURL()
                         })
-                        .setTitle("📂 Nenhum Tema Encontrado")
+                        .setTitle("<:pastatema:1442960424193622026> Nenhum Tema Encontrado")
                         .setDescription("Ainda não existem temas cadastrados no banco de dados.")
                         .setTimestamp()
                 ]
@@ -36,7 +36,7 @@ module.exports = {
 
         // 🖼 Montar a lista
         const lista = temas.map(t => 
-            `📁 **${t.nomeOriginal || t.nome}** — 🖼️ ${t.imagens.length} imagem${t.imagens.length !== 1 ? "s" : ""}`
+            `<:pastatema:1442960424193622026> **${t.nomeOriginal || t.nome}** - <:imagemjbot:1440425616359952445> ${t.imagens.length} imagen${t.imagens.length !== 1 ? "s" : ""}`
         );
 
         const embed = new EmbedBuilder()
@@ -45,8 +45,7 @@ module.exports = {
                 name: message.client.user.username,
                 iconURL: message.client.user.displayAvatarURL()
             })
-            .setTitle("📚 Lista de Temas Cadastrados")
-            .setDescription(lista.join("\n"))
+            .setDescription(`**<:pilhatemas:1442951385388941404> Lista de Temas Cadastrados**\n\n ${lista.join("\n")}`)
             .setFooter({
                 text: `Solicitado por ${message.author.username}`,
                 iconURL: message.author.displayAvatarURL()

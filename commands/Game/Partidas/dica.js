@@ -62,7 +62,7 @@ module.exports = {
         const dicaEspacada = dica.split("").join(" ");
 
         const embed = new EmbedBuilder()
-            .setColor("#f1c40f")
+            .setColor("Green")
             .setDescription("<:icon_dica:1441174865032904745> Dica Revelada!\n ```" + dicaEspacada + "```")
             .setFooter({ text: `Foram reveladas ${quantidadeRevelar} letras (${Math.round(porcentagem * 100)}%).` });
 

@@ -2,7 +2,7 @@ const { EmbedBuilder } = require("discord.js");
 const Tema = require("../../../models/Tema");
 
 module.exports = {
-    name: "imgshow",
+    name: "ver",
     aliases: ["show"],
     description: "Mostra uma imagem aleatória de um tema.",
 
@@ -52,7 +52,7 @@ module.exports = {
         if (!tema.imagens.length)
             return message.reply({
                 embeds: [
-                    criarEmbed("Yellow", `📭 **O tema \`${tema.nomeOriginal || tema.nome}\` não possui imagens.**`)
+                    criarEmbed("Yellow", `<:mailboxjf:1442960089085382928> **O tema \`${tema.nomeOriginal || tema.nome}\` não possui imagens.**`)
                 ]
             });
 
@@ -94,9 +94,9 @@ module.exports = {
             })
             .addFields(
                 { name: "Tema", value: temaNomeFinal, inline: true },
-                { name: "Resposta", value: `\`${imagem.resposta}\``, inline: true },
-                { name: "Adicionado por", value: `👤 ${addedBy}`, inline: true },
-                { name: "📅 Data", value: dataAdicao, inline: true }
+                { name: "Resposta", value: `<:questionsjf:1442959438720929822> \`${imagem.resposta}\``, inline: true },
+                { name: "Adicionado por", value: `<:user:1440074090663645355> ${addedBy}`, inline: true },
+                { name: "Data", value: `<:calendariorec:1439655247579447326> ${dataAdicao}`, inline: true }
             )
             .setImage(imagem.url)
             .setFooter({ text: message.author.username, iconURL: message.author.displayAvatarURL() })

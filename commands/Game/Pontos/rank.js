@@ -11,10 +11,10 @@ function formatarNumero(num) {
 
 // Medalhas automáticas
 function medalhaPosicao(pos) {
-    if (pos === 0) return "🥇";
-    if (pos === 1) return "🥈";
-    if (pos === 2) return "🥉";
-    return "🏅";
+    if (pos === 0) return "<:podio1:1442253692542648441>";
+    if (pos === 1) return "<:podio2:1442253730245378099>";
+    if (pos === 2) return "<:podio3:1442253772402196621>";
+    return "<:podio:1442253851091800205>";
 }
 
 module.exports = {
@@ -86,7 +86,7 @@ module.exports = {
 
             const embed = new EmbedBuilder()
                 .setColor("Blue")
-                .setTitle(`🏆 Ranking do Tema: ${nomeExibicao}`)
+                .setTitle(`<:trophyrank:1442949429903753246> Rank do Tema: ${nomeExibicao}`)
                 .setDescription(desc)
                 .setFooter({ text: "Rank baseado na soma total de pontos no tema" })
                 .setTimestamp();
@@ -138,7 +138,7 @@ module.exports = {
 
         const embedGeral = new EmbedBuilder()
             .setColor("Gold")
-            .setTitle("🌍 Ranking Geral dos Jogadores")
+            .setTitle("<:geralrank:1442948085398634599> Ranking Geral dos Jogadores")
             .setDescription(desc)
             .setFooter({ text: "Soma total de pontos em todos os temas" })
             .setTimestamp();

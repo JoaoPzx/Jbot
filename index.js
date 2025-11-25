@@ -346,6 +346,7 @@ if (interaction.customId === "recusar_casamento") {
       // ====================================================
       if (interaction.customId === "despausar_partida") {
         const partida = partidasAtivas.get(interaction.channel.id);
+    
 
         if (!partida || !partida.pausada) {
           return interaction.reply({ content: "❌ A partida não está mais pausada.", ephemeral: true });
@@ -362,8 +363,8 @@ if (interaction.customId === "recusar_casamento") {
         clearTimeout(partida.despausarTimer);
 
         const embed = new EmbedBuilder()
-          .setColor("#2ecc71")
-          .setTitle("▶️ Partida Retomada")
+          .setColor("#2c72ec")
+          .setTitle("<:playjf:1442673291621040260> Partida Retomada")
           .setDescription(`A partida foi retomada por ${interaction.user}.`)
           .setFooter({ text: "A próxima imagem será enviada em instantes..." })
           .setTimestamp();

@@ -73,7 +73,7 @@ module.exports = {
             }
 
             const retomado = new EmbedBuilder()
-                .setColor("#ffaa00")
+                .setColor("#2c72ec")
                 .setTitle("<:playjf:1442673291621040260> Partida retomada!");
 
             await message.reply({ embeds: [retomado] });
@@ -102,7 +102,7 @@ module.exports = {
         }
 
         const embedPause = new EmbedBuilder()
-            .setColor("#ffaa00")
+            .setColor("#2c72ec")
             .setTitle("<:pausejf:1442673336583979038> Partida pausada!");
 
         const botao = new ActionRowBuilder().addComponents(

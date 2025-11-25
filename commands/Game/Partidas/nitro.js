@@ -80,7 +80,7 @@ module.exports = {
         partida.nitro = true;
 
         const embedConfirmacao = new EmbedBuilder()
-            .setColor("#ffaa00")
+            .setColor("Green")
             .setDescription("<:icon_nitro:1441530028658790430> intervalo reduzido de **10s → 5s** em toda a partida.");
 
         return message.reply({ embeds: [embedConfirmacao] });

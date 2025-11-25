@@ -72,11 +72,11 @@ module.exports = {
                 name: message.client.user.username,
                 iconURL: message.client.user.displayAvatarURL()
             })
-            .setTitle("<:tacadeourorec:1439651590435770500> Recorde Oficial do Tema")
+            .setTitle("<:estrela1:1442253518361853962> Recorde Oficial do Tema")
             .addFields(
-                { name: "Tema", value: nomeFinal, inline: true },
-                { name: "Recordista", value: `<:medalrec:1439649790853124217> <@${tema.record.userId}>`, inline: true },
-                { name: "Pontuação", value: `**<:badgejbot:1441489105929371768> ${tema.record.pontos} pontos**`, inline: true },
+                { name: "Tema", value: `**${nomeFinal}**`, inline: true },
+                { name: "Recordista", value: `<:medalrec:1442253575576354876> <@${tema.record.userId}>`, inline: true },
+                { name: "Pontuação", value: `**<:pontos:1442182692748791889> ${tema.record.pontos} pontos**`, inline: true },
                 { name: "Quando", value: `<:calendariodemesa:1439655247579447326> ${data}`, inline: true }
             )
             .setThumbnail("https://i.ibb.co/bfYzcsm/medalha-de-ouro.png")

@@ -28,7 +28,7 @@ module.exports = {
         const respostaEspacada = letras.join(" ");
 
         const embed = new EmbedBuilder()
-            .setColor("#ffaa00")
+            .setColor("Green")
             .setDescription("<:icon_resposta:1441904668748939374> Resposta Revelada\n ```" + respostaEspacada + "```"
             )
 
