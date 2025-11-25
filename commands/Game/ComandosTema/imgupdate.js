@@ -7,12 +7,12 @@ module.exports = {
 
     async execute(message, args) {
         if (!message.member.permissions.has("Administrator")) {
-            return message.channel.send("❌ Você não tem permissão para usar este comando.");
+            return message.channel.send("<:fecharerr:1442682279322325095> Você não tem permissão para usar este comando.");
         }
 
         if (!args[0]) {
             return message.channel.send(
-                "❌ Uso: `;imgupdate <tema> <resposta_antiga> <nova_resposta>` + nova imagem (opcional)"
+                "<:fecharerr:1442682279322325095> Uso: `;imgupdate <tema> <resposta_antiga> <nova_resposta>` + nova imagem (opcional)"
             );
         }
 
@@ -23,7 +23,7 @@ module.exports = {
         const entrada = entradaRaw.toLowerCase();
 
         const temas = await Tema.find({});
-        if (!temas.length) return message.reply("❌ Não há temas cadastrados.");
+        if (!temas.length) return message.reply("<:fecharerr:1442682279322325095> Não há temas cadastrados.");
 
         const ordenados = temas.sort((a, b) =>
             (a.nomeOriginal || a.nome).localeCompare(b.nomeOriginal || b.nome)
@@ -34,7 +34,7 @@ module.exports = {
         );
 
         if (!tema) {
-            return message.channel.send(`❌ O tema **${entradaRaw}** não existe.`);
+            return message.channel.send(`<:fecharerr:1442682279322325095> O tema **${entradaRaw}** não existe.`);
         }
 
         /* =====================================================
@@ -57,7 +57,7 @@ module.exports = {
         }
 
         if (!antigaResposta || !novaResposta) {
-            return message.channel.send("❌ Use: `;imgupdate tema \"resposta antiga\" nova resposta`");
+            return message.channel.send("<:fecharerr:1442682279322325095> Use: `;imgupdate tema \"resposta antiga\" nova resposta`");
         }
 
         /* =====================================================

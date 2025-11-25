@@ -24,14 +24,14 @@ module.exports = {
         if (!partida) {
             const embedErro = new EmbedBuilder()
                 .setColor("#ff4d4d")
-                .setDescription("❌ Não há nenhuma partida ativa neste canal.");
+                .setDescription("<:fecharerr:1442682279322325095> Não há nenhuma partida ativa neste canal.");
             return message.reply({ embeds: [embedErro] });
         }
 
         if (message.author.id !== partida.autorId) {
             const embedErro = new EmbedBuilder()
                 .setColor("#ff4d4d")
-                .setDescription("❌ Apenas **quem iniciou a partida** pode encerrá-la.");
+                .setDescription("<:fecharerr:1442682279322325095> Apenas **quem iniciou a partida** pode encerrá-la.");
             return message.reply({ embeds: [embedErro] });
         }
 
@@ -149,14 +149,26 @@ if (melhorJogadorId && melhorPontuacao > 0) {
         const embedRecorde = new EmbedBuilder()
             .setColor("#FFD700")
             .setTitle("NOVO RECORDE ATINGIDO!")
-            .setThumbnail("https://i.ibb.co/3mKpcBQq/medal-1.png")
-            .setDescription(
-                `<:estrela1:1442253518361853962> **<@${melhorJogadorId}> Quebrou o recorde!**\n\n` +
-                `🏅 Pontuação: **<:pontos:1442182692748791889> ${melhorPontuacao} pts**\n` +
-                `🧩 Nível: **${nivel}**\n` +
-                `🎨 Tema: **${nomeTema}**\n\n` +
-                `✨ *Uma nova lenda foi criada...*`
-            );
+            .setThumbnail("https://i.ibb.co/BMJY9rs/estrela-1.png")
+            .setDescription(`<:estrela1:1442253518361853962> <@${melhorJogadorId}> Quebrou o recorde!`
+    ) 
+            .addFields(
+                {name: "Tema",
+                value: `**${nomeTema}**`,
+                inline: true
+                },
+
+                {name: "Pontuação", 
+                    value: `**<:pontos:1442182692748791889> ${melhorPontuacao} pontos**`,
+                    inline: true
+                },
+
+                {name: "Nível Atingido", 
+                    value: `**<:levelup:1442272592789639239> ${nivel}**`,
+                    inline: true
+                }
+
+    )
 
         message.channel.send({ embeds: [embedRecorde] });
     }

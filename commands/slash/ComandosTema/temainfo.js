@@ -54,7 +54,7 @@ module.exports = {
                             name: interaction.client.user.username,
                             iconURL: interaction.client.user.displayAvatarURL()
                         })
-                        .setDescription(`❌ ${txt}`)
+                        .setDescription(`<:fecharerr:1442682279322325095> ${txt}`)
                 ],
                 ephemeral: true
             });

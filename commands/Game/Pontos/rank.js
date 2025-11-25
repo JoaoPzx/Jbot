@@ -38,7 +38,7 @@ module.exports = {
                     embeds: [
                         new EmbedBuilder()
                             .setColor("Red")
-                            .setTitle("❌ Tema não encontrado!")
+                            .setTitle("<:fecharerr:1442682279322325095> Tema não encontrado!")
                             .setDescription("Use: `;rank <tema>` ou apenas `;rank` para ver o ranking geral.")
                     ]
                 });

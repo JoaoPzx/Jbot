@@ -28,7 +28,7 @@ function formatarTempo(t) {
 function embedErro(txt) {
     return new EmbedBuilder()
         .setColor("#ff4d4d")
-        .setDescription(`❌ ${txt}`);
+        .setDescription(`<:fecharerr:1442682279322325095> ${txt}`);
 }
 
 /* =====================================================
@@ -210,7 +210,7 @@ async function iniciarRodada(message, partida) {
 
     // 🔥 BUFF DO +3s (Tempo Extra)
     if (partida.tempoBoostNiveisRestantes > 0) {
-        partida.tempoExtraGlobal = 3;
+        partida.tempoExtraGlobal = 2;
     } else {
         partida.tempoExtraGlobal = 0;
     }
@@ -255,106 +255,97 @@ async function iniciarRodada(message, partida) {
     partida.coletor = collector;
 
     collector.on("collect", async (msg) => {
-        if (msg.content.toLowerCase().trim() === item.resposta.toLowerCase()) {
 
-            if (partida.pausada) return;
-
-            // Atualizar pontos do jogador no Perfil (acúmulo REAL)
-            let perfil = await Perfil.findOne({ userId: msg.author.id });
-            if (!perfil) perfil = await Perfil.create({ userId: msg.author.id });
-
-            // CÁLCULO DE PONTOS:
-            // - se jogador ativou combo nesta partida:
-            //     níveis 1..3 => ganha 1 (base)
-            //     níveis >=4 => ganha = getComboBonusByLevel(partida.nivel)
-            // - se não ativou combo => ganha 1
-            let ganho;
-            const possuiComboAtivo = Boolean(partida.combos && partida.combos[msg.author.id]);
-
-            if (!possuiComboAtivo) {
-                ganho = 1;
-            } else {
-                if (partida.nivel <= 3) ganho = 1;
-                else ganho = getComboBonusByLevel(partida.nivel);
-            }
-
-            // Atualiza pontos globais do jogador (Perfil)
-            perfil.pontos = (perfil.pontos || 0) + ganho;
-            await perfil.save();
-
-            // Atualiza ranking da PARTIDA usando os PONTOS (não mais só acertos)
-            partida.ranking[msg.author.id] =
-                (partida.ranking[msg.author.id] || 0) + ganho;
-
-            partida.rodadaTerminada = true;
-            collector.stop("acertou");
-
-            msg.react("<:pontos:1442182692748791889>").catch(() => {});
-
-            const rankingOrdenado = montarRanking(partida);
-            const rankingTexto = rankingOrdenado
-                .map((r, i) => {
-            const medalha =
-            i === 0 ? "<:podio1:1442253692542648441>" :
-            i === 1 ? "<:podio2:1442253730245378099>" :
-            i === 2 ? "<:podio3:1442253772402196621>" :
-            "<:podio:1442253851091800205>";
-
-            const userId = r[0];
-            const pontos = r[1];
-            const label = pontos === 1 ? "ponto" : "pontos";
-
-            return `${medalha} <@${userId}> — **${pontos} ${label}**`;
-        })
-        .join("\n");
-
-        const embedAcerto = new EmbedBuilder()
-        .setColor(partida.cor)
-        .setAuthor({
-        name: `${msg.author.username} acertou ${item.resposta}!`,
-        iconURL: message.client.user.displayAvatarURL({ dynamic: true })
-        })
-        .setTitle("<:ranking:1442253471356289284> RANKING")
-        .setDescription( `${rankingTexto}`)
-        .setThumbnail(msg.author.displayAvatarURL({ dynamic: true }))
-        .setFooter({ text: `Próxima imagem em ${partida.nitro ? "5s" : "10s"}`, iconURL: "https://i.ibb.co/ZpnWwHT9/sand-clock.png" });
-
-        await message.channel.send({ embeds: [embedAcerto] });
-        partida.ultimoEmbed = "acerto";
-
-
-
-            partida.podeUsarTempoAgora = true;
-            partida.podeUsarNitroAgora = true;
-
-            partida.nivel++;
-            partida.rodadaEmCurso = false;
-
-            // limpamos referência do embed da rodada anterior (opcional, mas seguro)
-            partida.embedRodada = null;
-
-            partida.timeout = setTimeout(
-                () => iniciarRodada(message, partida),
-                partida.nitro ? 5000 : 10000
-            );
-        }
-    });
-
-    collector.on("end", async (_, motivo) => {
-
-    // Se já foi encerrada em outro fluxo → NÃO DUPLICA EMBED
     if (partida.encerrada) return;
 
-    // Se foi pulo, apenas ignora
-    if (motivo === "pulado") return;
+    if (msg.content.toLowerCase().trim() === item.resposta.toLowerCase()) {
 
-    // Se acertou ou pausou, não envia embed final
+        if (partida.pausada) return;
+
+        // Atualizar pontos no perfil
+        let perfil = await Perfil.findOne({ userId: msg.author.id });
+        if (!perfil) perfil = await Perfil.create({ userId: msg.author.id });
+
+        // Cálculo do combo
+        let ganho;
+        const possuiComboAtivo = Boolean(partida.combos && partida.combos[msg.author.id]);
+
+        if (!possuiComboAtivo) {
+            ganho = 1;
+        } else {
+            if (partida.nivel <= 3) ganho = 1;
+            else ganho = getComboBonusByLevel(partida.nivel);
+        }
+
+        // Pontos globais
+        perfil.pontos = (perfil.pontos || 0) + ganho;
+        await perfil.save();
+
+        // Ranking da partida
+        partida.ranking[msg.author.id] =
+            (partida.ranking[msg.author.id] || 0) + ganho;
+
+        partida.rodadaTerminada = true;
+        collector.stop("acertou");
+
+        msg.react("<:pontos:1442182692748791889>").catch(() => {});
+
+        // 🔥 AGORA usa formatarRanking → mostra (+2), (+3), etc
+        const rankingOrdenado = montarRanking(partida);
+        const rankingTexto = formatarRanking(rankingOrdenado, partida);
+
+        // Montagem do título dinâmico com ícones de itens ativos
+let tituloRanking = "<:ranking:1442253471356289284> RANKING";
+
+// ÍCONE DO NITRO (apenas enquanto estiver ativo na partida)
+if (partida.nitro) {
+    tituloRanking += "<:icon_nitro:1441530028658790430>";
+}
+
+// ÍCONE DO TEMPO (mostra níveis restantes)
+if (partida.tempoBoostNiveisRestantes && partida.tempoBoostNiveisRestantes > 0) {
+    tituloRanking += `<:icon_tempo:1441174907445837907> (${partida.tempoBoostNiveisRestantes})`;
+}
+
+const embedAcerto = new EmbedBuilder()
+    .setColor(partida.cor)
+    .setAuthor({
+        name: `${msg.author.username} acertou ${item.resposta}!`,
+        iconURL: message.client.user.displayAvatarURL({ dynamic: true })
+    })
+    .setTitle(tituloRanking)
+    .setDescription(`${rankingTexto}`)
+    .setThumbnail(msg.author.displayAvatarURL({ dynamic: true }))
+    .setFooter({
+        text: `Próxima imagem em ${partida.nitro ? "5s" : "10s"}`,
+        iconURL: "https://i.ibb.co/ZpnWwHT9/sand-clock.png"
+    });
+
+await message.channel.send({ embeds: [embedAcerto] });
+
+        partida.ultimoEmbed = "acerto";
+
+        partida.podeUsarTempoAgora = true;
+        partida.podeUsarNitroAgora = true;
+
+        partida.nivel++;
+        partida.rodadaEmCurso = false;
+        partida.embedRodada = null;
+
+        partida.timeout = setTimeout(
+            () => iniciarRodada(message, partida),
+            partida.nitro ? 5000 : 10000
+        );
+    }
+});
+    collector.on("end", async (_, motivo) => {
+
+    if (partida.encerrada) return;
+    if (motivo === "pulado") return;
     if (motivo === "acertou" || partida.pausada) return;
 
-    // Marca como encerrada
     partida.encerrada = true;
 
-    // Remove da lista
     partidasAtivas.delete(message.channel.id);
 
     const temaDB = await Tema.findById(partida.tema._id);

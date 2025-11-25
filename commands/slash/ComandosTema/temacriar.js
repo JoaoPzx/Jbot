@@ -28,7 +28,7 @@ module.exports = {
 
     async execute(interaction) {
         if (!interaction.member.permissions.has(PermissionsBitField.Flags.Administrator)) {
-            return interaction.reply({ content: "❌ Você não tem permissão para usar este comando.", ephemeral: true });
+            return interaction.reply({ content: "<:fecharerr:1442682279322325095> Você não tem permissão para usar este comando.", ephemeral: true });
         }
 
         const nomeOriginal = interaction.options.getString("nome");
@@ -37,12 +37,12 @@ module.exports = {
 
         // ❌ Bloquear espaços
         if (/\s/.test(nomeOriginal)) {
-            return interaction.reply({ content: "❌ Nome inválido! Use apenas **letras e números**, sem espaços.", ephemeral: true });
+            return interaction.reply({ content: "<:fecharerr:1442682279322325095> Nome inválido! Use apenas **letras e números**, sem espaços.", ephemeral: true });
         }
 
         // ❌ Bloquear caracteres fora de A-Z / 0-9
         if (!/^[A-Za-z0-9]+$/.test(nomeOriginal)) {
-            return interaction.reply({ content: "❌ Nome inválido! Permitido somente caracteres **A-Z**, **a-z** e **0-9**.", ephemeral: true });
+            return interaction.reply({ content: "<:fecharerr:1442682279322325095> Nome inválido! Permitido somente caracteres **A-Z**, **a-z** e **0-9**.", ephemeral: true });
         }
 
         // Normalizar e baixar acentos
@@ -66,7 +66,7 @@ module.exports = {
         // 1️⃣ IMAGEM → transformar em emoji custom
         if (imagem) {
             if (!imagem.contentType?.startsWith("image/")) {
-                return interaction.reply({ content: "❌ O arquivo enviado **não é uma imagem válida**.", ephemeral: true });
+                return interaction.reply({ content: "<:fecharerr:1442682279322325095> O arquivo enviado **não é uma imagem válida**.", ephemeral: true });
             }
 
             try {
@@ -93,7 +93,7 @@ module.exports = {
 
             } catch (err) {
                 console.error(err);
-                return interaction.reply({ content: "❌ Não consegui criar o emoji! Verifique permissões e tamanho (<256kb).", ephemeral: true });
+                return interaction.reply({ content: "<:fecharerr:1442682279322325095> Não consegui criar o emoji! Verifique permissões e tamanho (<256kb).", ephemeral: true });
             }
         }
 
@@ -102,7 +102,7 @@ module.exports = {
             const match = emojiArg.match(/^<a?:([^:]+):(\d+)>$/);
 
             if (!match) {
-                return interaction.reply({ content: "❌ Emoji inválido! Envie um **emoji custom** ou **imagem**.", ephemeral: true });
+                return interaction.reply({ content: "<:fecharerr:1442682279322325095> Emoji inválido! Envie um **emoji custom** ou **imagem**.", ephemeral: true });
             }
 
             const emojiId = match[2];
@@ -118,14 +118,14 @@ module.exports = {
                 insigniaEmojiId = clone.id;
 
             } catch {
-                return interaction.reply({ content: "❌ Não consegui clonar o emoji custom.", ephemeral: true });
+                return interaction.reply({ content: "<:fecharerr:1442682279322325095> Não consegui clonar o emoji custom.", ephemeral: true });
             }
         }
 
         // 3️⃣ Nenhuma insígnia enviada
         if (!insigniaEmoji) {
             return interaction.reply({
-                content: "❌ Você **deve enviar** uma insígnia (imagem ou emoji).",
+                content: "<:fecharerr:1442682279322325095> Você **deve enviar** uma insígnia (imagem ou emoji).",
                 ephemeral: true
             });
         }

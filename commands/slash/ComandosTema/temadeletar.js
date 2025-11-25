@@ -42,7 +42,7 @@ module.exports = {
         // Permissão
         if (!interaction.member.permissions.has("Administrator")) {
             return interaction.reply({
-                content: "❌ Você não tem permissão para deletar temas.",
+                content: "<:fecharerr:1442682279322325095> Você não tem permissão para deletar temas.",
                 ephemeral: true
             });
         }
@@ -52,7 +52,7 @@ module.exports = {
 
         if (!tema) {
             return interaction.reply({
-                content: "❌ Tema não encontrado.",
+                content: "<:fecharerr:1442682279322325095> Tema não encontrado.",
                 ephemeral: true
             });
         }
@@ -97,13 +97,13 @@ module.exports = {
         coletor.on("collect", async (i) => {
 
             if (i.user.id !== interaction.user.id)
-                return i.reply({ content: "❌ Apenas quem executou pode confirmar.", ephemeral: true });
+                return i.reply({ content: "<:fecharerr:1442682279322325095> Apenas quem executou pode confirmar.", ephemeral: true });
 
             // CANCELAR
             if (i.customId === "cancelar_delete") {
                 coletor.stop("cancelado");
                 return i.update({
-                    content: "❌ Ação cancelada.",
+                    content: "<:fecharerr:1442682279322325095> Ação cancelada.",
                     embeds: [],
                     components: []
                 });

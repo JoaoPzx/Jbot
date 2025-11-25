@@ -87,7 +87,7 @@ module.exports = {
                 ephemeral: true,
                 embeds: [new EmbedBuilder()
                     .setColor("#ff4d4d")
-                    .setDescription("❌ Tema não encontrado.")]
+                    .setDescription("<:fecharerr:1442682279322325095> Tema não encontrado.")]
             });
         }
 
@@ -98,7 +98,7 @@ module.exports = {
                 ephemeral: true,
                 embeds: [new EmbedBuilder()
                     .setColor("#ff4d4d")
-                    .setDescription("❌ Esta resposta não existe no tema.")]
+                    .setDescription("<:fecharerr:1442682279322325095> Esta resposta não existe no tema.")]
             });
         }
 
@@ -116,7 +116,7 @@ module.exports = {
                     ephemeral: true,
                     embeds: [new EmbedBuilder()
                         .setColor("#ff4d4d")
-                        .setDescription(`❌ Já existe um item com a resposta \`${novaResposta}\`.`)]
+                        .setDescription(`<:fecharerr:1442682279322325095> Já existe um item com a resposta \`${novaResposta}\`.`)]
                 });
             }
         }
@@ -130,7 +130,7 @@ module.exports = {
                     ephemeral: true,
                     embeds: [new EmbedBuilder()
                         .setColor("#ff4d4d")
-                        .setDescription("❌ O arquivo enviado não é uma imagem válida.")]
+                        .setDescription("<:fecharerr:1442682279322325095> O arquivo enviado não é uma imagem válida.")]
                 });
             }
 
@@ -165,7 +165,7 @@ module.exports = {
                     ephemeral: true,
                     embeds: [new EmbedBuilder()
                         .setColor("#ff4d4d")
-                        .setDescription("❌ Erro ao salvar nova imagem no Cloudinary.")]
+                        .setDescription("<:fecharerr:1442682279322325095> Erro ao salvar nova imagem no Cloudinary.")]
                 });
             }
 

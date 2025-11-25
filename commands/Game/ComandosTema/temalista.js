@@ -9,7 +9,7 @@ module.exports = {
 
         // 🔒 Permissão
         if (!message.member.permissions.has("Administrator")) {
-            return message.reply("❌ Você não tem permissão para usar este comando.");
+            return message.reply("<:fecharerr:1442682279322325095> Você não tem permissão para usar este comando.");
         }
 
         // 🧩 Buscar todos os temas no MongoDB

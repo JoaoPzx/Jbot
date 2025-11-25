@@ -19,7 +19,7 @@ module.exports = {
                             name: message.client.user.username,
                             iconURL: message.client.user.displayAvatarURL()
                         })
-                        .setDescription(`❌ ${txt}`)
+                        .setDescription(`<:fecharerr:1442682279322325095> ${txt}`)
                 ],
                 allowedMentions: { repliedUser: true }
             });
@@ -119,7 +119,7 @@ module.exports = {
         collector.on("collect", async (i) => {
 
             if (i.user.id !== message.author.id)
-                return i.reply({ content: "❌ Apenas quem usou o comando pode navegar.", ephemeral: true });
+                return i.reply({ content: "<:fecharerr:1442682279322325095> Apenas quem usou o comando pode navegar.", ephemeral: true });
 
             if (i.customId === "primeira") paginaAtual = 1;
             if (i.customId === "voltar") paginaAtual--;

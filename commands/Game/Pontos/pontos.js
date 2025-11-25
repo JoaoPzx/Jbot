@@ -30,7 +30,7 @@ module.exports = {
                     embeds: [
                         new EmbedBuilder()
                             .setColor("#ff4d4d")
-                            .setDescription("❌ Usuário não encontrado.")
+                            .setDescription("<:fecharerr:1442682279322325095> Usuário não encontrado.")
                     ]
                 });
             }
@@ -54,7 +54,7 @@ module.exports = {
         // ===========================
         const temas = await Tema.find({});
         if (!temas.length)
-            return message.reply("❌ Não existem temas cadastrados.");
+            return message.reply("<:fecharerr:1442682279322325095> Não existem temas cadastrados.");
 
         // ===========================
         // COLETAR PONTOS DO USUÁRIO

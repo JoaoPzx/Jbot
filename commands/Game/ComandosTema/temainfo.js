@@ -24,7 +24,7 @@ module.exports = {
                             name: message.client.user.username,
                             iconURL: message.client.user.displayAvatarURL()
                         })
-                        .setDescription(`❌ ${txt}`)
+                        .setDescription(`<:fecharerr:1442682279322325095> ${txt}`)
                 ],
                 allowedMentions: { repliedUser: false }
             });

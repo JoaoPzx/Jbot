@@ -28,13 +28,9 @@ module.exports = {
         const respostaEspacada = letras.join(" ");
 
         const embed = new EmbedBuilder()
-            .setColor("#3498db")
-            .setTitle("🔎 Resposta Revelada")
-            .setDescription(
-                "```" + respostaEspacada + "```\n" +
-                "📦 1 item **Resposta** foi consumido do seu inventário."
+            .setColor("#ffaa00")
+            .setDescription("<:icon_resposta:1441904668748939374> Resposta Revelada\n ```" + respostaEspacada + "```"
             )
-            .setFooter({ text: "Use com sabedoria!" });
 
         return message.reply({ embeds: [embed] });
     }

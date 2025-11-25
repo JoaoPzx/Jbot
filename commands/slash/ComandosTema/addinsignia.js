@@ -58,7 +58,7 @@ module.exports = {
 
     if (!tema) {
         return interaction.reply({
-            content: "❌ Tema não encontrado no banco.",
+            content: "<:fecharerr:1442682279322325095> Tema não encontrado no banco.",
             ephemeral: true
         });
     }

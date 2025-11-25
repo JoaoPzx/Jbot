@@ -54,7 +54,7 @@ module.exports = {
                 embeds: [
                     new EmbedBuilder()
                         .setColor("#ff4d4d")
-                        .setDescription("❌ Tema não encontrado.")
+                        .setDescription("<:fecharerr:1442682279322325095> Tema não encontrado.")
                 ],
                 ephemeral: true
             });
@@ -153,7 +153,7 @@ module.exports = {
             // Somente quem executou pode usar
             if (i.user.id !== interaction.user.id) {
                 return i.reply({
-                    content: "❌ Apenas quem usou o comando pode navegar.",
+                    content: "<:fecharerr:1442682279322325095> Apenas quem usou o comando pode navegar.",
                     ephemeral: true
                 });
             }

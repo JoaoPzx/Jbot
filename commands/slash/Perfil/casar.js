@@ -21,7 +21,7 @@ module.exports = {
 
         if (userA.id === userB.id) {
             return interaction.reply({
-                content: "❌ Você não pode casar consigo mesmo!",
+                content: "<:fecharerr:1442682279322325095> Você não pode casar consigo mesmo!",
                 ephemeral: true
             });
         }
@@ -31,14 +31,14 @@ module.exports = {
 
         if (perfilA?.casamento) {
             return interaction.reply({
-                content: "❌ Você já está casado!",
+                content: "<:fecharerr:1442682279322325095> Você já está casado!",
                 ephemeral: true
             });
         }
 
         if (perfilB?.casamento) {
             return interaction.reply({
-                content: "❌ Esse usuário já está casado!",
+                content: "<:fecharerr:1442682279322325095> Esse usuário já está casado!",
                 ephemeral: true
             });
         }

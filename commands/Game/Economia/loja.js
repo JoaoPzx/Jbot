@@ -121,8 +121,8 @@ module.exports = {
         if (!args.length) {
             const embed = new EmbedBuilder()
                 .setColor("Purple")
-                .setTitle("Loja de Itens do JBot")
-                .setDescription("<:shop100:1441161458175180921> Confira nossos itens:")
+                .setTitle("Loja de Itens do JFlux")
+                .setDescription("<:shop100:1441161458175180921> Seja bem-vindo(a) a loja, confira nossos itens e seus valores:")
                 .setFooter({
                     text: "Use ;loja <item> <quantidade> para comprar",
                     iconURL: "https://i.ibb.co/N2NncX3f/informacoes.png"
@@ -152,7 +152,7 @@ module.exports = {
                 embeds: [
                     new EmbedBuilder()
                         .setColor("Red")
-                        .setDescription("❌ Quantidade inválida. Use números normais ou `1k`, `2m`, etc.")
+                        .setDescription("<:fecharerr:1442682279322325095> Quantidade inválida. Use números normais ou `1k`, `2m`, etc.")
                 ]
             });
         }
@@ -167,7 +167,7 @@ module.exports = {
                 embeds: [
                     new EmbedBuilder()
                         .setColor("Red")
-                        .setDescription("❌ Item não encontrado. Use `;loja` para ver os itens.")
+                        .setDescription("<:fecharerr:1442682279322325095> Item não encontrado. Use `;loja` para ver os itens.")
                 ]
             });
         }
@@ -185,7 +185,7 @@ module.exports = {
                     new EmbedBuilder()
                         .setColor("Red")
                         .setDescription(
-                            `❌ Moedas insuficientes.\n` +
+                            `<:fecharerr:1442682279322325095> Moedas insuficientes.\n` +
                             `💰 Preço: **${precoFmt}**\n` +
                             `💸 Seu saldo: **${perfil.moedas.toLocaleString("pt-BR")}**`
                         )

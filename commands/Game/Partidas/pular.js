@@ -20,7 +20,7 @@ module.exports = {
                 embeds: [
                     new EmbedBuilder()
                         .setColor("#ff4d4d")
-                        .setDescription("❌ Você não pode **pular imagem** enquanto a partida está pausada.")
+                        .setDescription("<:fecharerr:1442682279322325095> Você não pode **pular imagem** enquanto a partida está pausada.")
                 ]
             });
         }
@@ -31,7 +31,7 @@ module.exports = {
                 embeds: [
                     new EmbedBuilder()
                         .setColor("#ff4d4d")
-                        .setDescription("❌ Nenhuma imagem ativa no momento.")
+                        .setDescription("<:fecharerr:1442682279322325095> Nenhuma imagem ativa no momento.")
                 ]
             });
         }
@@ -43,7 +43,7 @@ module.exports = {
                 embeds: [
                     new EmbedBuilder()
                         .setColor("#ff4d4d")
-                        .setDescription("❌ Você atingiu o limite de **5 pulos por partida**.")
+                        .setDescription("<:fecharerr:1442682279322325095> Você atingiu o limite de **5 pulos por partida**.")
                 ]
             });
         }
@@ -74,20 +74,14 @@ module.exports = {
 
         // EMBED DE CONFIRMAÇÃO
         const embed = new EmbedBuilder()
-            .setColor("#00bcd4")
-            .setTitle("⏭️ Imagem pulada!")
-            .setDescription(
-                "Uma nova imagem foi carregada.\n" +
-                "Você **não perdeu pontos**, **nível** ou **tempo**.\n\n" +
-                `🟦 **${partida.pulosUsados}/5** pulos usados.\n` +
-                `📦 1 item **Pulo** foi consumido.`
-            );
+            .setColor("#ffaa00")
+            .setDescription(`<:icon_pulo:1441182320462790786> Você utilizou 1 pulo **${partida.pulosUsados}/5 pulos.**`)
 
         await message.reply({ embeds: [embed] });
 
         // INICIA NOVA RODADA IMEDIATAMENTE
         setTimeout(() => {
             iniciarRodada(message, partida);
-        }, 800); // leve atraso para não sobrepor mensagens
+        }, 1000); // leve atraso para não sobrepor mensagens
     }
 };

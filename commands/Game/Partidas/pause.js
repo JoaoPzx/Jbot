@@ -27,7 +27,7 @@ module.exports = {
                 embeds: [
                     new EmbedBuilder()
                         .setColor("#ff4d4d")
-                        .setDescription("❌ Não existe uma partida ativa neste canal.")
+                        .setDescription("<:fecharerr:1442682279322325095> Não existe uma partida ativa neste canal.")
                 ]
             });
         }
@@ -40,7 +40,7 @@ module.exports = {
                 embeds: [
                     new EmbedBuilder()
                         .setColor("#ff4d4d")
-                        .setDescription("❌ Apenas quem iniciou a partida pode pausar ou retomá-la.")
+                        .setDescription("<:fecharerr:1442682279322325095> Apenas quem iniciou a partida pode pausar ou retomá-la.")
                 ]
             });
         }
@@ -54,8 +54,7 @@ module.exports = {
                 embeds: [
                     new EmbedBuilder()
                         .setColor("#ff4d4d")
-                        .setTitle("⏳ Não é possível pausar agora")
-                        .setDescription("Você só pode pausar **após alguém acertar**, durante o intervalo da rodada.")
+                        .setTitle("<:sandclock:1442671562355380409> Não é possível pausar agora")
                 ]
             });
         }
@@ -74,8 +73,8 @@ module.exports = {
             }
 
             const retomado = new EmbedBuilder()
-                .setColor("#2ecc71")
-                .setTitle("▶️ Partida retomada!");
+                .setColor("#ffaa00")
+                .setTitle("<:playjf:1442673291621040260> Partida retomada!");
 
             await message.reply({ embeds: [retomado] });
 
@@ -103,8 +102,8 @@ module.exports = {
         }
 
         const embedPause = new EmbedBuilder()
-            .setColor("#f1c40f")
-            .setTitle("⏸ Partida pausada!");
+            .setColor("#ffaa00")
+            .setTitle("<:pausejf:1442673336583979038> Partida pausada!");
 
         const botao = new ActionRowBuilder().addComponents(
             new ButtonBuilder()
@@ -131,14 +130,10 @@ module.exports = {
 
             const embedTimeout = new EmbedBuilder()
                 .setColor("#e74c3c")
-                .setTitle("⏰ Pausa expirada")
-                .setDescription(
-                    "O limite máximo de pausa (**5 minutos**) foi atingido.\n" +
-                    "A partida foi retomada automaticamente."
-                );
+                .setDescription("<:tempoexpi:1442673849819992176> Pausa expirada, A partida será retomada em 5s .");
 
             await message.channel.send({
-                content: `⛔ <@${partida.autorId}>`,
+                content: `<@${partida.autorId}>`,
                 embeds: [embedTimeout]
             });
 

@@ -13,7 +13,7 @@ module.exports = {
             try {
                 user = await message.client.users.fetch(args[0]);
             } catch {
-                return message.reply('❌ Usuário não encontrado.');
+                return message.reply('<:fecharerr:1442682279322325095> Usuário não encontrado.');
             }
         } else {
             user = message.author;

@@ -12,7 +12,7 @@ module.exports = {
                 embeds: [
                     new EmbedBuilder()
                         .setColor("#ff4d4d")
-                        .setDescription("❌ Você não tem permissão para usar este comando.")
+                        .setDescription("<:fecharerr:1442682279322325095> Você não tem permissão para usar este comando.")
                 ],
                 allowedMentions: { repliedUser: false }
             });
@@ -23,7 +23,7 @@ module.exports = {
                 embeds: [
                     new EmbedBuilder()
                         .setColor("#ff4d4d")
-                        .setDescription("❌ Uso correto: `;resetrecord <tema>`")
+                        .setDescription("<:fecharerr:1442682279322325095> Uso correto: `;resetrecord <tema>`")
                 ],
                 allowedMentions: { repliedUser: false }
             });
@@ -37,7 +37,7 @@ module.exports = {
                 embeds: [
                     new EmbedBuilder()
                         .setColor("#ff4d4d")
-                        .setDescription("❌ Nenhum tema cadastrado.")
+                        .setDescription("<:fecharerr:1442682279322325095> Nenhum tema cadastrado.")
                 ],
                 allowedMentions: { repliedUser: false }
             });
@@ -52,7 +52,7 @@ module.exports = {
                 embeds: [
                     new EmbedBuilder()
                         .setColor("#ff4d4d")
-                        .setDescription(`❌ Nenhum tema encontrado para **${entrada}**.`)
+                        .setDescription(`<:fecharerr:1442682279322325095> Nenhum tema encontrado para **${entrada}**.`)
                 ],
                 allowedMentions: { repliedUser: false }
             });

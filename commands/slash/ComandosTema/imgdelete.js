@@ -87,7 +87,7 @@ module.exports = {
                 embeds: [
                     new EmbedBuilder()
                         .setColor("#ff4d4d")
-                        .setDescription(`❌ O tema **${temaNome}** não existe.`)
+                        .setDescription(`<:fecharerr:1442682279322325095> O tema **${temaNome}** não existe.`)
                 ],
                 ephemeral: true
             });
@@ -99,7 +99,7 @@ module.exports = {
                 embeds: [
                     new EmbedBuilder()
                         .setColor("#ff4d4d")
-                        .setDescription(`❌ Nenhuma imagem encontrada com a resposta **${resposta}**.`)
+                        .setDescription(`<:fecharerr:1442682279322325095> Nenhuma imagem encontrada com a resposta **${resposta}**.`)
                 ],
                 ephemeral: true
             });
@@ -137,7 +137,7 @@ module.exports = {
 
         collector.on("collect", async btn => {
             if (btn.user.id !== interaction.user.id)
-                return btn.reply({ content: "❌ Não é você quem executou o comando!", ephemeral: true });
+                return btn.reply({ content: "<:fecharerr:1442682279322325095> Não é você quem executou o comando!", ephemeral: true });
 
             if (btn.customId === "cancelar_delete") {
                 collector.stop("cancelado");

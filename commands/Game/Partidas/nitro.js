@@ -18,7 +18,7 @@ module.exports = {
                 embeds: [
                     new EmbedBuilder()
                         .setColor("#ff4d4d")
-                        .setDescription("❌ Não há partida ativa neste canal.")
+                        .setDescription("<:fecharerr:1442682279322325095> Não existe uma partida ativa neste canal.")
                 ]
             });
         }
@@ -49,7 +49,7 @@ module.exports = {
                 embeds: [
                     new EmbedBuilder()
                         .setColor("#ff4d4d")
-                        .setDescription("❌ Você não possui o item **Nitro** no inventário.")
+                        .setDescription("<:fecharerr:1442682279322325095> Você não possui **Nitros** no seu inventário.")
                 ]
             });
         }
@@ -62,7 +62,7 @@ module.exports = {
                 embeds: [
                     new EmbedBuilder()
                         .setColor("Red")
-                        .setDescription("❌ O Nitro só pode ser usado **no início da partida** ou **logo após um acerto**.")
+                        .setDescription("<:fecharerr:1442682279322325095> Você não pode usar o Nitro agora.")
                 ]
             });
         }
@@ -80,9 +80,8 @@ module.exports = {
         partida.nitro = true;
 
         const embedConfirmacao = new EmbedBuilder()
-            .setColor("#00ff9d")
-            .setTitle("⚡ NITRO ATIVADO!")
-            .setDescription("O intervalo entre as imagens agora será reduzido de **10s → 5s** durante toda a partida.");
+            .setColor("#ffaa00")
+            .setDescription("<:icon_nitro:1441530028658790430> intervalo reduzido de **10s → 5s** em toda a partida.");
 
         return message.reply({ embeds: [embedConfirmacao] });
     }

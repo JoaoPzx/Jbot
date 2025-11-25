@@ -28,7 +28,7 @@ module.exports = {
             dica:      { nome: "Dica",      emoji: "<:icon_dica:1441174865032904745>" },
             tempo:     { nome: "Tempo",     emoji: "<:icon_tempo:1441174907445837907>" },
             nitro:     { nome: "Nitro",     emoji: "<:icon_nitro:1441530028658790430>" },
-            pular:      { nome: "Pular",      emoji: "<:icon_pulo:1441182320462790786>" },
+            pular:     { nome: "Pular",    emoji: "<:icon_pulo:1441182320462790786>" },
             combo:     { nome: "Combo",     emoji: "<:icon_combo:1441177424124448868>" },
             resposta:  { nome: "Resposta",  emoji: "<:icon_resposta:1441904668748939374>" },
         };

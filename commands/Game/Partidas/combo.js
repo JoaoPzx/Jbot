@@ -21,7 +21,7 @@ module.exports = {
                     embeds: [
                         new EmbedBuilder()
                             .setColor("#ff4d4d")
-                            .setDescription("❌ Não existe uma partida ativa neste canal.")
+                            .setDescription("<:fecharerr:1442682279322325095> Não existe uma partida ativa neste canal.")
                     ]
                 });
             }
@@ -34,7 +34,7 @@ module.exports = {
                     embeds: [
                         new EmbedBuilder()
                             .setColor("#ff4d4d")
-                            .setDescription("❌ A partida já foi finalizada.")
+                            .setDescription("<:fecharerr:1442682279322325095> A partida já foi finalizada.")
                     ]
                 });
             }
@@ -48,7 +48,7 @@ module.exports = {
                     embeds: [
                         new EmbedBuilder()
                             .setColor("#ff4d4d")
-                            .setDescription("❌ Você já ativou um Combo nesta partida.")
+                            .setDescription("<:fecharerr:1442682279322325095> Você já ativou o Combo nesta partida.")
                     ]
                 });
             }
@@ -64,7 +64,7 @@ module.exports = {
                         embeds: [
                             new EmbedBuilder()
                                 .setColor("#ff4d4d")
-                                .setDescription("❌ Você **não pode ativar o Combo durante a imagem da rodada.**")
+                                .setDescription("<:fecharerr:1442682279322325095> Você não pode ativar o Combo agora.")
                         ]
                     });
                 }
@@ -89,7 +89,7 @@ module.exports = {
                     embeds: [
                         new EmbedBuilder()
                             .setColor("#ff4d4d")
-                            .setDescription("❌ Seu perfil não foi encontrado.")
+                            .setDescription("<:fecharerr:1442682279322325095> Seu perfil não foi encontrado.")
                     ]
                 });
             }
@@ -102,7 +102,7 @@ module.exports = {
                     embeds: [
                         new EmbedBuilder()
                             .setColor("#ff4d4d")
-                            .setDescription("❌ Você não possui um item **Combo**.")
+                            .setDescription("<:fecharerr:1442682279322325095> Você não possui **Combos** no seu inventário.")
                     ]
                 });
             }
@@ -127,12 +127,7 @@ module.exports = {
             const bonus = getComboBonusByLevel(partida.nivel);
             const embed = new EmbedBuilder()
                 .setColor("#ffaa00")
-                .setTitle("🔥 Combo Ativado!")
-                .setDescription(
-                    `💥 Você ativou seu Combo!\n` +
-                    `📈 Bônus atual: **+${bonus}** (a partir do nível 4).\n\n` +
-                    `O Combo permanece ativo durante toda a partida.`
-                );
+                .setDescription(`<:icon_combo:1441177424124448868> Você ativou seu combo, bônus atual: (+${bonus})`);
 
             return message.reply({ embeds: [embed] });
 
@@ -142,7 +137,7 @@ module.exports = {
                 embeds: [
                     new EmbedBuilder()
                         .setColor("#ff4d4d")
-                        .setDescription("❌ Erro ao ativar o Combo.")
+                        .setDescription("<:fecharerr:1442682279322325095> Erro ao ativar o Combo.")
                 ]
             });
         }

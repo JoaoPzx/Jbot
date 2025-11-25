@@ -18,7 +18,7 @@ module.exports = {
                 embeds: [
                     new EmbedBuilder()
                         .setColor("Red")
-                        .setDescription("❌ Não há partida ativa neste canal.")
+                        .setDescription("<:fecharerr:1442682279322325095> Não existe uma partida ativa neste canal.")
                 ]
             });
         }
@@ -32,9 +32,7 @@ module.exports = {
                     new EmbedBuilder()
                         .setColor("Red")
                         .setDescription(
-                            `❌ O item **Tempo (+3s)** já está ativo!\n` +
-                            `⏳ Faltam **${partida.tempoBoostNiveisRestantes} níveis** para o efeito acabar.`
-                        )
+                            `<:fecharerr:1442682279322325095> Você já ativou o **tempo** nesta partida.`)
                 ]
             });
         }
@@ -47,7 +45,7 @@ module.exports = {
                 embeds: [
                     new EmbedBuilder()
                         .setColor("Red")
-                        .setDescription("❌ O item só pode ser usado **no início da partida** ou **logo após um acerto**.")
+                        .setDescription("<:fecharerr:1442682279322325095> Você não pode usar o tempo agora.")
                 ]
             });
         }
@@ -65,7 +63,7 @@ module.exports = {
                 embeds: [
                     new EmbedBuilder()
                         .setColor("Red")
-                        .setDescription("❌ Você não possui o item **Tempo (+3s)**.")
+                        .setDescription("<:fecharerr:1442682279322325095> Você não possui **Tempos** no seu inventário.")
                 ]
             });
         }
@@ -82,20 +80,14 @@ module.exports = {
         // ===========================
         // ATIVAR BOOST DE TEMPO
         // ===========================
-        partida.tempoExtraGlobal = 3;                  // +3s fixo
+        partida.tempoExtraGlobal = 2;                  // +3s fixo
         partida.tempoBoostNiveisRestantes = 30;        // dura 30 rodadas
 
         const embed = new EmbedBuilder()
-            .setColor("#3498db")
-            .setTitle("⏳ TEMPO EXTRA ATIVADO!")
+            .setColor("#ffaa00")
             .setDescription(
-                `🕒 O tempo de resposta ganhou **+3 segundos**!\n` +
-                `🔵 Este efeito durará por **30 níveis**.`
+                `<:icon_tempo:1441174907445837907> Foi aplicado **+2s** no tempo de acerto por 30 níveis!`
             )
-            .addFields(
-                { name: "Ativado por", value: `<@${userId}>`, inline: true },
-                { name: "Novo tempo", value: `+3s adicionados`, inline: true }
-            );
 
         return message.reply({ embeds: [embed] });
     }

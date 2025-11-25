@@ -13,7 +13,7 @@ const cloudinary = require("../../Utility/cloudinary");
 function embedErro(txt) {
     return new EmbedBuilder()
         .setColor("#ff4d4d")
-        .setDescription(`❌ ${txt}`);
+        .setDescription(`<:fecharerr:1442682279322325095> ${txt}`);
 }
 
 // =====================

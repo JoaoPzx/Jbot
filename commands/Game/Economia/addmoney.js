@@ -14,7 +14,7 @@ module.exports = {
                 embeds: [
                     new EmbedBuilder()
                         .setColor("#ff4d4d")
-                        .setTitle("❌ Erro")
+                        .setTitle("<:fecharerr:1442682279322325095> Erro")
                         .setDescription("Você **não possui permissão** para usar este comando.")
                 ]
             });
@@ -28,7 +28,7 @@ module.exports = {
                 embeds: [
                     new EmbedBuilder()
                         .setColor("#ff4d4d")
-                        .setTitle("❌ Erro")
+                        .setTitle("<:fecharerr:1442682279322325095> Erro")
                         .setDescription("Usuário inválido! Use **menção**, **ID** ou **apelido**.")
                 ]
             });
@@ -39,7 +39,7 @@ module.exports = {
                 embeds: [
                     new EmbedBuilder()
                         .setColor("#ff4d4d")
-                        .setTitle("❌ Erro")
+                        .setTitle("<:fecharerr:1442682279322325095> Erro")
                         .setDescription("Informe uma **quantia válida**. Ex: `1k`, `2500`, `3m`.")
                 ]
             });
@@ -71,7 +71,7 @@ module.exports = {
                 embeds: [
                     new EmbedBuilder()
                         .setColor("#ff4d4d")
-                        .setTitle("❌ Valor inválido")
+                        .setTitle("<:fecharerr:1442682279322325095> Valor inválido")
                         .setDescription("Use valores como:\n`1000`, `1k`, `2.5m`, `3b`.")
                 ]
             });

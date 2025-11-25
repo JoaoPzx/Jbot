@@ -44,7 +44,7 @@ module.exports = {
         if (!tema)
             return message.reply({
                 embeds: [
-                    criarEmbed("Red", `❌ **O tema \`${entradaTema}\` não existe.**`)
+                    criarEmbed("Red", `<:fecharerr:1442682279322325095> **O tema \`${entradaTema}\` não existe.**`)
                 ]
             });
 
@@ -66,7 +66,7 @@ module.exports = {
             if (!imagem)
                 return message.reply({
                     embeds: [
-                        criarEmbed("Red", `❌ **Nenhuma imagem encontrada com a resposta \`${entradaResp}\`.**`)
+                        criarEmbed("Red", `<:fecharerr:1442682279322325095> **Nenhuma imagem encontrada com a resposta \`${entradaResp}\`.**`)
                     ]
                 });
         } else {

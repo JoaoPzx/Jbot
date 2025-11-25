@@ -58,7 +58,7 @@ module.exports = {
                 embeds: [
                     new EmbedBuilder()
                         .setColor("#ff4d4d")
-                        .setDescription("❌ Não foi possível obter a imagem enviada.")
+                        .setDescription("<:fecharerr:1442682279322325095> Não foi possível obter a imagem enviada.")
                 ],
                 ephemeral: true
             });
@@ -69,7 +69,7 @@ module.exports = {
                 embeds: [
                     new EmbedBuilder()
                         .setColor("#ff4d4d")
-                        .setDescription("❌ O arquivo enviado não é uma imagem válida.")
+                        .setDescription("<:fecharerr:1442682279322325095> O arquivo enviado não é uma imagem válida.")
                 ],
                 ephemeral: true
             });
@@ -83,7 +83,7 @@ module.exports = {
                 embeds: [
                     new EmbedBuilder()
                         .setColor("#ff4d4d")
-                        .setDescription(`❌ O tema **${temaLower}** não existe.`)
+                        .setDescription(`<:fecharerr:1442682279322325095> O tema **${temaLower}** não existe.`)
                 ],
                 ephemeral: true
             });
@@ -101,7 +101,7 @@ module.exports = {
                 embeds: [
                     new EmbedBuilder()
                         .setColor("#ff4d4d")
-                        .setDescription(`❌ Já existe uma imagem no tema **${tema.nomeOriginal}** com a resposta \`${resposta}\`.`)
+                        .setDescription(`<:fecharerr:1442682279322325095> Já existe uma imagem no tema **${tema.nomeOriginal}** com a resposta \`${resposta}\`.`)
                 ],
                 ephemeral: true
             });
@@ -115,7 +115,7 @@ module.exports = {
                 embeds: [
                     new EmbedBuilder()
                         .setColor("#ff4d4d")
-                        .setDescription("❌ Esta imagem já foi adicionada anteriormente neste tema.")
+                        .setDescription("<:fecharerr:1442682279322325095> Esta imagem já foi adicionada anteriormente neste tema.")
                 ],
                 ephemeral: true
             });
@@ -133,7 +133,7 @@ module.exports = {
                 embeds: [
                     new EmbedBuilder()
                         .setColor("#ff4d4d")
-                        .setDescription("❌ Já existe uma imagem com um ID semelhante. Tente usar outro nome de resposta.")
+                        .setDescription("<:fecharerr:1442682279322325095> Já existe uma imagem com um ID semelhante. Tente usar outro nome de resposta.")
                 ],
                 ephemeral: true
             });
@@ -160,7 +160,7 @@ module.exports = {
                 embeds: [
                     new EmbedBuilder()
                         .setColor("#ff4d4d")
-                        .setDescription("❌ Erro ao salvar imagem no Cloudinary.")
+                        .setDescription("<:fecharerr:1442682279322325095> Erro ao salvar imagem no Cloudinary.")
                 ],
                 ephemeral: true
             });

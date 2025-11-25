@@ -9,7 +9,7 @@ const axios = require("axios");
 const sharp = require("sharp");
 
 function erro(txt) {
-    return new EmbedBuilder().setColor("#ff4d4d").setDescription(`❌ ${txt}`);
+    return new EmbedBuilder().setColor("#ff4d4d").setDescription(`<:fecharerr:1442682279322325095> ${txt}`);
 }
 
 function ok(txt) {
