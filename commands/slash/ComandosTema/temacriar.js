@@ -53,7 +53,7 @@ module.exports = {
 
         const existente = await Tema.findOne({ nomeLower: nomeLimpo });
         if (existente) {
-            return interaction.reply({ content: `⚠️ O tema **${existente.nomeOriginal}** já existe!`, ephemeral: true });
+            return interaction.reply({ content: `<:avisojf:1442687822208303215> O tema **${existente.nomeOriginal}** já existe!`, ephemeral: true });
         }
 
         // ============================

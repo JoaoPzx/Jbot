@@ -19,7 +19,7 @@ module.exports = {
         if (!args[0])
             return message.reply({
                 embeds: [
-                    criarEmbed("Yellow", "⚠️ **Uso correto:** `;imgshow <tema> <resposta opcional>`")
+                    criarEmbed("Yellow", "<:avisojf:1442687822208303215> **Uso correto:** `;imgshow <tema> <resposta opcional>`")
                 ]
             });
 
@@ -32,7 +32,7 @@ module.exports = {
         if (!temas.length)
             return message.reply({
                 embeds: [
-                    criarEmbed("Yellow", "⚠️ **Nenhum tema cadastrado ainda.**")
+                    criarEmbed("Yellow", "<:avisojf:1442687822208303215> **Nenhum tema cadastrado ainda.**")
                 ]
             });
 

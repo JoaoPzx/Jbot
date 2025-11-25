@@ -111,7 +111,7 @@ module.exports = {
         const embedConfirma = new EmbedBuilder()
             .setColor("#f1c40f")
             .setDescription(
-                `⚠️ Tem certeza que deseja **remover** a imagem?\n\n` +
+                `<:avisojf:1442687822208303215> Tem certeza que deseja **remover** a imagem?\n\n` +
                 `**Tema:** ${nomeExibir}\n` +
                 `**Resposta:** \`${imagem.resposta}\``
             )

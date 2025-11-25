@@ -66,7 +66,7 @@ module.exports = {
                 embeds: [
                     new EmbedBuilder()
                         .setColor("#ff4d4d")
-                        .setDescription(`⚠️ O tema **${tema.nomeOriginal || tema.nome}** não possui palavras cadastradas.`)
+                        .setDescription(`<:avisojf:1442687822208303215> O tema **${tema.nomeOriginal || tema.nome}** não possui palavras cadastradas.`)
                 ],
                 ephemeral: true
             });

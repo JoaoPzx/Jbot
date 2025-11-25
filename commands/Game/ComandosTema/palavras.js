@@ -47,7 +47,7 @@ module.exports = {
         );
 
         if (!tema) return erro(`O tema **${entradaRaw}** não existe.`);
-        if (!tema.imagens.length) return erro(`⚠️ O tema **${tema.nomeOriginal || tema.nome}** não possui palavras cadastradas.`);
+        if (!tema.imagens.length) return erro(`<:avisojf:1442687822208303215> O tema **${tema.nomeOriginal || tema.nome}** não possui palavras cadastradas.`);
 
         // ==========================
         // TRATAMENTO DO NOME

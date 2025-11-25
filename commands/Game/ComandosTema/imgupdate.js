@@ -67,7 +67,7 @@ module.exports = {
 
         if (!imagem) {
             return message.channel.send(
-                `⚠️ A resposta **${antigaResposta}** não foi encontrada no tema **${tema.nomeOriginal}**.`
+                `<:avisojf:1442687822208303215> A resposta **${antigaResposta}** não foi encontrada no tema **${tema.nomeOriginal}**.`
             );
         }
 

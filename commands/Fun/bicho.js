@@ -11,7 +11,7 @@ module.exports = {
         const canalDestino = message.client.channels.cache.get(canalID);
 
         if (!canalDestino) {
-            return message.channel.send("⚠️ Não consegui encontrar o canal configurado para enviar o sorteio.");
+            return message.channel.send("<:avisojf:1442687822208303215> Não consegui encontrar o canal configurado para enviar o sorteio.");
         }
 
         if (message.deletable) {

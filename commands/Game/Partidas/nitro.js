@@ -30,7 +30,7 @@ module.exports = {
                 embeds: [
                     new EmbedBuilder()
                         .setColor("#ffcc00")
-                        .setDescription("⚠️ O Nitro já está ativo nesta partida.")
+                        .setDescription("<:avisojf:1442687822208303215> O Nitro já está ativo nesta partida.")
                 ]
             });
         }

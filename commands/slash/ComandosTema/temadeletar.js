@@ -174,7 +174,7 @@ try {
             if (motivo === "confirmado" || motivo === "cancelado") return;
 
             msg.edit({
-                content: "⏳ Tempo esgotado.",
+                content: "<:sandclock:1442671562355380409> Tempo esgotado.",
                 embeds: [],
                 components: []
             }).catch(() => {});

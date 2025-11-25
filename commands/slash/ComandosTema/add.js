@@ -183,7 +183,7 @@ module.exports = {
         // ================================
         const embed = new EmbedBuilder()
             .setColor("Green")
-            .setDescription(`🖼  \`${resposta}\` adicionado em \`${tema.nomeOriginal}\``);
+            .setDescription(`<:newjbot:1440423555744534699>  \`${resposta}\` adicionado em \`${tema.nomeOriginal}\``);
 
         return interaction.reply({ embeds: [embed] });
     }

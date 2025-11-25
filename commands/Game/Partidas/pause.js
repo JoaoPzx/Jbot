@@ -54,7 +54,7 @@ module.exports = {
                 embeds: [
                     new EmbedBuilder()
                         .setColor("#ff4d4d")
-                        .setTitle("<:sandclock:1442671562355380409> Não é possível pausar agora")
+                        .setTitle("<:fecharerr:1442682279322325095> Não é possível pausar agora")
                 ]
             });
         }
@@ -130,12 +130,18 @@ module.exports = {
 
             const embedTimeout = new EmbedBuilder()
                 .setColor("#e74c3c")
-                .setDescription("<:tempoexpi:1442673849819992176> Pausa expirada, A partida será retomada em 5s .");
+                .setDescription("<:tempoexpi:1442673849819992176> Pausa expirada, a partida será retomada em 5s .");
 
             await message.channel.send({
                 content: `<@${partida.autorId}>`,
                 embeds: [embedTimeout]
             });
+
+              setTimeout(() => {
+            if (!partida.encerrada) {
+            iniciarRodada(message, partida);
+        }
+    }, 5000);
 
             partida.rodadaEmCurso = true;
             iniciarRodada(message, partida);
