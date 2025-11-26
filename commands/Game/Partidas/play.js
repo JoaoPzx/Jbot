@@ -393,7 +393,7 @@ partidasAtivas.delete(message.channel.id);
     if (temaDB.record?.userId && temaDB.record?.pontos > 0) {
         recordistaLinha = `**<@${temaDB.record.userId}> - ${temaDB.record.pontos} pontos**`;
     } else {
-        recordistaLinha = `**<@${message.client.user.id}> - 0 pts**`;
+        recordistaLinha = `**<@${message.client.user.id}> - 0 pontos**`;
     }
 
     const rankingOrdenado = montarRanking(partida);
@@ -495,7 +495,6 @@ if (rankingOrdenado.length > 0) {
 
     // =============================
     // 🔥 ATUALIZAÇÃO DO RECORDE DO TEMA
-    // (AQUI você personaliza livremente)
     // =============================
     temaAtualizado.record = {
         userId: melhorJogadorId,
@@ -552,7 +551,7 @@ function formatarRanking(lista, partida) {
 
             const label = pontos === 1 ? "ponto" : "pontos";
 
-            return `${i + 1}. <@${userId}> — **${pontos} ${label}**${sufixo}`;
+            return `${i + 1}. <@${userId}> — **${pontos}** ${label}${sufixo}`;
         })
         .join("\n");
 }

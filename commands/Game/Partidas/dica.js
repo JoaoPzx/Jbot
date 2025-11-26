@@ -61,10 +61,19 @@ module.exports = {
         // adiciona espaços entre tudo para ficar bonito
         const dicaEspacada = dica.split("").join(" ");
 
-        const embed = new EmbedBuilder()
-            .setColor("Green")
-            .setDescription("<:icon_dica:1441174865032904745> Dica Revelada!\n ```" + dicaEspacada + "```")
-            .setFooter({ text: `Foram reveladas ${quantidadeRevelar} letras (${Math.round(porcentagem * 100)}%).` });
+const embed = new EmbedBuilder()
+    .setColor("Green")
+    .setDescription(
+        "<:icon_dica:1441174865032904745> Dica Revelada!\n" +
+        "```" +
+        dicaEspacada +
+        "```"
+    )
+    .setFooter({
+        text: `Foram reveladas ${quantidadeRevelar} letras (${Math.round(porcentagem * 100)}%).`
+    });
+
+
 
         return message.reply({ embeds: [embed] });
     }

@@ -344,40 +344,50 @@ if (interaction.customId === "recusar_casamento") {
       // ====================================================
       // 🔥 SISTEMA DE PARTIDAS — DESPAUSAR
       // ====================================================
-      if (interaction.customId === "despausar_partida") {
-        const partida = partidasAtivas.get(interaction.channel.id);
-    
+if (interaction.customId === "despausar_partida") {
+    const partida = partidasAtivas.get(interaction.channel.id);
 
-        if (!partida || !partida.pausada) {
-          return interaction.reply({ content: "❌ A partida não está mais pausada.", ephemeral: true });
-        }
+    if (!partida || !partida.pausada) {
+        return interaction.reply({ 
+            content: "❌ A partida não está mais pausada.",
+            ephemeral: true 
+        });
+    }
 
-        if (interaction.user.id !== partida.autorPausa) {
-          return interaction.reply({
+    // 💥 CORREÇÃO: garantir que o autor seja reconhecido corretamente
+    if (interaction.user.id !== partida.autorId) {
+        return interaction.reply({
             content: "❌ Apenas quem pausou pode despausar a partida.",
             ephemeral: true
-          });
-        }
-
-        partida.pausada = false;
-        clearTimeout(partida.despausarTimer);
-
-        const embed = new EmbedBuilder()
-          .setColor("#2c72ec")
-          .setTitle("<:playjf:1442673291621040260> Partida Retomada")
-          .setDescription(`A partida foi retomada por ${interaction.user}.`)
-          .setFooter({ text: "A próxima imagem será enviada em instantes..." })
-          .setTimestamp();
-
-        await interaction.update({
-          content: "",
-          embeds: [embed],
-          components: []
         });
+    }
 
-        setTimeout(() => iniciarRodada(interaction.message, partida), 1000);
-        return;
-      }
+    partida.pausada = false;
+
+    if (partida.pauseExpireTimeout) {
+        clearTimeout(partida.pauseExpireTimeout);
+        partida.pauseExpireTimeout = null;
+    }
+
+    const embed = new EmbedBuilder()
+        .setColor("#2c72ec")
+        .setTitle("<:playjf:1442673291621040260> Partida retomada!")
+
+    await interaction.update({
+        content: "",
+        embeds: [embed],
+        components: []
+    });
+
+    // retomada segura após 5 segundos
+    setTimeout(() => {
+        if (!partida.encerrada) {
+            partida.rodadaEmCurso = true;
+            iniciarRodada(interaction, partida);
+        }
+    }, 3000);
+}
+
 
       // ===== CONFIRMAR AÇÃO =====
       if (interaction.customId === "confirmar_acao") {

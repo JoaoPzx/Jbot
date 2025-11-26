@@ -89,17 +89,21 @@ module.exports = {
         // ======================  PAUSAR  ==========================
         // =========================================================
 
-        partida.pausada = true;
+    partida.pausada = true;
 
-        // Cancela timers da rodada
-        if (partida.timeout) clearTimeout(partida.timeout);
-        if (partida.coletor) partida.coletor.stop("paused");
+// 🔥 ESSENCIAL: salvar quem pausou a partida
+partida.autorId = message.author.id;
 
-        // Cancela timer antigo de pausa, se existir
-        if (partida.pauseExpireTimeout) {
-            clearTimeout(partida.pauseExpireTimeout);
-            partida.pauseExpireTimeout = null;
-        }
+// Cancela timers da rodada
+if (partida.timeout) clearTimeout(partida.timeout);
+if (partida.coletor) partida.coletor.stop("paused");
+
+// Cancela timer antigo de pausa, se existir
+if (partida.pauseExpireTimeout) {
+    clearTimeout(partida.pauseExpireTimeout);
+    partida.pauseExpireTimeout = null;
+}
+
 
         const embedPause = new EmbedBuilder()
             .setColor("#2c72ec")
@@ -123,29 +127,28 @@ module.exports = {
 
         partida.pauseExpireTimeout = setTimeout(async () => {
 
-            // Se já retomou, cancela
-            if (!partida.pausada) return;
+    // Se a partida já foi retomada antes do timeout, não faz nada
+    if (!partida.pausada) return;
 
-            partida.pausada = false;
+    // Remover pausa
+    partida.pausada = false;
 
-            const embedTimeout = new EmbedBuilder()
-                .setColor("#e74c3c")
-                .setDescription("<:tempoexpi:1442673849819992176> Pausa expirada, a partida será retomada em 5s .");
+    const embedTimeout = new EmbedBuilder()
+        .setColor("#e74c3c")
+        .setDescription("<:tempoexpi:1442673849819992176> Pausa expirada, a partida será retomada em 5s.");
 
-            await message.channel.send({
-                content: `<@${partida.autorId}>`,
-                embeds: [embedTimeout]
-            });
+    await message.channel.send({
+        content: `<@${partida.autorId}>`,
+        embeds: [embedTimeout]
+    });
 
-              setTimeout(() => {
-            if (!partida.encerrada) {
-            iniciarRodada(message, partida);
-        }
-    }, 1000);
-
+    // 🔥 AGORA SIM: inicia apenas UMA rodada após 5s
+    setTimeout(() => {
+        if (!partida.encerrada) {
             partida.rodadaEmCurso = true;
             iniciarRodada(message, partida);
+        }
+    }, 5000);
 
-        }, 5 * 60 * 1000);
-    }
-};
+}, 5 * 60 * 1000);
+}};
