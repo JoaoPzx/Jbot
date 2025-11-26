@@ -92,7 +92,7 @@ module.exports = {
                     value: `<:percentual:1441546241820459068> **${porcentagem}% → +${formatarNumero(bonus)} moedas**`,
                     inline: true
                 },
-                { name: "\u200B", value: "\u200B", inline: false },
+                { name: "", value: "", inline: false },
                 {
                     name: "Ganho Total",
                     value: `<:coin1:1441491987537727669> **${formatarNumero(total)} moedas**`,

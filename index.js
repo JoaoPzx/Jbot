@@ -300,7 +300,7 @@ if (interaction.customId === "recusar_casamento") {
           );
 
           return interaction.followUp({
-            content: "🖼 **Wallpaper atualizado com sucesso!**",
+            content: "<:imagemjbot:1440425616359952445> **Wallpaper atualizado com sucesso!**",
             flags: 64
           });
         });
@@ -413,7 +413,7 @@ if (interaction.customId === "recusar_casamento") {
         );
 
         return interaction.update({
-          content: `🎨 **Cor atualizada para:** \`${selected}\``,
+          content: `<:paletejf:1442988083497926706> **Cor atualizada para:** \`${selected}\``,
           components: []
         });
       }
@@ -434,7 +434,7 @@ if (interaction.customId === "recusar_casamento") {
         );
 
         return interaction.reply({
-          content: "📌 **Biografia atualizada com sucesso!**",
+          content: "<:lapisjf:1442988550466441297> **Biografia atualizada com sucesso!**",
           flags: 64
         });
       }

@@ -82,7 +82,7 @@ module.exports = {
             return setTimeout(() => {
                 partida.rodadaEmCurso = true;
                 iniciarRodada(message, partida);
-            }, 1000);
+            }, 5000);
         }
 
         // =========================================================
@@ -141,7 +141,7 @@ module.exports = {
             if (!partida.encerrada) {
             iniciarRodada(message, partida);
         }
-    }, 5000);
+    }, 1000);
 
             partida.rodadaEmCurso = true;
             iniciarRodada(message, partida);

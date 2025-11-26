@@ -83,15 +83,22 @@ module.exports = {
         // ===========================
         // TEXTO FINAL
         // ===========================
-        let texto = textoTitulo;
+        // ===========================
+// TEXTO FINAL
+// ===========================
+let texto = textoTitulo;
 
-        for (const item of ordenados) {
-            const tema = item.tema;
-            const pontos = item.pontos;
-            const nomeExibir = nomeComInsignia(tema);
+// Função local para formatar número sem letras
+const formatar = (n) => new Intl.NumberFormat("pt-BR").format(n);
 
-            texto += `${nomeExibir} — **${pontos} pontos**\n`;
-        }
+for (const item of ordenados) {
+    const tema = item.tema;
+    const pontos = formatar(item.pontos); // << FORMATADO AQUI
+    const nomeExibir = nomeComInsignia(tema);
+
+    texto += `**${nomeExibir}** - **${pontos} pontos**\n`;
+}
+
 
         // ===========================
         // EMBED FINAL

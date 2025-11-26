@@ -5,7 +5,7 @@ const { partidasAtivas } = require("./play");
 module.exports = {
     name: "tempo",
     aliases: ["t"],
-    description: "Adiciona +3s ao tempo das próximas rodadas (dura 30 níveis).",
+    description: "Adiciona +2s ao tempo das próximas rodadas (dura 30 níveis).",
 
     async execute(message) {
 
@@ -30,9 +30,9 @@ module.exports = {
             return message.reply({
                 embeds: [
                     new EmbedBuilder()
-                        .setColor("Red")
+                        .setColor("#ffcc00")
                         .setDescription(
-                            `<:fecharerr:1442682279322325095> Você já ativou o **tempo** nesta partida.`)
+                            `<:avisojf:1442687822208303215> Você já ativou o **tempo** nesta partida.`)
                 ]
             });
         }
@@ -80,8 +80,8 @@ module.exports = {
         // ===========================
         // ATIVAR BOOST DE TEMPO
         // ===========================
-        partida.tempoExtraGlobal = 2;                  // +3s fixo
-        partida.tempoBoostNiveisRestantes = 30;        // dura 30 rodadas
+        partida.tempoExtraGlobal = 3;                  // +3s fixo
+        partida.tempoBoostNiveisRestantes = 25;        // dura 30 rodadas
 
         const embed = new EmbedBuilder()
             .setColor("Green")

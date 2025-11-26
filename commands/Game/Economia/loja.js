@@ -22,7 +22,7 @@ module.exports = {
                 nome: "Resposta",
                 nomePlural: "Respostas",
                 emoji: "<:icon_resposta:1441904668748939374>",
-                preco: 20,
+                preco: 15,
                 desc: "Revela a **resposta completa** da imagem da rodada.",
                 aliases: ["r"]
             },
@@ -45,15 +45,6 @@ module.exports = {
                 aliases: ["n"]
             },
 
-            pular: {
-                nome: "Pular",
-                nomePlural: "Pulos",
-                emoji: "<:icon_pulo:1441182320462790786>",
-                preco: 70,
-                desc: "Pula a imagem da rodada (Máx 5 por partida).",
-                aliases: ["s"]
-            },
-
             combo: {
                 nome: "Combo",
                 nomePlural: "Combos",
@@ -61,7 +52,17 @@ module.exports = {
                 preco: 100,
                 desc: "Aumenta progressivamente a pontuação do jogador.",
                 aliases: ["c"]
-            }
+            },
+
+            chance: {
+                nome: "Chance",
+                nomePlural: "Chances",
+                emoji: "<:icon_chance:1443029812074512394>",
+                preco: 150,
+                desc: "Recupera uma partida perdida por tempo esgotado",
+                aliases: ["ch"]
+            },
+
         };
 
 
@@ -184,10 +185,19 @@ module.exports = {
                 embeds: [
                     new EmbedBuilder()
                         .setColor("Red")
-                        .setDescription(
-                            `<:fecharerr:1442682279322325095> Moedas insuficientes.\n` +
-                            `💰 Preço: **${precoFmt}**\n` +
-                            `💸 Seu saldo: **${perfil.moedas.toLocaleString("pt-BR")}**`
+                        .setDescription("**<:fecharerr:1442682279322325095> Saldo insuficiente**")
+                        .addFields(
+                            {
+                                name: `Preço`, 
+                                value: `**<:coin1:1441491987537727669> ${precoFmt}**`,
+                                inline: true
+                            },
+
+                            {
+                                name: `Seu saldo`,
+                                value: `<:carteira:1440068592354725888> **${perfil.moedas.toLocaleString("pt-BR")}**`,
+                                inline: true
+                            }
                         )
                 ]
             });

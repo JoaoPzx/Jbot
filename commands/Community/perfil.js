@@ -386,11 +386,11 @@ for (const { img } of icons) {
 
         const iconMap = {
             dica: "assets/icons/dica.png",
+            resposta: "assets/icons/resposta.png",
             tempo: "assets/icons/tempo.png",
+            chance: "assets/icons/chance.png",
             nitro: "assets/icons/nitro.png",
             combo: "assets/icons/combo.png",
-            pulo: "assets/icons/pulo.png",
-            resposta: "assets/icons/resposta.png",
         };
 
         const invItens = perfil.inventario || [];

@@ -2,6 +2,22 @@ const { EmbedBuilder } = require("discord.js");
 const Tema = require("../../../models/Tema");
 const { BANNER_PADRAO } = require("../../Utility/banners");
 const partidasAtivas = new Map();
+
+const recentEncerradas = new Map(); 
+
+function guardarSnapshotParaRecuperar(channelId, snapshot) {
+
+    const prev = recentEncerradas.get(channelId);
+    if (prev && prev.timer) clearTimeout(prev.timer);
+
+    const expiresAt = Date.now() + 15_000;
+    const timer = setTimeout(() => {
+        recentEncerradas.delete(channelId);
+    }, 15_000);
+
+    recentEncerradas.set(channelId, { snapshot, expiresAt, timer });
+}
+
 const Perfil = require("../../../models/Perfil");
 const tema = require("../ComandosTema/tema");
 
@@ -211,7 +227,7 @@ async function iniciarRodada(message, partida) {
 
     // 🔥 BUFF DO +3s (Tempo Extra)
     if (partida.tempoBoostNiveisRestantes > 0) {
-        partida.tempoExtraGlobal = 2;
+        partida.tempoExtraGlobal = 3;
     } else {
         partida.tempoExtraGlobal = 0;
     }
@@ -341,19 +357,34 @@ await message.channel.send({ embeds: [embedAcerto] });
 });
     collector.on("end", async (_, motivo) => {
 
-    // Se já foi encerrada em outro fluxo → NÃO DUPLICA EMBED
     if (partida.encerrada) return;
 
-    // (REMOVIDO: motivo === "pulado")
-
-    // Se acertou ou pausou, não envia embed final
     if (motivo === "acertou" || partida.pausada) return;
 
-    // Marca como encerrada
-    partida.encerrada = true;
+   partida.encerrada = true;
 
-    // Remove da lista
-    partidasAtivas.delete(message.channel.id);
+// === antes de remover: salvar snapshot para possibilidade de recuperar (apenas TIMEOUT real) ===
+const channelId = message.channel.id;
+const snapshot = {
+    tema: partida.tema,
+    temaNomeExibir: partida.temaNomeExibir,
+    nivel: partida.nivel,
+    ranking: partida.ranking,
+    cor: partida.cor,
+    combos: partida.combos || {},
+    nitro: partida.nitro || false,
+    tempoBoostNiveisRestantes: partida.tempoBoostNiveisRestantes || 0,
+    tempoExtraGlobal: partida.tempoExtraGlobal || 0,
+    inicio: partida.inicio || Date.now(),
+    // pode adicionar mais se for necessário depois
+};
+
+// guarda por 15s para possível recuperação
+guardarSnapshotParaRecuperar(channelId, snapshot);
+
+// agora sim remove a partida do cache
+partidasAtivas.delete(message.channel.id);
+
 
     const temaDB = await Tema.findById(partida.tema._id);
 
@@ -534,16 +565,17 @@ module.exports = {
     description: "Inicia uma partida de adivinhação baseado em um tema.",
     execute,
     partidasAtivas,
+    recentEncerradas,   // <- exporte o mapa para uso por comandos
     encerrarPartida: function (channelId) {
         const partida = partidasAtivas.get(channelId);
         if (!partida) return false;
 
-        // Garante que nenhuma pausa antiga vaze para esta partida
-        if (partida.pauseExpireTimeout) {
-        clearTimeout(partida.pauseExpireTimeout);
-        partida.pauseExpireTimeout = null;
-}
-
+        // limpar snapshot expired timer (caso exista)
+        const recent = recentEncerradas.get(channelId);
+        if (recent && recent.timer) {
+            clearTimeout(recent.timer);
+            recentEncerradas.delete(channelId);
+        }
 
         partida.encerrada = true;
         if (partida.coletor) partida.coletor.stop("fim_manual");
@@ -557,3 +589,4 @@ module.exports = {
     iniciarRodada,
     getComboBonusByLevel
 };
+
