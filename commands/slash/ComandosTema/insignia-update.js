@@ -10,22 +10,67 @@ module.exports = {
         .addStringOption(option =>
             option
                 .setName("tema")
-                .setDescription("Nome do tema (nomeLower)")
+                .setDescription("Nome do tema")
+                .setAutocomplete(true)
                 .setRequired(true)
         )
         .addStringOption(option =>
             option
                 .setName("emoji")
-                .setDescription("Emoji custom para usar como insígnia (se não enviar imagem)")
+                .setDescription("Escolha um emoji custom ou escreva um ID/emoji.")
+                .setAutocomplete(true)
                 .setRequired(false)
         )
         .addAttachmentOption(option =>
             option
                 .setName("imagem")
-                .setDescription("Imagem da nova insígnia (será convertida em emoji)")
+                .setDescription("Nova imagem da insígnia (vira emoji).")
                 .setRequired(false)
         ),
 
+    // =====================================================
+    // 🔍 AUTOCOMPLETE
+    // =====================================================
+    async autocomplete(interaction) {
+
+        const focused = interaction.options.getFocused();
+
+        // Autocomplete do TEMA
+        if (interaction.options.getSubcommand === undefined || 
+            interaction.options.getFocused(true).name === "tema") {
+
+            const temas = await Tema.find().limit(25);
+
+            return interaction.respond(
+                temas
+                    .filter(t => t.nomeLower.includes(focused.toLowerCase()))
+                    .map(t => ({
+                        name: t.nomeOriginal, // sem insígnia!
+                        value: t.nomeLower
+                    }))
+            );
+        }
+
+        // Autocomplete do EMOJI
+        if (interaction.options.getFocused(true).name === "emoji") {
+
+            const emojis = interaction.guild.emojis.cache;
+
+            const filtrados = emojis
+                .filter(e => e.name.toLowerCase().includes(focused.toLowerCase()))
+                .map(e => ({
+                    name: `<:${e.name}:${e.id}>  ${e.name}`,
+                    value: `<:${e.name}:${e.id}>`
+                }))
+                .slice(0, 25);
+
+            return interaction.respond(filtrados);
+        }
+    },
+
+    // =====================================================
+    // 🎯 EXECUÇÃO
+    // =====================================================
     async execute(interaction) {
 
         if (!interaction.member.permissions.has(PermissionsBitField.Flags.Administrator)) {
@@ -40,6 +85,7 @@ module.exports = {
         const imagem = interaction.options.getAttachment("imagem");
 
         const tema = await Tema.findOne({ nomeLower: temaEntrada });
+
         if (!tema) {
             return interaction.reply({
                 content: `<:fecharerr:1442682279322325095> O tema **${temaEntrada}** não existe.`,
@@ -49,9 +95,9 @@ module.exports = {
 
         const guild = interaction.guild;
 
-        // ==============================================
+        // =====================================================
         // 🔥 APAGAR INSÍGNIA ANTIGA
-        // ==============================================
+        // =====================================================
         if (tema.insigniaEmojiId) {
             try {
                 const oldEmoji = guild.emojis.cache.get(tema.insigniaEmojiId);
@@ -61,9 +107,9 @@ module.exports = {
             }
         }
 
-        // ==============================================
+        // =====================================================
         // 🔥 NOVA INSÍGNIA
-        // ==============================================
+        // =====================================================
         let insigniaEmoji = null;
         let insigniaEmojiId = null;
 
@@ -147,24 +193,24 @@ module.exports = {
             });
         }
 
-        // ==============================================
+        // =====================================================
         // 🔥 SALVAR NO BANCO
-        // ==============================================
+        // =====================================================
         tema.insigniaEmoji = insigniaEmoji;
         tema.insigniaEmojiId = insigniaEmojiId;
 
         await tema.save();
 
-        // ==============================================
+        // =====================================================
         // 🔥 RESPOSTA FINAL
-        // ==============================================
+        // =====================================================
         const embed = new EmbedBuilder()
             .setColor("#00ff9d")
-            .setTitle("🏅 Insígnia Atualizada!")
+            .setTitle("Insígnia Atualizada!")
             .addFields(
-                { name: "📌 Tema", value: tema.nomeOriginal, inline: true },
-                { name: "🏅 Nova Insígnia", value: insigniaEmoji, inline: true },
-                { name: "👤 Atualizado por", value: `<@${interaction.user.id}>`, inline: true }
+                { name: "Tema", value: `**${tema.nomeOriginal}**`, inline: true },
+                { name: "Nova Insígnia", value: insigniaEmoji, inline: true },
+                { name: "Atualizado por", value: `<:user:1440074090663645355> <@${interaction.user.id}>`, inline: true }
             )
             .setTimestamp();
 

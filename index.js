@@ -259,63 +259,94 @@ if (interaction.customId === "recusar_casamento") {
       // ==============================================
       // ===== WALLPAPER — APENAS ANEXO / ARRASTAR ====
       // ==============================================
-      if (interaction.customId === "editar_wallpaper") {
+const axios = require("axios");
+const cloudinary = require("cloudinary").v2;
 
-        await interaction.reply({
-          content: "📸 **Envie agora seu novo wallpaper.**\n\nArraste uma imagem ou anexe um arquivo.\n❌ *Links não são aceitos.*\n⏳ Você tem **1 minuto**.",
-          flags: 64
-        });
+if (interaction.customId === "editar_wallpaper") {
 
-        const filter = (msg) =>
-          msg.author.id === interaction.user.id;
+    await interaction.reply({
+        content: "📸 **Envie agora seu novo wallpaper.**\n\nArraste uma imagem ou anexe um arquivo.\n❌ *Links não são aceitos.*\n⏳ Você tem **1 minuto**.",
+        flags: 64
+    });
 
-        const collector = interaction.channel.createMessageCollector({
-          filter,
-          max: 1,
-          time: 60_000
-        });
+    const filter = (msg) => msg.author.id === interaction.user.id;
 
-        collector.on("collect", async (msg) => {
+    const collector = interaction.channel.createMessageCollector({
+        filter,
+        max: 1,
+        time: 60_000
+    });
 
-          const attachment = msg.attachments.first();
+    collector.on("collect", async (msg) => {
 
-          if (!attachment) {
-            return interaction.followUp({
-              content: "❌ Você precisa **anexar uma imagem verdadeira**.",
-              flags: 64
+        const attachment = msg.attachments.first();
+        if (!attachment)
+            return interaction.followUp({ content: "❌ Envie uma **imagem**.", flags: 64 });
+
+        if (!attachment.contentType?.startsWith("image/"))
+            return interaction.followUp({ content: "❌ Arquivo inválido.", flags: 64 });
+
+        try {
+            // 1️⃣ Baixar a imagem do Discord CDN
+            const imgBuffer = await axios.get(attachment.url, {
+                responseType: "arraybuffer"
             });
-          }
 
-          if (!attachment.contentType?.startsWith("image/")) {
+            // 2️⃣ Enviar o buffer ao Cloudinary
+            const upload = await cloudinary.uploader.upload_stream(
+                {
+                    folder: "jbot/wallpapers",
+                    public_id: `wallpaper_${interaction.user.id}`,
+                    overwrite: true
+                },
+                async (error, result) => {
+                    if (error) {
+                        console.error(error);
+                        return interaction.followUp({
+                            content: "❌ Erro ao enviar a imagem para o Cloudinary.",
+                            flags: 64
+                        });
+                    }
+
+                    // 3️⃣ Salvar no perfil
+                    await Perfil.updateOne(
+                        { userId: interaction.user.id },
+                        { wallpaper: result.secure_url },
+                        { upsert: true }
+                    );
+
+                    return interaction.followUp({
+                        content: "<:imagemjbot:1440425616359952445> **Wallpaper atualizado com sucesso!**",
+                        flags: 64
+                    });
+                }
+            );
+
+            // enviar buffer ao stream
+            upload.end(Buffer.from(imgBuffer.data));
+
+        } catch (err) {
+            console.error(err);
             return interaction.followUp({
-              content: "❌ O arquivo enviado **não é uma imagem válida**.",
-              flags: 64
+                content: "❌ Ocorreu um erro ao processar sua imagem.",
+                flags: 64
             });
-          }
+        }
+    });
 
-          await Perfil.updateOne(
-            { userId: interaction.user.id },
-            { $set: { wallpaper: attachment.url } },
-            { upsert: true }
-          );
-
-          return interaction.followUp({
-            content: "<:imagemjbot:1440425616359952445> **Wallpaper atualizado com sucesso!**",
-            flags: 64
-          });
-        });
-
-        collector.on("end", (collected) => {
-          if (collected.size === 0) {
+    collector.on("end", (collected) => {
+        if (collected.size === 0) {
             interaction.followUp({
-              content: "⌛ Tempo esgotado! Clique novamente em *Wallpaper* para tentar novamente.",
-              flags: 64
+                content: "⌛ Tempo esgotado! Clique novamente em *Wallpaper* para tentar novamente.",
+                flags: 64
             });
-          }
-        });
+        }
+    });
 
-        return;
-      }
+    return;
+}
+
+
 
       // ===== BIOGRAFIA =====
       if (interaction.customId === "editar_bio") {
