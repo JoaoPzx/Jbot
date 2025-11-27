@@ -298,14 +298,25 @@ async function iniciarRodada(message, partida) {
         perfil.pontos = (perfil.pontos || 0) + ganho;
         await perfil.save();
 
-        // Ranking da partida
-        partida.ranking[msg.author.id] =
-            (partida.ranking[msg.author.id] || 0) + ganho;
+       // Ranking da partida
+partida.ranking[msg.author.id] =
+    (partida.ranking[msg.author.id] || 0) + ganho;
 
-        partida.rodadaTerminada = true;
-        collector.stop("acertou");
+// ⭐ RECOMPENSA DE 1 MOEDA POR NÍVEL CONCLUÍDO
+try {
+    const jogador = await Perfil.findOne({ userId: msg.author.id }) || await Perfil.create({ userId: msg.author.id });
 
-        msg.react("<:pontos:1442182692748791889>").catch(() => {});
+    jogador.moedas = (jogador.moedas || 0) + 1; // +1 moeda por subir de nível
+    await jogador.save().catch(() => {});
+} catch (err) {
+    console.error("Erro ao adicionar moeda por nível:", err);
+};
+
+partida.rodadaTerminada = true;
+collector.stop("acertou");
+
+msg.react("<:pontos:1442182692748791889>").catch(() => {});
+
 
         // 🔥 AGORA usa formatarRanking → mostra (+2), (+3), etc
         const rankingOrdenado = montarRanking(partida);

@@ -1,13 +1,16 @@
 // index.js
-const { 
-    EmbedBuilder, 
-    Collection, 
-    Client, 
-    IntentsBitField 
-} = require('discord.js');
-
+const { EmbedBuilder, Collection, Client, IntentsBitField } = require('discord.js');
 const { partidasAtivas, iniciarRodada } = require("./commands/Game/Partidas/play");
 const Perfil = require("./models/Perfil"); // IMPORTAÇÃO CORRETA
+const {
+  mesas,
+  calcularMao,
+  gerarEmbed,
+  botoesJogo,
+  botoesDesativados
+} = require("./commands/Game/Cassino/blackjack");
+
+
 
 require('dotenv').config();
 const { connect } = require('./database');
@@ -154,7 +157,7 @@ client.on('messageCreate', async (message) => {
     await command.execute(message, args);
   } catch (error) {
     console.error(error);
-    message.reply('❌ Ocorreu um erro ao executar esse comando.');
+    message.reply('<:fecharerr:1442682279322325095> Ocorreu um erro ao executar esse comando.');
   }
 });
 
@@ -185,18 +188,105 @@ client.on('interactionCreate', async (interaction) => {
     // -------------------------
     if (interaction.isButton()) {
 
-      // ====================================================
-      // 🔥 /perfil-editar — BOTÕES (COR / WALLPAPER / BIO)
-      // ====================================================
+      // =======================
+// 🎰 BOTÕES DO BLACKJACK
+// =======================
+const userId = interaction.user.id;
+const mesa = mesas.get(userId);
 
-      // ===== COR DO PERFIL =====
+if (mesa && interaction.channel.id === mesa.canal) {
 
-      // BOTÃO: Aceitar casamento
+    // HIT = comprar carta
+    if (interaction.customId === "bj_hit") {
+        const carta = mesa.baralho.pop();
+        mesa.jogador.push(carta);
+
+        const total = calcularMao(mesa.jogador);
+
+        // estourou
+        if (total > 21) {
+            const embed = gerarEmbed(mesa, false)
+                .setColor("#ff4d4d")
+                .setFooter({ text: "💥 Você estourou! Dealer venceu." });
+
+            await interaction.update({
+                embeds: [embed],
+                components: [botoesDesativados()]
+            });
+
+            return mesas.delete(userId);
+        }
+
+        const embed = gerarEmbed(mesa, true);
+
+        return interaction.update({
+            embeds: [embed],
+            components: [botoesJogo()]
+        });
+    }
+
+    // STAND = parar
+    // STAND = parar
+if (interaction.customId === "bj_stand") {
+
+    while (calcularMao(mesa.dealer) < 17) {
+        mesa.dealer.push(mesa.baralho.pop());
+    }
+
+    const totalJog = calcularMao(mesa.jogador);
+    const totalDeal = calcularMao(mesa.dealer);
+
+    let resultado = "";
+    let cor = "#FFD700";
+
+    let premio = 0;
+    let devolucao = 0;
+
+    if (totalDeal > 21) {
+        resultado = "🎉 Dealer estourou! Você venceu!";
+        premio = mesa.aposta * 2;
+
+    } else if (totalJog > totalDeal) {
+        resultado = "🏆 Você venceu!";
+        premio = mesa.aposta * 2;
+
+    } else if (totalJog < totalDeal) {
+        resultado = "❌ Dealer venceu.";
+        cor = "#ff4d4d";
+
+    } else {
+        resultado = "🤝 Empate! Push.";
+        cor = "#a8a8a8";
+        devolucao = mesa.aposta;
+    }
+
+    // SALVAR MOEDAS
+    const perfil = await Perfil.findOne({ userId: interaction.user.id });
+    if (perfil) {
+        perfil.moedas += premio;
+        perfil.moedas += devolucao;
+        await perfil.save();
+    }
+
+    const embed = gerarEmbed(mesa, false)
+        .setColor(cor)
+        .setFooter({ text: resultado });
+
+    await interaction.update({
+        embeds: [embed],
+        components: [botoesDesativados()]
+    });
+
+    return mesas.delete(interaction.user.id);
+}};
+
+
+
 if (interaction.customId === "aceitar_casamento") {
 
     const pedido = interaction.client.pedidosCasamento?.get(interaction.user.id);
     if (!pedido) {
-        return interaction.reply({ content: "❌ Não há nenhum pedido pendente!", ephemeral: true });
+        return interaction.reply({ content: "<:fecharerr:1442682279322325095> Não há nenhum pedido pendente!", ephemeral: true });
     }
 
     const userA = pedido.de;
@@ -219,13 +309,13 @@ if (interaction.customId === "recusar_casamento") {
 
     const pedido = interaction.client.pedidosCasamento?.get(interaction.user.id);
     if (!pedido) {
-        return interaction.reply({ content: "❌ Não há nenhum pedido pendente!", ephemeral: true });
+        return interaction.reply({ content: "<:fecharerr:1442682279322325095> Não há nenhum pedido pendente!", ephemeral: true });
     }
 
     interaction.client.pedidosCasamento.delete(interaction.user.id);
 
     return interaction.update({
-        content: `❌ O pedido de casamento foi recusado.`,
+        content: `<:fecharerr:1442682279322325095> O pedido de casamento foi recusado.`,
         components: []
     });
 }
@@ -250,7 +340,7 @@ if (interaction.customId === "recusar_casamento") {
           ]);
 
         return interaction.reply({
-          content: "🎨 Escolha a nova cor do seu perfil:",
+          content: "<:colorjf:1443729261247598710> Escolha a nova cor do seu perfil:",
           components: [new ActionRowBuilder().addComponents(menu)],
           ephemeral: true
         });
@@ -265,7 +355,7 @@ const cloudinary = require("cloudinary").v2;
 if (interaction.customId === "editar_wallpaper") {
 
     await interaction.reply({
-        content: "📸 **Envie agora seu novo wallpaper.**\n\nArraste uma imagem ou anexe um arquivo.\n❌ *Links não são aceitos.*\n⏳ Você tem **1 minuto**.",
+        content: "<:camerajf:1442989958678712411> **Envie agora seu novo wallpaper.**\n\nArraste uma imagem ou anexe um arquivo.\n❌ *Links não são aceitos.*\n⏳ Você tem **1 minuto**.",
         flags: 64
     });
 
@@ -281,10 +371,10 @@ if (interaction.customId === "editar_wallpaper") {
 
         const attachment = msg.attachments.first();
         if (!attachment)
-            return interaction.followUp({ content: "❌ Envie uma **imagem**.", flags: 64 });
+            return interaction.followUp({ content: "<:fecharerr:1442682279322325095> Envie uma **imagem**.", flags: 64 });
 
         if (!attachment.contentType?.startsWith("image/"))
-            return interaction.followUp({ content: "❌ Arquivo inválido.", flags: 64 });
+            return interaction.followUp({ content: "<:fecharerr:1442682279322325095> Arquivo inválido.", flags: 64 });
 
         try {
             // 1️⃣ Baixar a imagem do Discord CDN
@@ -303,7 +393,7 @@ if (interaction.customId === "editar_wallpaper") {
                     if (error) {
                         console.error(error);
                         return interaction.followUp({
-                            content: "❌ Erro ao enviar a imagem para o Cloudinary.",
+                            content: "<:fecharerr:1442682279322325095> Erro ao enviar a imagem para o Cloudinary.",
                             flags: 64
                         });
                     }
@@ -328,7 +418,7 @@ if (interaction.customId === "editar_wallpaper") {
         } catch (err) {
             console.error(err);
             return interaction.followUp({
-                content: "❌ Ocorreu um erro ao processar sua imagem.",
+                content: "<:fecharerr:1442682279322325095> Ocorreu um erro ao processar sua imagem.",
                 flags: 64
             });
         }
@@ -337,7 +427,7 @@ if (interaction.customId === "editar_wallpaper") {
     collector.on("end", (collected) => {
         if (collected.size === 0) {
             interaction.followUp({
-                content: "⌛ Tempo esgotado! Clique novamente em *Wallpaper* para tentar novamente.",
+                content: "<:sandclock:1442671562355380409> Tempo esgotado! Clique novamente em *Wallpaper* para tentar novamente.",
                 flags: 64
             });
         }
@@ -380,7 +470,7 @@ if (interaction.customId === "despausar_partida") {
 
     if (!partida || !partida.pausada) {
         return interaction.reply({ 
-            content: "❌ A partida não está mais pausada.",
+            content: "<:fecharerr:1442682279322325095> A partida não está mais pausada.",
             ephemeral: true 
         });
     }
@@ -388,7 +478,7 @@ if (interaction.customId === "despausar_partida") {
     // 💥 CORREÇÃO: garantir que o autor seja reconhecido corretamente
     if (interaction.user.id !== partida.autorId) {
         return interaction.reply({
-            content: "❌ Apenas quem pausou pode despausar a partida.",
+            content: "<:fecharerr:1442682279322325095> Apenas quem pausou pode despausar a partida.",
             ephemeral: true
         });
     }
@@ -429,8 +519,7 @@ if (interaction.customId === "despausar_partida") {
             name: interaction.client.user.username,
             iconURL: interaction.client.user.displayAvatarURL()
           })
-          .setTitle("✅ AÇÃO CONCLUÍDA!")
-          .setDescription(texto)
+          .setDescription(`**<:checkjf:1443729850568413256> AÇÃO CONCLUÍDA!**\n\n ${texto}`)
           .setFooter({ text: "Lembrete Finalizado!" })
           .setTimestamp();
 
@@ -500,7 +589,7 @@ if (interaction.customId === "despausar_partida") {
     if (interaction.replied || interaction.deferred) {
       try { 
         await interaction.editReply({ 
-          content: '❌ Erro interno ao executar.', 
+          content: '<:fecharerr:1442682279322325095> Erro interno ao executar.', 
           embeds: [], 
           components: [] 
         }); 
@@ -508,7 +597,7 @@ if (interaction.customId === "despausar_partida") {
     } else {
       try { 
         await interaction.reply({ 
-          content: '❌ Erro interno ao executar.', 
+          content: '<:fecharerr:1442682279322325095> Erro interno ao executar.', 
           flags: 64 
         }); 
       } catch {}
