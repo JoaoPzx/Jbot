@@ -8,9 +8,6 @@ module.exports = {
 
     async execute(message, args) {
 
-        // ============================
-        // EMBEDS PADRÃO (ERRO)
-        // ============================
         const erro = (txt) =>
             message.reply({
                 embeds: [
@@ -24,22 +21,15 @@ module.exports = {
                 ]
             });
 
-        // ============================
-        // VERIFICA ARGUMENTO
-        // ============================
         if (!args[0])
             return erro("Uso correto: `;record <tema>`");
 
         const entrada = args.shift().toLowerCase().trim();
 
-        // ============================
-        // BUSCAR TEMAS
-        // ============================
         const temas = await Tema.find({});
         if (!temas.length)
             return erro("Nenhum tema cadastrado ainda.");
 
-        // Aceita abreviação
         const tema = temas.find(t =>
             (t.nomeOriginal || t.nome).toLowerCase().startsWith(entrada)
         );
@@ -47,25 +37,21 @@ module.exports = {
         if (!tema)
             return erro(`Nenhum tema corresponde a **${entrada}**.`);
 
-        // ============================
-        // VALIDAR SE TEM RECORDE
-        // ============================
-        if (!tema.record?.userId || !tema.record?.pontos)
-            return erro(`O tema **${tema.nomeOriginal || tema.nome}** ainda não possui um recordista.`);
+        // =============== INSÍGNIA + NOME ===============
+        const insignia = tema.insigniaEmoji ? `${tema.insigniaEmoji} ` : "";
+        const nomeCompleto = `${insignia}${tema.nomeOriginal || tema.nome}`;
 
-        // ============================
-        // MONTAR INFORMAÇÕES
-        // ============================
-        const insignia = tema.insigniaEmoji || "";
-        const nomeFinal = `${insignia} ${tema.nomeOriginal || tema.nome}`.trim();
+        // =============== SEM RECORDE ===============
+        if (!tema.record?.userId || !tema.record?.pontos) {
+            return erro(`O tema **${nomeCompleto}** ainda não possui um recordista.`);
+        }
 
+        // =============== DATA DO RECORDE ===============
         const data = tema.record.data
             ? `<t:${Math.floor(new Date(tema.record.data).getTime() / 1000)}:f>`
             : "Desconhecida";
 
-        // ============================
-        // EMBED FINAL
-        // ============================
+        // =============== EMBED FINAL ===============
         const embed = new EmbedBuilder()
             .setColor("#FFD700")
             .setAuthor({
@@ -74,13 +60,16 @@ module.exports = {
             })
             .setTitle("<:estrela1:1442253518361853962> Recorde Oficial do Tema")
             .addFields(
-                { name: "Tema", value: `**${nomeFinal}**`, inline: true },
+                { name: "Tema", value: `**${nomeCompleto}**`, inline: true },
                 { name: "Recordista", value: `<:medalrec:1442253575576354876> <@${tema.record.userId}>`, inline: true },
                 { name: "Pontuação", value: `**<:pontos:1442182692748791889> ${tema.record.pontos} pontos**`, inline: true },
                 { name: "Quando", value: `<:calendariodemesa:1439655247579447326> ${data}`, inline: true }
             )
             .setThumbnail("https://i.ibb.co/bfYzcsm/medalha-de-ouro.png")
-            .setFooter({ text: `Solicitado por ${message.author.username}`, iconURL: message.author.displayAvatarURL()  });
+            .setFooter({
+                text: `Solicitado por ${message.author.username}`,
+                iconURL: message.author.displayAvatarURL()
+            });
 
         return message.reply({ embeds: [embed] });
     }

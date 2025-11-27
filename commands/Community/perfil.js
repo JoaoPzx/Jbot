@@ -388,9 +388,9 @@ for (const { img } of icons) {
             dica: "assets/icons/dica.png",
             resposta: "assets/icons/resposta.png",
             tempo: "assets/icons/tempo.png",
-            chance: "assets/icons/chance.png",
             nitro: "assets/icons/nitro.png",
             combo: "assets/icons/combo.png",
+            sobrevida: "assets/icons/sobrevida.png",
         };
 
         const invItens = perfil.inventario || [];

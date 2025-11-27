@@ -7,7 +7,7 @@ const cloudinary = require("../../Utility/cloudinary");
 
 module.exports = {
     data: new SlashCommandBuilder()
-        .setName("imgupdate")
+        .setName("img-update")
         .setDescription("Atualiza uma imagem ou resposta de um tema.")
         .addStringOption(opt =>
             opt.setName("tema")

@@ -5,7 +5,7 @@ const Tema = require("../../../models/Tema");
 
 module.exports = {
     data: new SlashCommandBuilder()
-        .setName("temacriar")
+        .setName("tema-criar")
         .setDescription("Cria um novo tema com insígnia obrigatória (imagem ou emoji).")
         .addStringOption(option =>
             option

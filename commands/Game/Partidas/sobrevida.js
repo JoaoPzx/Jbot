@@ -7,8 +7,8 @@ const recentEncerradas = playModule.recentEncerradas;
 const iniciarRodada = playModule.iniciarRodada;
 
 module.exports = {
-  name: "chance",
-  aliases: ["ch"],
+  name: "sobrevida",
+  aliases: ["s"],
   description: "Restaura uma partida encerrada por tempo (janela 15s).",
   async execute(message, args) {
     try {
@@ -44,13 +44,13 @@ module.exports = {
       const item = perfil.inventario.find(i => i.nome === "chance");
       if (!item || item.quantidade <= 0) {
         return message.reply({
-          embeds: [new EmbedBuilder().setColor("#ff4d4d").setDescription("<:fecharerr:1442682279322325095> Você não possui **Chances** no seu inventário.")]
+          embeds: [new EmbedBuilder().setColor("#ff4d4d").setDescription("<:fecharerr:1442682279322325095> Você não possui **Sobreviadas** no seu inventário.")]
         });
       }
 
       // 4) Consome 1 chance
       item.quantidade -= 1;
-      if (item.quantidade <= 0) perfil.inventario = perfil.inventario.filter(i => i.nome !== "chance");
+      if (item.quantidade <= 0) perfil.inventario = perfil.inventario.filter(i => i.nome !== "sobrevida");
       await perfil.save();
 
       // 5) Re-cria a partida com a snapshot
@@ -87,7 +87,7 @@ module.exports = {
       // 6) Mensagem para canal e reinicia rodada com o mesmo NIVEL (tempo calculado normalmente para o nível)
       const embed = new EmbedBuilder()
         .setColor("#00C8FF")
-        .setDescription(`**<:chance:1443024584105398445> Partida restaurada com sucesso por ${message.author}.**`)
+        .setDescription(`**<:icon_sobrevida:1443390286159155342> Partida restaurada com sucesso por ${message.author}.**`)
         .setFooter({text: "Partida continuando em 10s"})
 
 

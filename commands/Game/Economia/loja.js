@@ -54,13 +54,13 @@ module.exports = {
                 aliases: ["c"]
             },
 
-            chance: {
-                nome: "Chance",
-                nomePlural: "Chances",
-                emoji: "<:icon_chance:1443029812074512394>",
+            sobrevida: {
+                nome: "Sobrevida",
+                nomePlural: "Sobrevidas",
+                emoji: "<:icon_sobrevida:1443390286159155342>",
                 preco: 150,
                 desc: "Recupera uma partida perdida por tempo esgotado",
-                aliases: ["ch"]
+                aliases: ["s"]
             },
 
         };

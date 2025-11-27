@@ -9,7 +9,7 @@ const Tema = require("../../../models/Tema");
 
 module.exports = {
     data: new SlashCommandBuilder()
-        .setName("temalista")
+        .setName("tema-lista")
         .setDescription("Lista todas as palavras de um tema, com paginação.")
         .addStringOption(opt =>
             opt.setName("tema")

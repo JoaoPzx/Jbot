@@ -29,7 +29,7 @@ module.exports = {
 
         const embed = new EmbedBuilder()
             .setColor("Green")
-            .setDescription("<:icon_resposta:1441904668748939374> Resposta Revelada\n ```" + respostaEspacada + "```"
+            .setDescription("<:icon_resposta:1441904668748939374> Resposta Revelada!\n ```" + respostaEspacada + "```"
             )
 
         return message.reply({ embeds: [embed] });

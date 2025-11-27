@@ -18,7 +18,7 @@ function nomeComInsignia(tema) {
 
 module.exports = {
     data: new SlashCommandBuilder()
-        .setName("imgdelete")
+        .setName("img-delete")
         .setDescription("Exclui uma imagem de um tema específico.")
         .addStringOption(opt =>
             opt.setName("tema")

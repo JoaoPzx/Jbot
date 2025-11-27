@@ -127,10 +127,10 @@ module.exports = {
                 name: message.client.user.username,
                 iconURL: message.client.user.displayAvatarURL()
             })
-            .setTitle("🎨 Banner do Tema Atualizado")
+            .setTitle("<:bannerjf:1443389754094653592> Banner do Tema Atualizado")
             .addFields(
                 { name: "Tema", value: `**${nomeExibir}**`, inline: true },
-                { name: "Status", value: jaExistia ? "🔄 Atualizado" : "🆕 Adicionado", inline: true }
+                { name: "Status", value: jaExistia ? "<:attjf:1443389707072438303> Atualizado" : "<:novojf:1443389668656808007> Adicionado", inline: true }
             )
             .setImage(bannerFinalURL);
 

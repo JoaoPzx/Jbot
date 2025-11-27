@@ -30,7 +30,7 @@ module.exports = {
             tempo:     { nome: "Tempo",     emoji: "<:icon_tempo:1441174907445837907>"},
             nitro:     { nome: "Nitro",     emoji: "<:icon_nitro:1441530028658790430>"},
             combo:     { nome: "Combo",     emoji: "<:icon_combo:1441177424124448868>"},
-            chance:    { nome: "Chance",    emoji: "<:icon_chance:1443029812074512394>"},
+            sobrevida: { nome: "Sobrevida", emoji: "<:icon_chance:1443029812074512394>"},
         };
 
         // ============================

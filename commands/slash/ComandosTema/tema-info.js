@@ -12,7 +12,7 @@ function nomeComInsignia(tema) {
 
 module.exports = {
     data: new SlashCommandBuilder()
-        .setName("temainfo")
+        .setName("tema-info")
         .setDescription("Mostra informações detalhadas sobre um tema.")
         .addStringOption(option =>
             option.setName("tema")

@@ -4,7 +4,7 @@ const cloudinary = require("../../Utility/cloudinary");
 
 module.exports = {
     data: new SlashCommandBuilder()
-        .setName("temadeletar")
+        .setName("tema-deletar")
         .setDescription("Deleta completamente um tema e sua pasta no Cloudinary.")
         .addStringOption(opt =>
             opt.setName("tema")
