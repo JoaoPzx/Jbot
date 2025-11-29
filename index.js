@@ -126,7 +126,7 @@ console.log("Slash commands carregados (recursivo).");
 // EVENTS & LISTENERS
 // ======================================================
 
-client.on('clientReady', () => {
+client.once('clientReady', () => {
   console.log(`${client.user.tag} está online!`);
 });
 
@@ -554,20 +554,39 @@ if (interaction.customId === "despausar_partida") {
     if (interaction.isModalSubmit()) {
 
       // ===== SALVAR BIOGRAFIA =====
-      if (interaction.customId === "modal_bio") {
+      if (interaction.isModalSubmit()) {
 
-        const bio = interaction.fields.getTextInputValue("bio_input");
+    // ===== SALVAR BIOGRAFIA =====
+    if (interaction.customId === "modal_bio") {
+
+        let bio = interaction.fields.getTextInputValue("bio_input");
+
+        // remove apenas caracteres de controle (não remove emojis)
+        bio = bio.replace(/[\u0000-\u001F\u007F]/g, "");
+
+        // normaliza unicode (evita emojis quebrados)
+        bio = bio.normalize("NFC");
+
+        // limite por caracteres, não bytes
+        if (bio.length > 180) {
+            return interaction.reply({
+                content: "⚠️ Sua biografia deve ter no máximo **180 caracteres**.",
+                ephemeral: true
+            });
+        }
 
         await Perfil.updateOne(
-          { userId: interaction.user.id },
-          { $set: { bio } }
+            { userId: interaction.user.id },
+            { $set: { bio } }
         );
 
         return interaction.reply({
-          content: "<:lapisjf:1442988550466441297> **Biografia atualizada com sucesso!**",
-          flags: 64
+            content: "<:lapisjf:1442988550466441297> **Biografia atualizada com sucesso!**",
+            flags: 64
         });
-      }
+    }
+}
+
 
       return;
     }
@@ -604,6 +623,15 @@ if (interaction.customId === "despausar_partida") {
     }
   }
 });
+
+// Alternância de atividades
+const activityRotator = require("./commands/Utility/activity-rotator");
+
+client.once("ready", () => {
+    console.log(`${client.user.tag} está online!`);
+    activityRotator(client);
+});
+
 
 client.login(process.env.TOKEN);
 

@@ -23,15 +23,24 @@ module.exports = {
         await perfil.save();
 
         // Monta resposta espaçada
-        const respostaRaw = String(partida.itemAtual.resposta).toUpperCase();
-        const letras = respostaRaw.split("");
-        const respostaEspacada = letras.join(" ");
+        // ======== FORMATAÇÃO DA RESPOSTA ========
+const respostaRaw = String(partida.itemAtual.resposta).toUpperCase();
+const respostaEspacada = respostaRaw.split("").join(" ");
 
-        const embed = new EmbedBuilder()
-            .setColor("Green")
-            .setDescription("<:icon_resposta:1441904668748939374> Resposta Revelada!\n ```" + respostaEspacada + "```"
-            )
+const caixa =
+`\`\`\`ansi
+[1;38;5;51m${respostaEspacada}[0m
+\`\`\``;
 
-        return message.reply({ embeds: [embed] });
+
+const embed = new EmbedBuilder()
+    .setColor("Green")
+    .setDescription(
+        "<:icon_resposta:1441904668748939374> **Resposta Revelada!**\n" +
+        caixa
+    );
+
+return message.reply({ embeds: [embed] });
+
     }
 };

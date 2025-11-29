@@ -48,30 +48,32 @@ module.exports = {
     // EXECUTAR
     // ================================
     async execute(interaction) {
+
+        // === PREVENIR UNKNOWN INTERACTION ===
+        await interaction.deferReply({ ephemeral: false });
+
         const imagem = interaction.options.getAttachment("imagem");
         const temaLower = interaction.options.getString("tema").toLowerCase();
         const resposta = interaction.options.getString("resposta").toLowerCase();
 
         // valida imagem
         if (!imagem || !imagem.url) {
-            return interaction.reply({
+            return interaction.editReply({
                 embeds: [
                     new EmbedBuilder()
                         .setColor("#ff4d4d")
                         .setDescription("<:fecharerr:1442682279322325095> Não foi possível obter a imagem enviada.")
-                ],
-                ephemeral: true
+                ]
             });
         }
 
         if (!imagem.contentType?.startsWith("image/")) {
-            return interaction.reply({
+            return interaction.editReply({
                 embeds: [
                     new EmbedBuilder()
                         .setColor("#ff4d4d")
                         .setDescription("<:fecharerr:1442682279322325095> O arquivo enviado não é uma imagem válida.")
-                ],
-                ephemeral: true
+                ]
             });
         }
 
@@ -79,49 +81,45 @@ module.exports = {
         const tema = await Tema.findOne({ nomeLower: temaLower });
 
         if (!tema) {
-            return interaction.reply({
+            return interaction.editReply({
                 embeds: [
                     new EmbedBuilder()
                         .setColor("#ff4d4d")
                         .setDescription(`<:fecharerr:1442682279322325095> O tema **${temaLower}** não existe.`)
-                ],
-                ephemeral: true
+                ]
             });
         }
 
         // ================================
         // VALIDAÇÕES DE DUPLICIDADE
         // ================================
-
-        // Resposta duplicada
         const respostaExiste = tema.imagens.some(img => img.resposta.toLowerCase() === resposta);
 
         if (respostaExiste) {
-            return interaction.reply({
+            return interaction.editReply({
                 embeds: [
                     new EmbedBuilder()
                         .setColor("#ff4d4d")
-                        .setDescription(`<:fecharerr:1442682279322325095> Já existe uma imagem no tema **${tema.nomeOriginal}** com a resposta \`${resposta}\`.`)
-                ],
-                ephemeral: true
+                        .setDescription(
+                            `<:fecharerr:1442682279322325095> Já existe uma imagem no tema **${tema.nomeOriginal}** com a resposta \`${resposta}\`.`
+                        )
+                ]
             });
         }
 
-        // Imagem duplicada (mesma URL de upload)
         const imagemExiste = tema.imagens.some(img => img.url === imagem.url);
 
         if (imagemExiste) {
-            return interaction.reply({
+            return interaction.editReply({
                 embeds: [
                     new EmbedBuilder()
                         .setColor("#ff4d4d")
                         .setDescription("<:fecharerr:1442682279322325095> Esta imagem já foi adicionada anteriormente neste tema.")
-                ],
-                ephemeral: true
+                ]
             });
         }
 
-        // ID único para o Cloudinary
+        // ID único para Cloudinary
         const respostaID = resposta.replace(/[^a-z0-9]/gi, "_").toLowerCase();
 
         const idJaExiste = tema.imagens.some(img =>
@@ -129,13 +127,12 @@ module.exports = {
         );
 
         if (idJaExiste) {
-            return interaction.reply({
+            return interaction.editReply({
                 embeds: [
                     new EmbedBuilder()
                         .setColor("#ff4d4d")
-                        .setDescription("<:fecharerr:1442682279322325095> Já existe uma imagem com um ID semelhante. Tente usar outro nome de resposta.")
-                ],
-                ephemeral: true
+                        .setDescription("<:fecharerr:1442682279322325095> Já existe uma imagem com um ID semelhante. Use outra resposta.")
+                ]
             });
         }
 
@@ -156,13 +153,12 @@ module.exports = {
             });
         } catch (err) {
             console.error(err);
-            return interaction.reply({
+            return interaction.editReply({
                 embeds: [
                     new EmbedBuilder()
                         .setColor("#ff4d4d")
                         .setDescription("<:fecharerr:1442682279322325095> Erro ao salvar imagem no Cloudinary.")
-                ],
-                ephemeral: true
+                ]
             });
         }
 
@@ -179,12 +175,12 @@ module.exports = {
         await tema.save();
 
         // ================================
-        // RESPOSTA FINAL
+        // FINAL
         // ================================
         const embed = new EmbedBuilder()
             .setColor("Green")
             .setDescription(`<:newjbot:1440423555744534699>  \`${resposta}\` adicionado em \`${tema.nomeOriginal}\``);
 
-        return interaction.reply({ embeds: [embed] });
+        return interaction.editReply({ embeds: [embed] });
     }
 };

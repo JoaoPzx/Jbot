@@ -8,13 +8,12 @@ module.exports = {
 
     async execute(message) {
 
-        // Middleware já verifica tudo (pausa, rodada, inventário etc.)
         const contexto = await validarItem(message, "dica");
         if (!contexto || contexto.reply) return contexto;
 
         const { partida, perfil, item } = contexto;
 
-        // Consumir o item
+        // Consumir item
         item.quantidade--;
         if (item.quantidade <= 0) {
             perfil.inventario = perfil.inventario.filter(i => i.nome !== "dica");
@@ -23,57 +22,57 @@ module.exports = {
 
 
         /* ============================================================
-           🔥 NOVO SISTEMA DE DICA:
-              - revela entre 30% e 50% das letras
-              - mantém espaços
-              - posições reveladas são aleatórias
+           🔥 NOVO SISTEMA DE DICA (30% a 50% revelado)
         ============================================================ */
-
         const resposta = String(partida.itemAtual.resposta).toUpperCase();
-
-        // transforma a resposta inteira em array
         const caracteres = resposta.split("");
 
-        // índices válidos (somente letras)
         const indicesLetras = caracteres
             .map((c, idx) => (c !== " " ? idx : null))
             .filter(idx => idx !== null);
 
-        // sorteia porcentagem entre 30% e 50%
         const porcentagem = 0.30 + Math.random() * 0.20;
         const quantidadeRevelar = Math.max(1, Math.floor(indicesLetras.length * porcentagem));
 
-        // escolhe posições aleatórias sem repetir
         const revelados = new Set();
         while (revelados.size < quantidadeRevelar) {
             const idx = indicesLetras[Math.floor(Math.random() * indicesLetras.length)];
             revelados.add(idx);
         }
 
-        // monta a dica final
         const dica = caracteres
             .map((c, idx) => {
-                if (c === " ") return " ";     // mantém palavra separada
+                if (c === " ") return " ";
                 return revelados.has(idx) ? c : "_";
             })
             .join("");
 
-        // adiciona espaços entre tudo para ficar bonito
-        const dicaEspacada = dica.split("").join(" ");
-
-const embed = new EmbedBuilder()
-    .setColor("Green")
-    .setDescription(
-        "<:icon_dica:1441174865032904745> Dica Revelada!\n" +
-        "```" +
-        dicaEspacada +
-        "```"
-    )
-    .setFooter({
-        text: `Foram reveladas ${quantidadeRevelar} letras (${Math.round(porcentagem * 100)}%).`
-    });
+        const dicaEspacada = dica.split("").join(" "); // 2 espaços igual ao ;resposta
 
 
+        /* ============================================================
+           🎨 BLOCO ANSI (NEGRITO REAL, SEM ASTERISCOS)
+        ============================================================ */
+
+        // Se quiser cor ANSI nas letras, troque para o código abaixo:
+        // const caixa = `\`\`\`ansi\n[1;38;5;87m${dicaEspacada}[0m\n\`\`\``;
+
+    const caixa =
+`\`\`\`ansi
+[1;38;5;51m${dicaEspacada}[0m
+\`\`\``;
+
+
+
+        const embed = new EmbedBuilder()
+            .setColor("Green")
+            .setDescription(
+                "<:icon_dica:1441174865032904745> **Dica Revelada!**\n" +
+                caixa
+            )
+            .setFooter({
+                text: `Foram reveladas ${quantidadeRevelar} letras (${Math.round(porcentagem * 100)}%).`
+            });
 
         return message.reply({ embeds: [embed] });
     }

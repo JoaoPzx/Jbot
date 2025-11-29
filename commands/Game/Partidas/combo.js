@@ -7,6 +7,7 @@ const getComboBonusByLevel = playModule.getComboBonusByLevel;
 module.exports = {
     name: "combo",
     aliases: ["c"],
+    description: "Aumenta progressivamente a pontuação do jogador.",
 
     async execute(message) {
         try {

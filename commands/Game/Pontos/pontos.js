@@ -13,6 +13,7 @@ function nomeComInsignia(tema) {
 module.exports = {
     name: "pontos",
     aliases: ["pts"],
+    description: "Consultar os pontos de um jogador por tema.",
 
     async execute(message, args) {
 

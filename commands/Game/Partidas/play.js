@@ -552,20 +552,38 @@ function formatarRanking(lista, partida) {
             const userId = r[0];
             const pontos = r[1];
 
-            let sufixo = "";
+            // ================================
+            // 🏅 MEDALHAS POR POSIÇÃO
+            // ================================
+            let medalha;
+        const MEDAL_1 = "<:podio1:1442253692542648441>";
+        const MEDAL_2 = "<:podio2:1442253730245378099>";
+        const MEDAL_3 = "<:podio3:1442253772402196621>";
+        const MEDAL_PADRAO = "<:podio:1442253851091800205>";
 
+
+            if (i === 0) medalha = MEDAL_1;        // 🥇 primeiro
+            else if (i === 1) medalha = MEDAL_2;  // 🥈 segundo
+            else if (i === 2) medalha = MEDAL_3;  // 🥉 terceiro
+            else medalha = MEDAL_PADRAO;          // 🔹 padrão para 4º+
+
+            // ================================
+            // (+X) bônus do combo
+            // ================================
+            let sufixo = "";
             if (partida.combos && partida.combos[userId]) {
                 const bonus = getComboBonusByLevel(partida.nivel);
-                // só exibe quando o bônus for maior que 1 (ou seja, a partir do nível 4)
                 if (bonus > 1) sufixo = ` (+${bonus})`;
             }
 
             const label = pontos === 1 ? "ponto" : "pontos";
 
-            return `${i + 1}. <@${userId}> — **${pontos}** ${label}${sufixo}`;
+            return `${medalha} <@${userId}> — **${pontos}** ${label}${sufixo}`;
         })
         .join("\n");
 }
+
+
 
 /* =====================================================
    EXPORTAR

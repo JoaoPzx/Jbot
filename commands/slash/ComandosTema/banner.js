@@ -22,10 +22,10 @@ function embedErro(txt) {
 function embedSucesso(temaNome, url, atualizado) {
     return new EmbedBuilder()
         .setColor("#5865F2")
-        .setTitle("🎨 Banner do Tema Atualizado")
+        .setTitle("<:bannerjf:1443389754094653592> Banner do Tema Atualizado")
         .addFields(
             { name: "Tema", value: `**${temaNome}**`, inline: true },
-            { name: "Status", value: atualizado ? "🔄 Atualizado" : "🆕 Adicionado", inline: true }
+            { name: "Status", value: atualizado ? "<:attjf:1443389707072438303> Atualizado" : "<:novojf:1443389668656808007> Adicionado", inline: true }
         )
         .setImage(url)
         .setTimestamp();

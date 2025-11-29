@@ -51,7 +51,7 @@ module.exports = {
             return interaction.respond(lista.map(n => ({ name: n, value: n })));
         }
 
-        // Autocomplete da imagem (resposta)
+        // Autocomplete da imagem
         const tema = temas.find(t =>
             (t.nomeOriginal || t.nome).toLowerCase() === temaSelecionado.toLowerCase()
         );
@@ -107,11 +107,13 @@ module.exports = {
 
         const nomeExibir = nomeComInsignia(tema);
 
+        // ==========================
         // CONFIRMAÇÃO
+        // ==========================
         const embedConfirma = new EmbedBuilder()
             .setColor("#f1c40f")
             .setDescription(
-                `<:avisojf:1442687822208303215> Tem certeza que deseja **remover** a imagem?\n\n` +
+                `<:avisojf:1442687822208303215> Tem certeza que deseja **remover** esta imagem?\n\n` +
                 `**Tema:** ${nomeExibir}\n` +
                 `**Resposta:** \`${imagem.resposta}\``
             )
@@ -122,6 +124,7 @@ module.exports = {
                 .setCustomId("confirmar_delete")
                 .setLabel("Sim, excluir")
                 .setStyle(ButtonStyle.Danger),
+
             new ButtonBuilder()
                 .setCustomId("cancelar_delete")
                 .setLabel("Cancelar")
@@ -130,17 +133,24 @@ module.exports = {
 
         await interaction.reply({ embeds: [embedConfirma], components: [botoes] });
 
-        // Collector dos botões
+        // ==========================
+        // COLLECTOR
+        // ==========================
         const collector = interaction.channel.createMessageComponentCollector({
             time: 15000
         });
 
         collector.on("collect", async btn => {
             if (btn.user.id !== interaction.user.id)
-                return btn.reply({ content: "<:fecharerr:1442682279322325095> Não é você quem executou o comando!", ephemeral: true });
+                return btn.reply({
+                    content: "<:fecharerr:1442682279322325095> Não é você quem executou o comando!",
+                    ephemeral: true
+                });
 
+            // CANCELAR
             if (btn.customId === "cancelar_delete") {
                 collector.stop("cancelado");
+
                 return btn.update({
                     embeds: [
                         new EmbedBuilder()
@@ -151,13 +161,25 @@ module.exports = {
                 });
             }
 
-            // ========== EXCLUIR DA CLOUDINARY ==========
+            // ==============================
+            // DELETAR DO CLOUDINARY
+            // ==============================
             try {
-                const publicId = imagem.url.split("/").pop().split(".")[0];
-                await cloudinary.uploader.destroy(`jbot/${tema.nomeLower}/${publicId}`);
-            } catch {}
+                // Pega o último segmento da URL
+                const fileName = imagem.url.split("/").pop(); // ex: a482ba9c8d7f.png
 
-            // ========== EXCLUIR DO BANCO ==========
+                const publicId = fileName.split(".")[0]; // a482ba9c8d7f
+
+                await cloudinary.uploader.destroy(
+                    `jbot/${tema.nomeLower}/${publicId}`
+                );
+            } catch (err) {
+                console.log("Erro ao deletar Cloudinary:", err);
+            }
+
+            // ==============================
+            // DELETAR DO BANCO
+            // ==============================
             tema.imagens = tema.imagens.filter(i => i.url !== imagem.url);
             await tema.save();
 
@@ -178,7 +200,7 @@ module.exports = {
         });
 
         collector.on("end", (_, motivo) => {
-            if (motivo === "time")
+            if (motivo === "time") {
                 interaction.editReply({
                     embeds: [
                         new EmbedBuilder()
@@ -187,6 +209,7 @@ module.exports = {
                     ],
                     components: []
                 }).catch(() => {});
+            }
         });
     }
 };
