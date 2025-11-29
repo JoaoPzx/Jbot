@@ -58,14 +58,14 @@ module.exports = {
                 name: message.client.user.username,
                 iconURL: message.client.user.displayAvatarURL()
             })
-            .setTitle("<:estrela1:1442253518361853962> Recorde Oficial do Tema")
+            .setTitle("Recorde Oficial do Tema")
             .addFields(
                 { name: "Tema", value: `**${nomeCompleto}**`, inline: true },
                 { name: "Recordista", value: `<:medalrec:1442253575576354876> <@${tema.record.userId}>`, inline: true },
                 { name: "Pontuação", value: `**<:pontos:1442182692748791889> ${tema.record.pontos} pontos**`, inline: true },
                 { name: "Quando", value: `<:calendariodemesa:1439655247579447326> ${data}`, inline: true }
             )
-            .setThumbnail("https://i.ibb.co/bfYzcsm/medalha-de-ouro.png")
+            .setThumbnail("https://i.ibb.co/BMJY9rs/estrela-1.png")
             .setFooter({
                 text: `Solicitado por ${message.author.username}`,
                 iconURL: message.author.displayAvatarURL()

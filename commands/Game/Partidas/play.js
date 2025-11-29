@@ -243,6 +243,20 @@ async function iniciarRodada(message, partida) {
         }
     }
 
+function gerarFooterDicas() {
+    const dicas = [
+        "Use ;dica para revelar uma ajuda especial!",
+        "Use ;resposta para revelar a resposta!",
+        "Use ;tempo para ganhar +2 segundos!",
+        "Use ;nitro para reduzir o tempo de espera!",
+        "Use ;sobrevida para recuperar uma partida!",
+        "Use ;combo para aumentar sua pontuação!"
+    ];
+
+    const aleatorio = Math.floor(Math.random() * dicas.length);
+    return dicas[aleatorio];
+}
+
     const tempoFormatado = formatarTempo(tempoSegundos);
     const tempoMs = tempoSegundos * 1000;
 
@@ -256,7 +270,9 @@ async function iniciarRodada(message, partida) {
             { name: "Tempo", value: `**<:alarme:1440073671443091526> ${tempoFormatado}**`, inline: true },
             { name: "Dificuldade", value: `**${dificuldadePorNivel(partida.nivel)}**`, inline: true }
         )
-        .setImage(item.url);
+        .setImage(item.url)
+
+        embedRodada.setFooter({text: gerarFooterDicas()})
 
     // ⬇️ AQUI: registramos o embed da rodada para o comando ;combo saber qual embed é proibido
     const msgRodada = await message.channel.send({ embeds: [embedRodada] });
@@ -491,36 +507,74 @@ const embedFim = new EmbedBuilder()
 
 await message.channel.send({ embeds: [embedFim] });
 
+const rankingOrdenadoLocal = Object.entries(partida.ranking).sort((a, b) => b[1] - a[1]);
 
+const melhorJogadorId = rankingOrdenadoLocal?.[0]?.[0] || null;
+const melhorPontuacao = rankingOrdenadoLocal?.[0]?.[1] || 0;
 
+// nível atual da partida
+const nivelAtual = partida.nivel || 0;
 
-// ============================================================
-// === ATUALIZAÇÃO DO RECORDE E PONTUAÇÃO ACUMULADA DO TEMA ===
-// ============================================================
-if (rankingOrdenado.length > 0) {
+if (melhorJogadorId && melhorPontuacao > 0) {
 
-    const melhorJogadorId = rankingOrdenado[0][0];
-    const melhorPontuacao = rankingOrdenado[0][1];
+    const ultrapassouRecorde =
+        !tema.record?.userId ||
+        melhorPontuacao > (tema.record?.pontos || 0) ||
+        nivelAtual > (tema.record?.nivel || 0);
 
-    const temaAtualizado = await Tema.findById(partida.tema._id);
+    if (ultrapassouRecorde) {
 
-    // =============================
-    // 🔥 ATUALIZAÇÃO DO RECORDE DO TEMA
-    // =============================
-    temaAtualizado.record = {
-        userId: melhorJogadorId,
-        pontos: melhorPontuacao,
-        nivel: partida.nivel,      // <-- novo campo
-        data: new Date()
-    };
+        // 🔥 SALVAR NOVO RECORDE COMPLETO
+        tema.record = {
+            userId: melhorJogadorId,
+            pontos: melhorPontuacao,
+            nivel: nivelAtual,
+            data: new Date()
+        };
 
-    // =============================
-    // 🔥 SISTEMA DE PONTUAÇÃO ACUMULADA
-    // =============================
-    let registro = temaAtualizado.pontuacoes.find(p => p.userId === melhorJogadorId);
+        await tema.save();
+
+        if (ultrapassouRecorde) {
+
+    const nomeTema = tema.insigniaEmoji
+        ? `${tema.insigniaEmoji} ${tema.nomeOriginal || tema.nome}`
+        : (tema.nomeOriginal || tema.nome);
+
+        // 🔥 EMBED DE NOVO RECORDE
+        const embedRecorde = new EmbedBuilder()
+            .setColor("#FFD700")
+            .setTitle("NOVO RECORDE ATINGIDO!")
+            .setThumbnail("https://i.ibb.co/BMJY9rs/estrela-1.png")
+            .setDescription(`<:medalrec:1442253575576354876> <@${melhorJogadorId}> estabeleceu um novo recorde!`)
+            .addFields(
+                {
+                    name: "Tema",
+                    value: `**${nomeTema}**`,
+                    inline: true
+                },
+                {
+                    name: "Pontuação",
+                    value: `**<:pontos:1442182692748791889> ${melhorPontuacao} pontos**`,
+                    inline: true
+                },
+                {
+                    name: "Nível Atingido",
+                    value: `**<:levelup:1442272592789639239> ${nivelAtual}**`,
+                    inline: true
+                }
+            );
+
+        message.channel.send({ embeds: [embedRecorde] });
+    }
+
+    // ============================================================
+    // SISTEMA DE PONTUAÇÃO ACUMULADA
+    // ============================================================
+
+    let registro = tema.pontuacoes?.find((p) => p.userId === melhorJogadorId);
 
     if (!registro) {
-        temaAtualizado.pontuacoes.push({
+        tema.pontuacoes.push({
             userId: melhorJogadorId,
             total: melhorPontuacao,
             partidas: 1
@@ -530,11 +584,12 @@ if (rankingOrdenado.length > 0) {
         registro.partidas += 1;
     }
 
-    await temaAtualizado.save();
+    await tema.save();
 }
 
 
-    });
+
+    }});
 }
 
 /* =====================================================

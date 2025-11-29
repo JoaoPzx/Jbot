@@ -150,7 +150,7 @@ if (melhorJogadorId && melhorPontuacao > 0) {
             .setColor("#FFD700")
             .setTitle("NOVO RECORDE ATINGIDO!")
             .setThumbnail("https://i.ibb.co/BMJY9rs/estrela-1.png")
-            .setDescription(`<:medalrec:1442253575576354876> <@${melhorJogadorId}> Quebrou o recorde!`
+            .setDescription(`<:medalrec:1442253575576354876> <@${melhorJogadorId}> estabeleceu um novo recorde!`
     ) 
             .addFields(
                 {name: "Tema",
