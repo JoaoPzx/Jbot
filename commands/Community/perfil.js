@@ -318,22 +318,31 @@ ctx.fillStyle = theme.textMain;
 ctx.fillText("Insígnias:", insX + 1, insY - 8);
 
 // perfil.insignias agora guarda nomeLower dos temas
-const insigniaKeys = perfil.insignias || [];
+// =====================================================
+// 🔥 NOVO SISTEMA DE INSÍGNIAS (objetos, não strings)
+// =====================================================
 
-// Buscar temas no Mongo
+// perfil.insignias agora é uma lista de objetos
+const insigniaDocs = perfil.insignias || [];
+
+// extrair os temaId das insígnias salvas no perfil
+const temaIds = insigniaDocs.map(i => i.temaId);
+
+// buscar os temas correspondentes no Mongo
 let temasInsignias = [];
-if (insigniaKeys.length > 0) {
+if (temaIds.length > 0) {
     temasInsignias = await Tema.find({
-        nomeLower: { $in: insigniaKeys }
+        _id: { $in: temaIds }
     }).lean();
 }
 
-// Montar ícones a partir de insigniaEmoji
+// montar ícones das insígnias
 const icons = [];
+
 for (const tema of temasInsignias) {
     if (!tema.insigniaEmoji) continue;
 
-    // Formatos aceitos: <:nome:ID> ou <a:nome:ID>
+    // pegar o ID do emoji do tema, animado ou não
     const match = tema.insigniaEmoji.match(/<?a?:\w+:(\d+)>?/);
     if (!match) continue;
 
@@ -347,10 +356,10 @@ for (const tema of temasInsignias) {
         const img = await Canvas.loadImage(url);
         icons.push({ img, nome: tema.nome });
     } catch (e) {
-        // se der erro em algum emoji, só pula
         continue;
     }
 }
+
 
 // Desenhar grid de ícones.
 // 4 por linha, 48x48 cada, com padding interno.

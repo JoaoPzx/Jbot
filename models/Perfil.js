@@ -15,6 +15,19 @@ const PerfilSchema = new mongoose.Schema({
     wallpaper: { type: String, default: null },
     cor: { type: String, default: "preto" },
 
+    pontuacoes: {
+    type: [
+        {
+            temaId: { type: String, required: true },  // id do tema
+            total: { type: Number, default: 0 },       // pontos acumulados
+            partidas: { type: Number, default: 0 }     // número de partidas
+        }
+    ],
+    default: []
+},
+
+
+
     pontos: { type: Number, default: 0 },
     moedas: { type: Number, default: 0 },
     lastDaily: { type: Date, default: null },
@@ -23,8 +36,21 @@ const PerfilSchema = new mongoose.Schema({
     comboBonus: { type: Number, default: 1 },
     comboItems: { type: Number, default: 0 }, // quantidade de itens combo no inventário
 
+    insignias: {
+  type: [
+    {
+      temaId: { type: String, required: true },
+      nome: { type: String, required: true },
+      nomeLower: { type: String, required: true },
+      insigniaEmoji: { type: String, default: null },
+      insigniaEmojiId: { type: String, default: null },
+      pontos: { type: Number, default: 0 },
+      grantedAt: { type: Date, default: Date.now }
+    }
+  ],
+  default: []
+},
 
-    insignias: { type: [String], default: [] },
 
     inventario: {
         type: [ItemSchema],

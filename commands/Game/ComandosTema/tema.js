@@ -52,16 +52,29 @@ module.exports = {
         // ==============================
         // BUSCA (mesma lógica do ;play)
         // ==============================
-        const tema = ordenados.find(t => {
-            const nome = (t.nomeOriginal || t.nome).toLowerCase();
-            return (
-                nome.startsWith(entrada) ||
-                nome.includes(entrada) ||
-                t.nomeLower === entrada
-            );
-        });
+        // ==============================
+// BUSCA (corrigida)
+// ==============================
+let tema = ordenados.find(t =>
+    t.nomeLower === entrada
+);
 
-        if (!tema) return erro(`O tema **${entradaRaw}** não existe.`);
+if (!tema) {
+    // começa com
+    tema = ordenados.find(t =>
+        (t.nomeOriginal || t.nome).toLowerCase().startsWith(entrada)
+    );
+}
+
+if (!tema) {
+    // contém
+    tema = ordenados.find(t =>
+        (t.nomeOriginal || t.nome).toLowerCase().includes(entrada)
+    );
+}
+
+if (!tema)
+    return erro(`O tema **${entradaRaw}** não existe.`);
 
         // ==============================
         // DADOS

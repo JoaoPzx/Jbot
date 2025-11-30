@@ -5,42 +5,54 @@ const TemaSchema = new mongoose.Schema({
     nomeLower: { type: String, required: true },
     nomeOriginal: { type: String, default: null },
 
-    // 🔥 RECORD DO TEMA (agora com nível)
+    // ============================================================
+    // 🔥 RECORDISTA DO TEMA (com nível e data)
+    // ============================================================
     record: {
         userId: { type: String, default: null },
         pontos: { type: Number, default: 0 },
-        nivel: { type: Number, default: 0 }, // ⭐ NOVO CAMPO
+        nivel: { type: Number, default: 0 },
         data: { type: Date, default: null }
     },
 
-    // 🔥 NOVO SISTEMA DE ACÚMULO DE PONTOS 🔥
+    // ============================================================
+    // 🔥 PONTUAÇÃO ACUMULADA POR USUÁRIO NO TEMA
+    // ============================================================
     pontuacoes: [
         {
-            userId: String,
-            total: { type: Number, default: 0 },
-            partidas: { type: Number, default: 0 }
+            userId: { type: String, required: true },
+            total: { type: Number, default: 0 },      // total acumulado
+            partidas: { type: Number, default: 0 }    // quantas partidas ele jogou no tema
         }
     ],
 
     criadoPor: { type: String, default: null },
     dataCriacao: { type: Date, default: Date.now },
 
+    // ============================================================
+    // 🔥 BANNER DO TEMA
+    // ============================================================
     banner: { type: String, default: null },
 
+    // ============================================================
+    // 🔥 LISTA DE IMAGENS DO TEMA
+    // ============================================================
     imagens: [
         {
             resposta: { type: String, required: true },
             url: { type: String, required: true },
             addedBy: { type: String, default: null },
-            addedAt: { type: Date, default: null }
+            addedAt: { type: Date, default: Date.now }
         }
     ],
 
+    // ============================================================
+    // 🔥 INSÍGNIA DO TEMA (USADA NO PERFIL)
+    // ============================================================
     insignia: { type: String, default: null },
     insigniaEmoji: { type: String, default: null },
     insigniaEmojiId: { type: String, default: null },
 
-    partidasJogadas: { type: Number, default: 0 }
 });
 
 module.exports = mongoose.model("Tema", TemaSchema);

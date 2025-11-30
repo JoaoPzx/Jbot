@@ -367,19 +367,133 @@ const embedAcerto = new EmbedBuilder()
 
 await message.channel.send({ embeds: [embedAcerto] });
 
-        partida.ultimoEmbed = "acerto";
+try {
+    // --------------------------------------------------------
+    // 🔥 GARANTIR PERFIL EXISTE
+    // --------------------------------------------------------
+    let perfilTema = await Perfil.findOne({ userId: msg.author.id });
+    if (!perfilTema)
+        perfilTema = await Perfil.create({ userId: msg.author.id, moedas: 0, pontos: 0 });
 
-        partida.podeUsarTempoAgora = true;
-        partida.podeUsarNitroAgora = true;
+    // --------------------------------------------------------
+    // 🔥 ATUALIZAR PONTUAÇÃO DO TEMA IMEDIATAMENTE
+    // --------------------------------------------------------
+    const temaIdStr = partida.tema._id.toString();
+    let entry = perfilTema.pontuacoes.find(p => p.temaId === temaIdStr);
 
-        partida.nivel++;
-        partida.rodadaEmCurso = false;
-        partida.embedRodada = null;
+    if (!entry) {
+        perfilTema.pontuacoes.push({
+            temaId: temaIdStr,
+            total: ganho,      // ganho calculado nesta rodada
+            partidas: 1
+        });
+    } else {
+        entry.total = (entry.total || 0) + ganho;
+        entry.partidas = (entry.partidas || 0) + 1;
+    }
 
-        partida.timeout = setTimeout(
-            () => iniciarRodada(message, partida),
-            partida.nitro ? 5000 : 10000
-        );
+    await perfilTema.save();
+
+    // --------------------------------------------------------
+    // 🏅 CONCEDER INSÍGNIA IMEDIATAMENTE SE ATINGIR META
+    // --------------------------------------------------------
+    if (partida.tema.insigniaEmojiId) {
+
+        const DEFAULT_META = 3;  // 🔧 meta default (pode alterar)
+        const META = (typeof partida.tema.pontosParaInsignia === "number" && partida.tema.pontosParaInsignia > 0)
+            ? partida.tema.pontosParaInsignia
+            : DEFAULT_META;
+
+        // recarrega entry atualizada
+        entry = perfilTema.pontuacoes.find(p => p.temaId === temaIdStr);
+
+        // verificar se o jogador já tem a insígnia
+        const jaTem = (perfilTema.insignias || []).some(i => {
+            if (typeof i === "string") return i === partida.tema.insigniaEmojiId;
+            if (i && i.insigniaEmojiId) return i.insigniaEmojiId === partida.tema.insigniaEmojiId;
+            return false;
+        });
+
+        // condições para conceder
+        if (!jaTem && entry && entry.total >= META) {
+
+            // objeto de insígnia salvo no perfil
+            const novoObj = {
+                temaId: temaIdStr,
+                nome: partida.tema.nomeOriginal || partida.tema.nome,
+                nomeLower: (partida.tema.nomeOriginal || partida.tema.nome).toLowerCase(),
+                insigniaEmoji: partida.tema.insigniaEmoji || null,
+                insigniaEmojiId: partida.tema.insigniaEmojiId || null,
+                pontos: entry.total,
+                grantedAt: new Date()
+            };
+
+            perfilTema.insignias.push(novoObj);
+            await perfilTema.save();
+
+            // --------------------------------------------------------
+            // 📢 ENVIAR EMBED DA INSÍGNIA
+            // --------------------------------------------------------
+            const embedInsignia = new EmbedBuilder()
+                .setColor("#FFD700")
+                .setTitle("NOVA INSÍGNIA CONQUISTADA!")
+                .setThumbnail("https://i.ibb.co/LX2YqbyS/premio.png")
+                .setDescription(
+                    `${partida.tema.insigniaEmoji ? partida.tema.insigniaEmoji + " " : ""}<@${msg.author.id}> acaba de conquistar a insígnia do tema **${novoObj.nome}**!\n\n` +
+                    `Pontos no tema: **${novoObj.pontos}**`
+                )
+                .setTimestamp();
+
+            // parar a rodada atual
+            if (collector && !collector.ended) {
+                partida.pausada = true;
+                collector.stop("pause_for_insignia");
+            } else {
+                partida.pausada = true;
+            }
+
+            await message.channel.send({ embeds: [embedInsignia] }).catch(() => {});
+
+            // --------------------------------------------------------
+            // ⏳ ESPERAR 10s E CONTINUAR A PARTIDA
+            // --------------------------------------------------------
+            setTimeout(async () => {
+                try {
+                    partida.pausada = false;
+                    partida.nivel = (partida.nivel || 1) + 1;
+                    partida.rodadaEmCurso = false;
+                    partida.embedRodada = null;
+
+                    await iniciarRodada(message, partida);
+                } catch (err) {
+                    console.error("Erro ao retomar após insígnia:", err);
+                }
+            }, 15000);
+
+            return; // impede continuar fluxo normal
+        }
+    }
+
+} catch (err) {
+    console.error("Erro ao atualizar pontuação/insígnia no acerto:", err);
+}
+
+// --------------------------------------------------------
+// 🔄 Continuação normal após acerto (sem insígnia)
+// --------------------------------------------------------
+partida.ultimoEmbed = "acerto";
+partida.podeUsarTempoAgora = true;
+partida.podeUsarNitroAgora = true;
+
+partida.nivel++;
+partida.rodadaEmCurso = false;
+partida.embedRodada = null;
+
+partida.timeout = setTimeout(
+    () => iniciarRodada(message, partida),
+    partida.nitro ? 5000 : 10000
+);
+
     }
 });
     collector.on("end", async (_, motivo) => {
@@ -507,89 +621,89 @@ const embedFim = new EmbedBuilder()
 
 await message.channel.send({ embeds: [embedFim] });
 
-const rankingOrdenadoLocal = Object.entries(partida.ranking).sort((a, b) => b[1] - a[1]);
+// =====================================================
+//   🔽 SALVAR E CHECAR RECORDE / PONTOS / INSÍGNIA
+// =====================================================
 
+// ======================
+// BLOCO B: substituição no final da partida (collector.on("end", ...))
+// Atualiza recorde e garante persistência final da pontuação por tema.
+// Insígnias NÃO são tratadas aqui (foram entregues durante a partida).
+// ======================
+
+const rankingOrdenadoLocal = Object.entries(partida.ranking).sort((a, b) => b[1] - a[1]);
 const melhorJogadorId = rankingOrdenadoLocal?.[0]?.[0] || null;
 const melhorPontuacao = rankingOrdenadoLocal?.[0]?.[1] || 0;
-
-// nível atual da partida
 const nivelAtual = partida.nivel || 0;
 
 if (melhorJogadorId && melhorPontuacao > 0) {
+    // garante perfil do vencedor
+    let perfilFinal = await Perfil.findOne({ userId: melhorJogadorId });
+    if (!perfilFinal) perfilFinal = await Perfil.create({ userId: melhorJogadorId, moedas: 0, pontos: 0 });
 
-    const ultrapassouRecorde =
-        !tema.record?.userId ||
-        melhorPontuacao > (tema.record?.pontos || 0) ||
-        nivelAtual > (tema.record?.nivel || 0);
-
-    if (ultrapassouRecorde) {
-
-        // 🔥 SALVAR NOVO RECORDE COMPLETO
-        tema.record = {
-            userId: melhorJogadorId,
-            pontos: melhorPontuacao,
-            nivel: nivelAtual,
-            data: new Date()
-        };
-
-        await tema.save();
+    // ATUALIZA RECORDE DO TEMA SE PRECISAR
+    const temaDB = await Tema.findById(partida.tema._id);
+    if (temaDB) {
+        const ultrapassouRecorde =
+            !temaDB.record?.userId ||
+            melhorPontuacao > (temaDB.record?.pontos || 0) ||
+            nivelAtual > (temaDB.record?.nivel || 0);
 
         if (ultrapassouRecorde) {
+            temaDB.record = {
+                userId: melhorJogadorId,
+                pontos: melhorPontuacao,
+                nivel: nivelAtual,
+                data: new Date()
+            };
+            await temaDB.save();
 
-    const nomeTema = tema.insigniaEmoji
-        ? `${tema.insigniaEmoji} ${tema.nomeOriginal || tema.nome}`
-        : (tema.nomeOriginal || tema.nome);
+            // envia embed de novo recorde (se desejar)
+            const nomeTema = temaDB.insigniaEmoji
+                ? `${temaDB.insigniaEmoji} ${temaDB.nomeOriginal || temaDB.nome}`
+                : (temaDB.nomeOriginal || temaDB.nome);
 
-        // 🔥 EMBED DE NOVO RECORDE
-        const embedRecorde = new EmbedBuilder()
-            .setColor("#FFD700")
-            .setTitle("NOVO RECORDE ATINGIDO!")
-            .setThumbnail("https://i.ibb.co/BMJY9rs/estrela-1.png")
-            .setDescription(`<:medalrec:1442253575576354876> <@${melhorJogadorId}> estabeleceu um novo recorde!`)
-            .addFields(
-                {
-                    name: "Tema",
-                    value: `**${nomeTema}**`,
-                    inline: true
-                },
-                {
-                    name: "Pontuação",
-                    value: `**<:pontos:1442182692748791889> ${melhorPontuacao} pontos**`,
-                    inline: true
-                },
-                {
-                    name: "Nível Atingido",
-                    value: `**<:levelup:1442272592789639239> ${nivelAtual}**`,
-                    inline: true
-                }
-            );
+            const embedRecorde = new (require("discord.js").EmbedBuilder)()
+                .setColor("#FFD700")
+                .setTitle("NOVO RECORDE ATINGIDO!")
+                .setThumbnail("https://i.ibb.co/BMJY9rs/estrela-1.png")
+                .setDescription(`<:medalrec:1442253575576354876> <@${melhorJogadorId}> estabeleceu um novo recorde!`)
+                .addFields(
+                    { name: "Tema", value: `**${nomeTema}**`, inline: true },
+                    { name: "Pontuação", value: `**<:pontos:1442182692748791889> ${melhorPontuacao} pontos**`, inline: true },
+                    { name: "Nível Atingido", value: `**<:levelup:1442272592789639239> ${nivelAtual}**`, inline: true }
+                );
 
-        message.channel.send({ embeds: [embedRecorde] });
+            message.channel.send({ embeds: [embedRecorde] }).catch(() => {});
+        }
     }
 
-    // ============================================================
-    // SISTEMA DE PONTUAÇÃO ACUMULADA
-    // ============================================================
+    // GARANTE que a pontuação por tema foi atualizada (caso algum acerto final não tenha sido persistido)
+    try {
+        let perfilCheck = await Perfil.findOne({ userId: melhorJogadorId });
+        if (!perfilCheck) perfilCheck = await Perfil.create({ userId: melhorJogadorId, moedas: 0, pontos: 0 });
 
-    let registro = tema.pontuacoes?.find((p) => p.userId === melhorJogadorId);
-
-    if (!registro) {
-        tema.pontuacoes.push({
-            userId: melhorJogadorId,
-            total: melhorPontuacao,
-            partidas: 1
-        });
-    } else {
-        registro.total += melhorPontuacao;
-        registro.partidas += 1;
+        const temaIdStr = partida.tema._id.toString();
+        let e = perfilCheck.pontuacoes.find(p => p.temaId === temaIdStr);
+        if (!e) {
+            perfilCheck.pontuacoes.push({
+                temaId: temaIdStr,
+                total: melhorPontuacao,
+                partidas: 1
+            });
+        } else {
+            // já somamos durante a partida, mas garantimos que esteja salvo
+            e.total = Math.max(e.total || 0, (e.total || 0));
+            e.partidas = (e.partidas || 0);
+        }
+        await perfilCheck.save();
+    } catch (err) {
+        console.error("Erro ao garantir pontuação final por tema:", err);
     }
-
-    await tema.save();
 }
 
 
-
-    }});
+});
 }
 
 /* =====================================================
