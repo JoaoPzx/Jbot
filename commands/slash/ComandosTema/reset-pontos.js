@@ -9,7 +9,7 @@ module.exports = {
 
     async execute(interaction) {
 
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferReply({ ephemeral: false });
 
         // ============================
         // RESETAR PONTOS NOS TEMAS
@@ -46,7 +46,7 @@ module.exports = {
         // ============================
         const embed = new EmbedBuilder()
             .setColor("#2ecc71")
-            .setTitle("🔄 Pontos resetados com sucesso!")
+            .setTitle("<:resetrec:1442956821357920406> Pontos resetados com sucesso!")
             .setDescription("Todas as pontuações, recordes e insígnias foram removidas.")
             .setTimestamp();
 

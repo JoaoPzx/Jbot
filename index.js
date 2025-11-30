@@ -355,7 +355,7 @@ const cloudinary = require("cloudinary").v2;
 if (interaction.customId === "editar_wallpaper") {
 
     await interaction.reply({
-        content: "<:camerajf:1442989958678712411> **Envie agora seu novo wallpaper.**\n\nArraste uma imagem ou anexe um arquivo.\n❌ *Links não são aceitos.*\n⏳ Você tem **1 minuto**.",
+        content: "<:camerajf:1442989958678712411> **Envie agora seu novo wallpaper.**\n\nArraste uma imagem ou anexe um arquivo.\n<:fecharerr:1442682279322325095> *Links não são aceitos.*\n<:sandclock:1442671562355380409> Você tem **1 minuto**.",
         flags: 64
     });
 

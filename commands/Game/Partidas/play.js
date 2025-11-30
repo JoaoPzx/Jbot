@@ -188,7 +188,7 @@ async function execute(message, args) {
             { name: "Tema", value: `**${temaNomeExibir}**`, inline: true },
             { name: "Palavras", value: `**<:imagemjbot:1440425616359952445> ${temaEncontrado.imagens.length}**`, inline: true },
         )
-        .setFooter({ text: "Primeira imagem em 10s", iconURL: "https://i.ibb.co/ZpnWwHT9/sand-clock.png" })
+        .setFooter({ text: "Primeira imagem em 10s", iconURL: "https://i.ibb.co/BVyFPGM1/651885917153525780.gif" })
         .setImage(bannerInicio);
 
     await message.channel.send({ embeds: [embedInicio] });
@@ -362,7 +362,7 @@ const embedAcerto = new EmbedBuilder()
     .setThumbnail(msg.author.displayAvatarURL({ dynamic: true }))
     .setFooter({
         text: `Próxima imagem em ${partida.nitro ? "5s" : "10s"}`,
-        iconURL: "https://i.ibb.co/ZpnWwHT9/sand-clock.png"
+        iconURL: "https://i.ibb.co/BVyFPGM1/651885917153525780.gif"
     });
 
 await message.channel.send({ embeds: [embedAcerto] });
@@ -399,7 +399,7 @@ try {
     // --------------------------------------------------------
     if (partida.tema.insigniaEmojiId) {
 
-        const DEFAULT_META = 3;  // 🔧 meta default (pode alterar)
+        const DEFAULT_META = 12000;  // 🔧 meta default (pode alterar)
         const META = (typeof partida.tema.pontosParaInsignia === "number" && partida.tema.pontosParaInsignia > 0)
             ? partida.tema.pontosParaInsignia
             : DEFAULT_META;
@@ -436,13 +436,24 @@ try {
             // --------------------------------------------------------
             const embedInsignia = new EmbedBuilder()
                 .setColor("#FFD700")
-                .setTitle("NOVA INSÍGNIA CONQUISTADA!")
-                .setThumbnail("https://i.ibb.co/LX2YqbyS/premio.png")
                 .setDescription(
-                    `${partida.tema.insigniaEmoji ? partida.tema.insigniaEmoji + " " : ""}<@${msg.author.id}> acaba de conquistar a insígnia do tema **${novoObj.nome}**!\n\n` +
-                    `Pontos no tema: **${novoObj.pontos}**`
+                    `**<:fireworksjf:1444675463036407979> NOVA INSÍGNIA CONQUISTADA <:fireworksjf:1444675463036407979>**\n\n <@${msg.author.id}> conquistou a insígnia do tema:`
                 )
-                .setTimestamp();
+                .setThumbnail("https://i.ibb.co/LX2YqbyS/premio.png")
+                .addFields(
+                    {
+                        name: "Tema",
+                         value: `${partida.tema.insigniaEmoji ? partida.tema.insigniaEmoji + " " : ""}**${novoObj.nome}**!`,
+                         inline: true
+
+                    },
+                    {
+                        name: "Pontos no Tema",
+                         value: `**<:pontos:1442182692748791889> ${novoObj.pontos}**`,
+                         inline: true
+                         
+                    }
+            )
 
             // parar a rodada atual
             if (collector && !collector.ended) {
@@ -455,7 +466,7 @@ try {
             await message.channel.send({ embeds: [embedInsignia] }).catch(() => {});
 
             // --------------------------------------------------------
-            // ⏳ ESPERAR 10s E CONTINUAR A PARTIDA
+            // ⏳ ESPERAR 20s E CONTINUAR A PARTIDA
             // --------------------------------------------------------
             setTimeout(async () => {
                 try {
@@ -468,7 +479,7 @@ try {
                 } catch (err) {
                     console.error("Erro ao retomar após insígnia:", err);
                 }
-            }, 15000);
+            }, 20000);
 
             return; // impede continuar fluxo normal
         }
