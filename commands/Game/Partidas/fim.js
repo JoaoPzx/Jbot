@@ -73,10 +73,19 @@ if (rankingOrdenado.length === 0) {
         // Finalizar cache
         encerrarPartida(canalId);
 
-        // ============================
-        // BANNER
-        // ============================
-        const bannerFinal = validarBanner(tema.banner);
+        function gameOverImages() {
+    const gameOver = [
+        "https://i.ibb.co/mprpscW/game-over-insert-coins.gif",
+        "https://i.ibb.co/HphDW8sq/You-Lose-Game-Over-GIF-by-Universal-Music-Africa.gif",
+        "https://i.ibb.co/ynnGc5LT/game-over.gif",
+    ];
+
+    
+
+    const aleatorioGO = Math.floor(Math.random() * gameOver.length);
+    return gameOver[aleatorioGO];
+
+    }
 
         // ============================
         // DEFININDO RECORDISTA ATUAL
@@ -84,7 +93,7 @@ if (rankingOrdenado.length === 0) {
         let recordistaTexto;
 
         if (tema.record?.userId && tema.record?.pontos > 0) {
-            recordistaTexto = `<:estrela1:1442253518361853962> <@${tema.record.userId}> - **${tema.record.pontos} pts**`;
+            recordistaTexto = `<:medalrec:1442253575576354876> <@${tema.record.userId}> - **${tema.record.pontos} Pontos**`;
         } else {
             tema.record = {
                 userId: message.client.user.id,
@@ -92,7 +101,7 @@ if (rankingOrdenado.length === 0) {
                 data: new Date()
             };
             await tema.save();
-            recordistaTexto = `<:estrela1:1442253518361853962> <@${message.client.user.id}> - **0 pts**`;
+            recordistaTexto = `<:medalrec:1442253575576354876> <@${message.client.user.id}> - **0 Pontos**`;
         }
         
 
@@ -106,15 +115,14 @@ if (rankingOrdenado.length === 0) {
                 iconURL: message.client.user.displayAvatarURL()
             })
             .setDescription("**<:parar:1442269401255510098> Partida Finalizada!**")
-            .setImage("https://i.ibb.co/HphDW8sq/You-Lose-Game-Over-GIF-by-Universal-Music-Africa.gif")
+            embedFim.setImage(gameOverImages())
             .addFields(
                 { name: "Tema", value: `**${nomeTema}**`, inline: true },
                 { name: "Nível atingido", value: `<:levelup:1442272592789639239> **${nivel}**`, inline: true },
-                { name: "Recordista", value: recordistaTexto, inline: true },
+                { name: "Ganhador", value: `${rankingTexto}`, inline: true},
+                { name: "Recordista", value: `${recordistaTexto}`, inline: true },
+                { name: "Nível Recorde", value: tema.record?.nivel? `**<:levelup:1442272592789639239> ${tema.record.nivel}**`: `<:levelup:1442272592789639239> Sem nível`, inline: true},
                 { name: "Duração", value: `**<:duration:1442275100056617021> ${tempoTotal}**`, inline: true },
-                { name: "Ganhador", value: rankingTexto, inline: true},
-                {name: "Nível Recorde", value: tema.record?.nivel? `**<:levelup:1442272592789639239> ${tema.record.nivel}**`: "Nenhum nível.", inline: true
-    },
                 
             );
 

@@ -570,7 +570,7 @@ if (interaction.customId === "despausar_partida") {
         // limite por caracteres, não bytes
         if (bio.length > 180) {
             return interaction.reply({
-                content: "⚠️ Sua biografia deve ter no máximo **180 caracteres**.",
+                content: "<:avisojf:1442687822208303215> Sua biografia deve ter no máximo **180 caracteres**.",
                 ephemeral: true
             });
         }

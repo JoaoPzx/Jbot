@@ -174,24 +174,91 @@ async function execute(message, args) {
     };
 
     partidasAtivas.set(message.channel.id, partida);
+// pontos do jogador no tema
+const formatar = (n) => new Intl.NumberFormat("pt-BR").format(n);
 
-    const bannerInicio = validarBanner(temaEncontrado.banner);
+// ===============================
+// BUSCAR DADOS DO JOGADOR NESSE TEMA
+// ===============================
+let perfilJogador = await Perfil.findOne({ userId: message.author.id });
 
-    const embedInicio = new EmbedBuilder()
-        .setColor(corDaPartida)
-        .setAuthor({
-            name: `Solicitado por ${message.author.username}`,
-            iconURL: message.author.displayAvatarURL({ dynamic: true })
-        })
-        .setDescription("🎮 **Iniciando nova partida...**")
-        .addFields(
-            { name: "Tema", value: `**${temaNomeExibir}**`, inline: true },
-            { name: "Palavras", value: `**<:imagemjbot:1440425616359952445> ${temaEncontrado.imagens.length}**`, inline: true },
-        )
-        .setFooter({ text: "Primeira imagem em 10s", iconURL: "https://i.ibb.co/BVyFPGM1/651885917153525780.gif" })
-        .setImage(bannerInicio);
+let pontosNoTema = 0;
+if (perfilJogador && perfilJogador.pontuacoes?.length) {
+    const entryTema = perfilJogador.pontuacoes.find(p => p.temaId === temaEncontrado._id.toString());
+    pontosNoTema = entryTema ? entryTema.total : 0;
+}
 
-    await message.channel.send({ embeds: [embedInicio] });
+// ===============================
+// DADOS DO RECORDE DO TEMA
+// ===============================
+let recordistaTag = "Nenhum ainda";
+let recordPontos = 0;
+let recordNivel = 0;
+
+if (temaEncontrado.record?.userId) {
+    recordistaTag = `<@${temaEncontrado.record.userId}>`;
+    recordPontos = temaEncontrado.record.pontos || 0;
+    recordNivel = temaEncontrado.record.nivel || 0;
+}
+
+// ===============================
+// BANNER
+// ===============================
+const bannerInicio = validarBanner(temaEncontrado.banner);
+
+// ===============================
+// EMBED FINAL DE INÍCIO
+// ===============================
+const embedInicio = new EmbedBuilder()
+    .setColor(corDaPartida)
+    .setAuthor({
+        name: `Solicitado por ${message.author.username}`,
+        iconURL: message.author.displayAvatarURL({ dynamic: true })
+    })
+    .setDescription("🎮 **Iniciando nova partida...**")
+    .addFields(
+        {
+            name: "Tema",
+            value: `**${temaNomeExibir}**`,
+            inline: true
+        },
+        {
+            name: "Palavras",
+            value: `**<:imagemjbot:1440425616359952445> ${temaEncontrado.imagens.length}**`,
+            inline: true
+        },
+        {
+            name: "Seus pontos no tema",
+            value: `**<:pontos:1442182692748791889> ${formatar(pontosNoTema)}**`,
+            inline: true
+        },
+        {
+            name: "Recordista",
+            value: `<:medalrec:1442253575576354876> ${recordistaTag}`,
+            inline: true
+        },
+        {
+            name: "Pontos Record",
+            value: `**<:pontos:1442182692748791889> ${formatar(recordPontos)}**`,
+            inline: true
+        },
+        {
+            name: "Nível Record",
+            value: `**<:levelup:1442272592789639239> ${formatar(recordNivel)}**`,
+            inline: true
+        },
+        
+    )
+    .setFooter({
+        text: "Primeira imagem em 10s",
+        iconURL: "https://i.ibb.co/BVyFPGM1/651885917153525780.gif"
+    })
+    .setImage(bannerInicio);
+
+await message.channel.send({ embeds: [embedInicio] });
+
+
+
     partida.ultimoEmbed = "inicio";
 
 
@@ -243,6 +310,7 @@ async function iniciarRodada(message, partida) {
         }
     }
 
+    
 function gerarFooterDicas() {
     const dicas = [
         "Use ;dica para revelar uma ajuda especial!",
@@ -256,6 +324,21 @@ function gerarFooterDicas() {
     const aleatorio = Math.floor(Math.random() * dicas.length);
     return dicas[aleatorio];
 }
+
+function gameOverImages() {
+    const gameOver = [
+        "https://i.ibb.co/mprpscW/game-over-insert-coins.gif",
+        "https://i.ibb.co/HphDW8sq/You-Lose-Game-Over-GIF-by-Universal-Music-Africa.gif",
+        "https://i.ibb.co/ynnGc5LT/game-over.gif",
+        "https://i.ibb.co/8L7zt2D0/DICd.gif",
+    ];
+
+    
+
+    const aleatorioGO = Math.floor(Math.random() * gameOver.length);
+    return gameOver[aleatorioGO];
+
+    }
 
     const tempoFormatado = formatarTempo(tempoSegundos);
     const tempoMs = tempoSegundos * 1000;
@@ -586,7 +669,7 @@ const embedFim = new EmbedBuilder()
         name: `A resposta era: ${partida.itemAtual.resposta}`,
         iconURL: message.client.user.displayAvatarURL()
     })
-    .setImage("https://i.ibb.co/HphDW8sq/You-Lose-Game-Over-GIF-by-Universal-Music-Africa.gif")
+    embedFim.setImage(gameOverImages())
     .addFields(
         // === LINHA 1 ===
         {
@@ -607,12 +690,10 @@ const embedFim = new EmbedBuilder()
                     : (() => {
                           const [vencedorId, pontos] = rankingOrdenado[0];
                           const plural = pontos === 1 ? "ponto" : "pontos";
-                          return `<:vencedor:1442267461545361629> <@${vencedorId}> - **${pontos} ${plural}**`;
+                          return `<:vencedor:1442267461545361629> <@${vencedorId}> — **${pontos} ${plural}**`;
                       })(),
             inline: true
         },
-
-        // === LINHA 2 ===
         {
             name: "Recordista",
             value: `<:medalrec:1442253575576354876> **${recordistaLinha}**`,
@@ -620,7 +701,7 @@ const embedFim = new EmbedBuilder()
         },
         {
             name: "Nível Recorde",
-            value: `**<:levelup:1442272592789639239> ${temaDB.record?.nivel || 0}**`,
+            value: `**<:levelup:1442272592789639239> ${temaDB.record?.nivel}**` || "<:levelup:1442272592789639239> Sem nível",
             inline: true
         },
         {
