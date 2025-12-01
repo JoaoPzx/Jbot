@@ -183,7 +183,7 @@ module.exports = {
 
         const embed = new EmbedBuilder()
             .setColor("Green")
-            .setDescription(`<:checkjf:1443729850568413256> **Imagem atualizada com sucesso!**\n\n<:tema:1440424182759428206> Tema: \`${tema.nomeOriginal}\`\n\n<:attjf:1443389707072438303> Resposta atualizada: \`${item.resposta}\``);
+            .setDescription(`<:checkjf:1443729850568413256> **Imagem atualizada com sucesso!**\n\n**<:tema:1440424182759428206> Tema:** \`${tema.nomeOriginal}\`\n\n**<:attjf:1443389707072438303> Resposta atualizada:** \`${item.resposta}\``);
 
         return interaction.reply({ embeds: [embed] });
     }
