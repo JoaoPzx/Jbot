@@ -190,7 +190,7 @@ module.exports = {
                     new EmbedBuilder()
                         .setColor("#e74c3c")
                         .setDescription(
-                            `🗑️ A imagem foi **removida com sucesso**!\n\n` +
+                            `<:bin:1440818365575729173> A imagem foi **removida com sucesso**!\n\n` +
                             `**Tema:** ${nomeExibir}\n` +
                             `**Resposta:** \`${resposta}\``
                         )
