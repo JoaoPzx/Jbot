@@ -250,7 +250,7 @@ const embedInicio = new EmbedBuilder()
         
     )
     .setFooter({
-        text: "Primeira imagem em 10s",
+        text: "Primeira imagem em 10 segundos",
         iconURL: "https://i.ibb.co/BVyFPGM1/651885917153525780.gif"
     })
     .setImage(bannerInicio);
@@ -444,7 +444,7 @@ const embedAcerto = new EmbedBuilder()
     .setDescription(`${rankingTexto}`)
     .setThumbnail(msg.author.displayAvatarURL({ dynamic: true }))
     .setFooter({
-        text: `Próxima imagem em ${partida.nitro ? "5s" : "10s"}`,
+        text: `Próxima imagem em ${partida.nitro ? "5 segundos" : "10 segundos"}`,
         iconURL: "https://i.ibb.co/BVyFPGM1/651885917153525780.gif"
     });
 
@@ -626,9 +626,9 @@ partidasAtivas.delete(message.channel.id);
     // ===== RECORDISTA ATUAL =====
     let recordistaLinha;
     if (temaDB.record?.userId && temaDB.record?.pontos > 0) {
-        recordistaLinha = `**<@${temaDB.record.userId}> - ${temaDB.record.pontos} pontos**`;
+        recordistaLinha = `**<@${temaDB.record.userId}>: ${temaDB.record.pontos} pontos**`;
     } else {
-        recordistaLinha = `**<@${message.client.user.id}> - 0 pontos**`;
+        recordistaLinha = `**<@${message.client.user.id}>: 0 pontos**`;
     }
 
     const rankingOrdenado = montarRanking(partida);
@@ -690,7 +690,7 @@ const embedFim = new EmbedBuilder()
                     : (() => {
                           const [vencedorId, pontos] = rankingOrdenado[0];
                           const plural = pontos === 1 ? "ponto" : "pontos";
-                          return `<:vencedor:1442267461545361629> <@${vencedorId}> — **${pontos} ${plural}**`;
+                          return `<:vencedor:1442267461545361629> <@${vencedorId}>: **${pontos} ${plural}**`;
                       })(),
             inline: true
         },
@@ -839,7 +839,7 @@ function formatarRanking(lista, partida) {
 
             const label = pontos === 1 ? "ponto" : "pontos";
 
-            return `${medalha} <@${userId}> — **${pontos}** ${label}${sufixo}`;
+            return `${medalha} <@${userId}>: **${pontos}** ${label}${sufixo}`;
         })
         .join("\n");
 }

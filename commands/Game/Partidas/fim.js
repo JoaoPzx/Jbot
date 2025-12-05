@@ -53,7 +53,7 @@ if (rankingOrdenado.length === 0) {
 } else {
     const [vencedorId, pontos] = rankingOrdenado[0];
     const plural = pontos === 1 ? "ponto" : "pontos";
-    rankingTexto = `<:vencedor:1442267461545361629> <@${vencedorId}> - **${pontos} ${plural}**`;
+    rankingTexto = `<:vencedor:1442267461545361629> <@${vencedorId}>: **${pontos} ${plural}**`;
 }
 
         // Melhor jogador da partida
