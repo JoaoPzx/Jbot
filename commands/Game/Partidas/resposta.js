@@ -30,7 +30,7 @@ const tamanho = respostaRaw.replace(/\s/g, "").length;
 const linha = `${respostaEspacada}`;
 
 const caixa = 
-`**\`\`\`fix
+`**\`\`\`yaml
 ${linha}
 \`\`\`**`;
 
