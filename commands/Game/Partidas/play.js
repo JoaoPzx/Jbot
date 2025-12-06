@@ -330,7 +330,6 @@ function gameOverImages() {
         "https://i.ibb.co/mprpscW/game-over-insert-coins.gif",
         "https://i.ibb.co/HphDW8sq/You-Lose-Game-Over-GIF-by-Universal-Music-Africa.gif",
         "https://i.ibb.co/ynnGc5LT/game-over.gif",
-        "https://i.ibb.co/8L7zt2D0/DICd.gif",
     ];
 
     

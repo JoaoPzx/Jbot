@@ -57,17 +57,21 @@ module.exports = {
         // Se quiser cor ANSI nas letras, troque para o código abaixo:
         // const caixa = `\`\`\`ansi\n[1;38;5;87m${dicaEspacada}[0m\n\`\`\``;
 
-    const caixa =
-`\`\`\`ansi
-[1;38;5;51m${dicaEspacada}[0m
-\`\`\``;
+    const tamanho = resposta.replace(/\s/g, "").length; // quantidade de letras (sem espaços)
+        const linha = `[${tamanho}] ${dicaEspacada}`;
+
+        const caixa =
+`**\`\`\`prolog
+${linha}
+\`\`\`**`;
+
 
 
 
         const embed = new EmbedBuilder()
             .setColor("Green")
             .setDescription(
-                "<:icon_dica:1441174865032904745> **Dica Revelada!**\n" +
+                "<:icon_dica:1441174865032904745> Dica Revelada!\n" +
                 caixa
             )
             .setFooter({
