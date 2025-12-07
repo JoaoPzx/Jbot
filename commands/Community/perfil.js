@@ -533,6 +533,7 @@ for (const { img } of icons) {
         glass(bioX, bioY, bioW, bioH);
 
         ctx.font = "25px 'SF Pro Display'";
+        ctx.font = "26px 'SF Pro', 'Emoji'";
         ctx.fillStyle = theme.textMain;
         wrapText(ctx, perfil.bio, bioX + 20, bioY + 43, bioW - 40, 26);
 
