@@ -7,9 +7,6 @@ module.exports = {
 
     async execute(message, args) {
 
-        // ==========================
-        // ERRO PADRÃO
-        // ==========================
         const erro = (txt) =>
             message.reply({
                 embeds: [
