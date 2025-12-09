@@ -134,22 +134,49 @@ function getTheme(cor) {
 // 🔵 FUNÇÃO PARA DESENHAR TEXTO + EMOJIS TWEMOJI NO CANVAS
 // ======================================================================
 async function drawTextWithEmoji(ctx, text, x, y, fontSize = 26) {
+    if (!text) return;
 
-    const parsed = parse(text, { assetType: "png" });
+    ctx.font = `${fontSize}px 'SF Pro Display'`;
+    ctx.textBaseline = "alphabetic";
+
+    const emojiRegex = /(\p{Extended_Pictographic}|\p{Emoji_Component})+/gu;
+
+    let lastIndex = 0;
     let offsetX = x;
 
-    for (const part of parsed) {
-        if (part.url) {
-            const img = await loadImage(part.url);
+    for (const match of text.matchAll(emojiRegex)) {
+        // texto antes do emoji
+        const before = text.slice(lastIndex, match.index);
+        if (before) {
+            ctx.fillText(before, offsetX, y);
+            offsetX += ctx.measureText(before).width;
+        }
+
+        // emoji
+        const emoji = match[0];
+        const code = twemoji.convert.toCodePoint(emoji);
+        const url = `https://twemoji.maxcdn.com/v/latest/72x72/${code}.png`;
+
+        try {
+            const img = await loadImage(url);
             const size = fontSize + 6;
             ctx.drawImage(img, offsetX, y - size + 6, size, size);
-            offsetX += size + 2;
-        } else {
-            ctx.fillText(part.text, offsetX, y);
-            offsetX += ctx.measureText(part.text).width;
+            offsetX += size + 4;
+        } catch {
+            ctx.fillText(emoji, offsetX, y);
+            offsetX += ctx.measureText(emoji).width;
         }
+
+        lastIndex = match.index + emoji.length;
+    }
+
+    // texto restante depois do último emoji
+    const rest = text.slice(lastIndex);
+    if (rest) {
+        ctx.fillText(rest, offsetX, y);
     }
 }
+
 
 
 
