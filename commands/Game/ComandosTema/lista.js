@@ -59,29 +59,53 @@ module.exports = {
             .map(img => img.resposta.toUpperCase())
             .sort((a, b) => a.localeCompare(b, "pt-BR"));
 
-        const porPagina = 20;
+        const porColuna = 20;                 // 20 palavras por coluna
+        const porPagina = porColuna;      // 40 por página (2 colunas)
         const totalPaginas = Math.ceil(palavras.length / porPagina);
         let paginaAtual = 1;
+function gerarEmbed() {
+    const inicio = (paginaAtual - 1) * porPagina; // ex: 0
+    const meio = inicio + porPagina;              // ex: 20
+    const fim = meio + porPagina;                // ex: 40
 
-        function gerarEmbed() {
-            const inicio = (paginaAtual - 1) * porPagina;
-            const fim = inicio + porPagina;
+    // fatias da página
+    const col1 = palavras.slice(inicio, meio);
+    const col2 = palavras.slice(meio, fim);
 
-            const lista = "```\n" + palavras.slice(inicio, fim).join("\n") + "\n```";
+    // monta blocos individuais
+    const bloco1 = "```\n" + col1.join("\n") + "\n```";
+    const bloco2 = "```\n" + col2.join("\n") + "\n```";
 
-            return new EmbedBuilder()
-                .setColor("#9b59b6")
-                .setAuthor({
-                    name: message.client.user.username,
-                    iconURL: message.client.user.displayAvatarURL()
-                })
-                .setDescription(`**<:tema:1440424182759428206> LISTA DE IMAGENS DO TEMA ${nomeFinal}**\n\n **1 - ${tema.imagens.length}**\n\n${lista}`)
-                .setFooter({
-                    text: `${tema.imagens.length} palavra(s) cadastrada(s) • solicitado por ${message.author.username}`,
-                    iconURL: message.author.displayAvatarURL()
-                })
-                .setTimestamp();
-        }
+    // títulos das colunas
+    const tituloCol1 = `${inicio + 1} - ${meio}`;
+    const tituloCol2 = `${meio + 1} - ${Math.min(fim, palavras.length)}`;
+
+    return new EmbedBuilder()
+        .setColor("#9b59b6")
+        .setAuthor({
+            name: message.client.user.username,
+            iconURL: message.client.user.displayAvatarURL()
+        })
+        .setTitle(`📘 LISTA DE IMAGENS DO TEMA ${nomeFinal}`)
+        .addFields(
+            {
+                name: tituloCol1,
+                value: bloco1,
+                inline: true
+            },
+            {
+                name: tituloCol2,
+                value: col2.length ? bloco2 : "``` \n```",
+                inline: true
+            }
+        )
+        .setFooter({
+            text: `${tema.imagens.length} palavra(s) cadastrada(s) • solicitado por ${message.author.username}`,
+            iconURL: message.author.displayAvatarURL()
+        })
+        .setTimestamp();
+}
+
 
         function gerarBotoes() {
             return new ActionRowBuilder().addComponents(

@@ -1,17 +1,15 @@
-/**
- * commands/Community/perfil.js
- * Layout COMPLETO corrigido
- * - Borda externa redonda em todos os cantos
- * - Wallpaper APENAS na parte inferior (top quadrado, bottom arredondado)
- * - Avatar, bio, caixas, inventário e insígnias corrigidos
- */
-
 const { AttachmentBuilder } = require("discord.js");
 const Canvas = require("canvas");
 const fs = require("fs");
 const path = require("path");
 const Perfil = require("../../models/Perfil");
 const Tema = require("../../models/Tema");
+const twemoji = require("twemoji");
+const { parse } = require("twemoji-parser");
+const { loadImage } = require("canvas");
+
+
+
 
 
 // =============================
@@ -131,6 +129,28 @@ function getTheme(cor) {
         
     }
 }
+
+// ======================================================================
+// 🔵 FUNÇÃO PARA DESENHAR TEXTO + EMOJIS TWEMOJI NO CANVAS
+// ======================================================================
+async function drawTextWithEmoji(ctx, text, x, y, fontSize = 26) {
+
+    const parsed = parse(text, { assetType: "png" });
+    let offsetX = x;
+
+    for (const part of parsed) {
+        if (part.url) {
+            const img = await loadImage(part.url);
+            const size = fontSize + 6;
+            ctx.drawImage(img, offsetX, y - size + 6, size, size);
+            offsetX += size + 2;
+        } else {
+            ctx.fillText(part.text, offsetX, y);
+            offsetX += ctx.measureText(part.text).width;
+        }
+    }
+}
+
 
 
 // =============================
@@ -522,26 +542,51 @@ for (const { img } of icons) {
         ctx.fillStyle = theme.textMain;
         ctx.fillText(target.username, avatarX + 62, avatarY + avatarSize + 48);
 
-        // =============================
-        // BIO
-        // =============================
-        const bioX = insX;
-        const bioY = insY + insH + 12;
-        const bioW = rightX + rightW - 55;
-        const bioH = 70;
+// =============================
+// BIO
+// =============================
+// =============================
+// BIO (substituir a chamada antiga por este bloco)
+// =============================
+const bioX = insX;
+const bioY = insY + insH + 12;
+const bioW = rightX + rightW - 55;
+const bioH = 70;
 
-        glass(bioX, bioY, bioW, bioH);
+glass(bioX, bioY, bioW, bioH);
 
-        ctx.font = "23px 'SF Pro Display'";
-        ctx.fillStyle = theme.textMain;
-        wrapText(ctx, perfil.bio, bioX + 20, bioY + 43, bioW - 40, 26);
+// configura fonte / cor antes de desenhar (ajuste se necessário)
+ctx.font = "23px 'SF Pro Display'";
+ctx.fillStyle = theme.textMain || "#ffffff";
 
-        // =============================
-        // ENVIAR
-        // =============================
-        const buffer = canvas.toBuffer("image/png");
-        const attachment = new AttachmentBuilder(buffer, { name: "perfil.png" });
+// coordenadas de início para o texto (pequena margem à esquerda e central vertical)
+const textStartX = bioX + 16;
+const textStartY = bioY + Math.floor(bioH / 2) + 8; // centraliza verticalmente ~ ajuste se necessário
 
-        return message.reply({ files: [attachment] });
+// largura máxima do texto (respeita margens internas)
+const maxWidth = bioW - 32;
+
+// assegura que perfil.bio exista e seja string
+const bioText = (perfil && perfil.bio) ? String(perfil.bio) : "";
+
+// chama o helper que desenha texto + emojis
+// assinatura esperada: drawTextWithEmoji(ctx, text, x, y, fontSize, options?)
+// caso o seu drawTextWithEmoji aceite um objeto de opções, passamos maxWidth/align
+try {
+    await drawTextWithEmoji(ctx, bioText, textStartX, textStartY, 23, { maxWidth, align: "left" });
+} catch (err) {
+    console.error("Erro em drawTextWithEmoji ao desenhar a bio:", err);
+    // fallback simples: desenha apenas texto sem emoji
+    ctx.fillText(bioText.slice(0, 120), textStartX, textStartY); // corta se for muito longo
+}
+
+// =============================
+// ENVIAR
+// =============================
+const buffer = canvas.toBuffer("image/png");
+const attachment = new AttachmentBuilder(buffer, { name: "perfil.png" });
+
+return message.reply({ files: [attachment] });
+
     }
 };

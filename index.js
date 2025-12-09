@@ -548,10 +548,6 @@ if (interaction.customId === "despausar_partida") {
         });
       }
     }
-    // -------------------------
-    // MODAIS (/perfil-editar)
-    // -------------------------
-    if (interaction.isModalSubmit()) {
 
       // ===== SALVAR BIOGRAFIA =====
       if (interaction.isModalSubmit()) {
@@ -585,9 +581,6 @@ if (interaction.customId === "despausar_partida") {
             flags: 64
         });
     }
-}
-
-
       return;
     }
 
