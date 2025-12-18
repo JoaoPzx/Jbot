@@ -8,7 +8,7 @@ const activities = [
     { name: "Blackjack no cassino JFlux ♠️", type: ActivityType.Playing },
     { name: "Tudo, sempre 👀", type: ActivityType.Watching },
     { name: "Analisando estatísticas 📊", type: ActivityType.Watching },
-    { name: "Novos temas sendo criados 🖼️", type: ActivityType.Watching },
+    { name: "João 🤍 Mikaa", type: ActivityType.Watching },
     { name: "Limpando caches 🧹", type: ActivityType.Watching },
     { name: "O dealer dando 21 ♣️", type: ActivityType.Listening },
     { name: "As imagens enviadas no servidor 📸", type: ActivityType.Watching },
