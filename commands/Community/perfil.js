@@ -322,17 +322,17 @@ module.exports = {
         // =============================
         // POSICIONAMENTO
         // =============================
-        const insX = avatarX + avatarSize + 36;
+        const insX = avatarX + avatarSize + 250;
         const insY = 65;
         const insW = 260;
         const insH = 230;
 
-        const invX = insX + insW + 224;
+        const invX = insX + insW + 15;
         const invY = insY;
         const invW = 260;
         const invH = 230;
 
-        const rightX = invW + 340;
+        const rightX = invW + 68;
         const rightY = insY;
         const rightW = 200;
         const rightH = 72;
@@ -364,12 +364,10 @@ ctx.font = "20px 'SF Pro Display Bold'";
 ctx.fillStyle = theme.textMain;
 ctx.fillText("Insígnias:", insX + 1, insY - 8);
 
-// perfil.insignias agora guarda nomeLower dos temas
 // =====================================================
 // 🔥 NOVO SISTEMA DE INSÍGNIAS (objetos, não strings)
 // =====================================================
 
-// perfil.insignias agora é uma lista de objetos
 const insigniaDocs = perfil.insignias || [];
 
 // extrair os temaId das insígnias salvas no perfil
@@ -572,12 +570,9 @@ for (const { img } of icons) {
 // =============================
 // BIO
 // =============================
-// =============================
-// BIO (substituir a chamada antiga por este bloco)
-// =============================
-const bioX = insX;
-const bioY = insY + insH + 12;
-const bioW = rightX + rightW - 55;
+const bioX = 328;
+const bioY = 305;
+const bioW = 750;
 const bioH = 70;
 
 glass(bioX, bioY, bioW, bioH);
