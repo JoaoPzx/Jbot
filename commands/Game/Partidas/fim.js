@@ -93,7 +93,7 @@ if (rankingOrdenado.length === 0) {
         let recordistaTexto;
 
         if (tema.record?.userId && tema.record?.pontos > 0) {
-            recordistaTexto = `<:medalrec:1442253575576354876> <@${tema.record.userId}> - **${tema.record.pontos} Pontos**`;
+            recordistaTexto = `<:medalrec:1442253575576354876> <@${tema.record.userId}>: **${tema.record.pontos} Pontos**`;
         } else {
             tema.record = {
                 userId: message.client.user.id,
@@ -101,7 +101,7 @@ if (rankingOrdenado.length === 0) {
                 data: new Date()
             };
             await tema.save();
-            recordistaTexto = `<:medalrec:1442253575576354876> <@${message.client.user.id}> - **0 Pontos**`;
+            recordistaTexto = `<:medalrec:1442253575576354876> <@${message.client.user.id}>: **0 Pontos**`;
         }
         
 
@@ -121,17 +121,15 @@ if (rankingOrdenado.length === 0) {
                 { name: "Nível atingido", value: `<:levelup:1442272592789639239> **${nivel}**`, inline: true },
                 { name: "Ganhador", value: `${rankingTexto}`, inline: true},
                 { name: "Recordista", value: `${recordistaTexto}`, inline: true },
-                { name: "Nível Recorde", value: tema.record?.nivel? `**<:levelup:1442272592789639239> ${tema.record.nivel}**`: `<:levelup:1442272592789639239> Sem nível`, inline: true},
+                { name: "Nível Recorde", value: tema.record?.nivel? `**<:levelup:1442272592789639239> ${tema.record.nivel}**`: `**<:levelup:1442272592789639239> 0**`, inline: true},
                 { name: "Duração", value: `**<:duration:1442275100056617021> ${tempoTotal}**`, inline: true },
                 
             );
 
         await message.reply({ embeds: [embedFim] });
 
-        // ============================
-        // SISTEMA DE RECORDE
-        // ============================
-        // ============================
+    
+// ============================
 // SISTEMA DE RECORDE (ATUALIZADO)
 // ============================
 if (melhorJogadorId && melhorPontuacao > 0) {
