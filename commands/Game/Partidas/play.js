@@ -592,53 +592,64 @@ partida.timeout = setTimeout(
     collector.on("end", async (_, motivo) => {
 
     if (partida.encerrada) return;
-
     if (motivo === "acertou" || partida.pausada) return;
 
-   partida.encerrada = true;
+    partida.encerrada = true;
 
-// === antes de remover: salvar snapshot para possibilidade de recuperar (apenas TIMEOUT real) ===
-const channelId = message.channel.id;
-const snapshot = {
-    tema: partida.tema,
-    temaNomeExibir: partida.temaNomeExibir,
-    nivel: partida.nivel,
-    ranking: partida.ranking,
-    cor: partida.cor,
-    combos: partida.combos || {},
-    nitro: partida.nitro || false,
-    tempoBoostNiveisRestantes: partida.tempoBoostNiveisRestantes || 0,
-    tempoExtraGlobal: partida.tempoExtraGlobal || 0,
-    inicio: partida.inicio || Date.now(),
-    // pode adicionar mais se for necessário depois
-};
+    // =====================================================
+    // 🔒 SNAPSHOT PARA RECUPERAÇÃO
+    // =====================================================
+    const channelId = message.channel.id;
+    const snapshot = {
+        tema: partida.tema,
+        temaNomeExibir: partida.temaNomeExibir,
+        nivel: partida.nivel,
+        ranking: partida.ranking,
+        cor: partida.cor,
+        combos: partida.combos || {},
+        nitro: partida.nitro || false,
+        tempoBoostNiveisRestantes: partida.tempoBoostNiveisRestantes || 0,
+        tempoExtraGlobal: partida.tempoExtraGlobal || 0,
+        inicio: partida.inicio || Date.now(),
+    };
 
-// guarda por 15s para possível recuperação
-guardarSnapshotParaRecuperar(channelId, snapshot);
+    guardarSnapshotParaRecuperar(channelId, snapshot);
+    partidasAtivas.delete(channelId);
 
-// agora sim remove a partida do cache
-partidasAtivas.delete(message.channel.id);
-
-
+    // =====================================================
+    // 📊 PREPARAÇÃO DE DADOS
+    // =====================================================
     const temaDB = await Tema.findById(partida.tema._id);
-
-    // ===== RECORDISTA ATUAL =====
-    let recordistaLinha;
-    if (temaDB.record?.userId && temaDB.record?.pontos > 0) {
-        recordistaLinha = `**<@${temaDB.record.userId}>: ${temaDB.record.pontos} pontos**`;
-    } else {
-        recordistaLinha = `**<@${message.client.user.id}>: 0 pontos**`;
-    }
-
     const rankingOrdenado = montarRanking(partida);
 
-    // ===== RECORDE DO TEMA =====
-    if (rankingOrdenado.length > 0) {
-        const melhorJogadorId = rankingOrdenado[0][0];
-        const melhorPontuacao = rankingOrdenado[0][1];
+    // =====================================================
+    // 🔒 SNAPSHOT DO RECORDE ANTIGO
+    // =====================================================
+    const recordAntigo = temaDB.record
+        ? {
+            userId: temaDB.record.userId,
+            pontos: temaDB.record.pontos || 0,
+            nivel: temaDB.record.nivel || 0
+        }
+        : null;
 
-        // Salva recorde completo
-        if (!temaDB.record || melhorPontuacao > temaDB.record.pontos) {
+    // =====================================================
+    // 🏆 PROCESSAR NOVO RECORDE
+    // =====================================================
+    let novoRecorde = false;
+    let melhorJogadorId = null;
+    let melhorPontuacao = 0;
+
+    if (rankingOrdenado.length > 0) {
+        melhorJogadorId = rankingOrdenado[0][0];
+        melhorPontuacao = rankingOrdenado[0][1];
+
+        novoRecorde =
+            !recordAntigo ||
+            melhorPontuacao > recordAntigo.pontos ||
+            partida.nivel > recordAntigo.nivel;
+
+        if (novoRecorde) {
             temaDB.record = {
                 userId: melhorJogadorId,
                 pontos: melhorPontuacao,
@@ -649,6 +660,9 @@ partidasAtivas.delete(message.channel.id);
         }
     }
 
+    // =====================================================
+    // ⏱️ DURAÇÃO DA PARTIDA
+    // =====================================================
     let tempoTotal = "Indisponível";
     if (partida.inicio) {
         const duracao = Date.now() - partida.inicio;
@@ -658,116 +672,87 @@ partidasAtivas.delete(message.channel.id);
         tempoTotal = (h ? `${h}h ` : "") + (m ? `${m}m ` : "") + `${s}s`;
     }
 
-    // ===== EMBED FINAL =====
+    // =====================================================
+    // 📦 EMBED FINAL DA PARTIDA
+    // =====================================================
+    const embedFim = new EmbedBuilder()
+        .setColor(partida.cor)
+        .setAuthor({
+            name: `A resposta era: ${partida.itemAtual.resposta}`,
+            iconURL: message.client.user.displayAvatarURL()
+        })
+        .setImage(gameOverImages())
+        .addFields(
+            {
+                name: "Tema",
+                value: `**${partida.temaNomeExibir}**`,
+                inline: true
+            },
+            {
+                name: "Nível atingido",
+                value: `**<:levelup:1442272592789639239> ${partida.nivel}**`,
+                inline: true
+            },
+            {
+                name: "Ganhador",
+                value:
+                    rankingOrdenado.length === 0
+                        ? "<:nada:1442277644346593462> Sem vencedor"
+                        : (() => {
+                              const [vId, pts] = rankingOrdenado[0];
+                              const plural = pts === 1 ? "ponto" : "pontos";
+                              return `<:vencedor:1442267461545361629> <@${vId}>: **${pts} ${plural}**`;
+                          })(),
+                inline: true
+            },
+            {
+                name: "Recordista",
+                value: temaDB.record?.userId
+                    ? `<:medalrec:1442253575576354876> <@${temaDB.record.userId}>`
+                    : "Nenhum",
+                inline: true
+            },
+            {
+                name: "Nível Recorde",
+                value: temaDB.record?.nivel
+                    ? `**<:levelup:1442272592789639239> ${temaDB.record.nivel}**`
+                    : "—",
+                inline: true
+            },
+            {
+                name: "Duração",
+                value: `**<:duration:1442275100056617021> ${tempoTotal}**`,
+                inline: true
+            }
+        );
 
-    
+    await message.channel.send({ embeds: [embedFim] });
 
-const embedFim = new EmbedBuilder()
-    .setColor(partida.cor)
-    .setAuthor({
-        name: `A resposta era: ${partida.itemAtual.resposta}`,
-        iconURL: message.client.user.displayAvatarURL()
-    })
-    embedFim.setImage(gameOverImages())
-    .addFields(
-        // === LINHA 1 ===
-        {
-            name: "Tema",
-            value: `**${partida.temaNomeExibir}**`,
-            inline: true
-        },
-        {
-            name: "Nível atingido",
-            value: `**<:levelup:1442272592789639239> ${partida.nivel}**`,
-            inline: true
-        },
-        {
-            name: "Ganhador",
-            value:
-                rankingOrdenado.length === 0
-                    ? "<:nada:1442277644346593462> Sem vencedor"
-                    : (() => {
-                          const [vencedorId, pontos] = rankingOrdenado[0];
-                          const plural = pontos === 1 ? "ponto" : "pontos";
-                          return `<:vencedor:1442267461545361629> <@${vencedorId}>: **${pontos} ${plural}**`;
-                      })(),
-            inline: true
-        },
-        {
-            name: "Recordista",
-            value: `<:medalrec:1442253575576354876> **${recordistaLinha}**`,
-            inline: true
-        },
-        {
-            name: "Nível Recorde",
-            value: `**<:levelup:1442272592789639239> ${temaDB.record?.nivel}**` || "<:levelup:1442272592789639239> Sem nível",
-            inline: true
-        },
-        {
-            name: "Duração",
-            value: `**<:duration:1442275100056617021> ${tempoTotal}**`,
-            inline: true
-        }
-    );
+    // =====================================================
+    // 📢 EMBED DE NOVO RECORDE (TIMEOUT)
+    // =====================================================
+    if (novoRecorde && melhorJogadorId) {
 
-await message.channel.send({ embeds: [embedFim] });
+        const nomeTema = temaDB.insigniaEmoji
+            ? `${temaDB.insigniaEmoji} ${temaDB.nomeOriginal || temaDB.nome}`
+            : (temaDB.nomeOriginal || temaDB.nome);
 
-// =====================================================
-//   🔽 SALVAR E CHECAR RECORDE / PONTOS / INSÍGNIA
-// =====================================================
+        const embedRecorde = new EmbedBuilder()
+            .setColor("#FFD700")
+            .setTitle("🏆 NOVO RECORDE DO TEMA!")
+            .setThumbnail("https://i.ibb.co/BMJY9rs/estrela-1.png")
+            .setDescription(
+                `<:medalrec:1442253575576354876> <@${melhorJogadorId}> estabeleceu um novo recorde!`
+            )
+            .addFields(
+                { name: "Tema", value: `**${nomeTema}**`, inline: true },
+                { name: "Pontuação", value: `**<:pontos:1442182692748791889> ${melhorPontuacao} pontos**`, inline: true },
+                { name: "Nível Atingido", value: `**<:levelup:1442272592789639239> ${partida.nivel}**`, inline: true }
+            );
 
-// ======================
-// BLOCO B: substituição no final da partida (collector.on("end", ...))
-// Atualiza recorde e garante persistência final da pontuação por tema.
-// Insígnias NÃO são tratadas aqui (foram entregues durante a partida).
-// ======================
-
-const rankingOrdenadoLocal = Object.entries(partida.ranking).sort((a, b) => b[1] - a[1]);
-const melhorJogadorId = rankingOrdenadoLocal?.[0]?.[0] || null;
-const melhorPontuacao = rankingOrdenadoLocal?.[0]?.[1] || 0;
-const nivelAtual = partida.nivel || 0;
-
-if (melhorJogadorId && melhorPontuacao > 0) {
-    // garante perfil do vencedor
-    let perfilFinal = await Perfil.findOne({ userId: melhorJogadorId });
-    if (!perfilFinal) perfilFinal = await Perfil.create({ userId: melhorJogadorId, moedas: 0, pontos: 0 });
-
-    // ATUALIZA RECORDE DO TEMA SE PRECISAR
-    const temaDB = await Tema.findById(partida.tema._id);
-    if (temaDB) {
-        const ultrapassouRecorde =
-            !temaDB.record?.userId ||
-            melhorPontuacao > (temaDB.record?.pontos || 0) ||
-            nivelAtual > (temaDB.record?.nivel || 0);
-
-        if (ultrapassouRecorde) {
-            temaDB.record = {
-                userId: melhorJogadorId,
-                pontos: melhorPontuacao,
-                nivel: nivelAtual,
-                data: new Date()
-            };
-            await temaDB.save();
-
-            // envia embed de novo recorde (se desejar)
-            const nomeTema = temaDB.insigniaEmoji
-                ? `${temaDB.insigniaEmoji} ${temaDB.nomeOriginal || temaDB.nome}`
-                : (temaDB.nomeOriginal || temaDB.nome);
-
-            const embedRecorde = new (require("discord.js").EmbedBuilder)()
-                .setColor("#FFD700")
-                .setTitle("NOVO RECORDE ATINGIDO!")
-                .setThumbnail("https://i.ibb.co/BMJY9rs/estrela-1.png")
-                .setDescription(`<:medalrec:1442253575576354876> <@${melhorJogadorId}> estabeleceu um novo recorde!`)
-                .addFields(
-                    { name: "Tema", value: `**${nomeTema}**`, inline: true },
-                    { name: "Pontuação", value: `**<:pontos:1442182692748791889> ${melhorPontuacao} pontos**`, inline: true },
-                    { name: "Nível Atingido", value: `**<:levelup:1442272592789639239> ${nivelAtual}**`, inline: true }
-                );
-
-            message.channel.send({ embeds: [embedRecorde] }).catch(() => {});
-        }
+        await message.channel.send({ embeds: [embedRecorde] }).catch(() => {});
     }
+});
 
     // GARANTE que a pontuação por tema foi atualizada (caso algum acerto final não tenha sido persistido)
     try {
@@ -791,11 +776,7 @@ if (melhorJogadorId && melhorPontuacao > 0) {
     } catch (err) {
         console.error("Erro ao garantir pontuação final por tema:", err);
     }
-}
-
-
-});
-}
+};
 
 /* =====================================================
    FUNÇÕES AUXILIARES DE RANKING
