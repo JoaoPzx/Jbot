@@ -25,12 +25,24 @@ module.exports = {
 
         try {
             const bichos = [
-                { nome: "Aranha", emoji: "🕷️" }, { nome: "Boi", emoji: "🐂" }, { nome: "Boto", emoji: "🐬" },
-                { nome: "Cobra", emoji: "🐍" }, { nome: "Girafa", emoji: "🦒" }, { nome: "Hamster", emoji: "🐹" },
-                { nome: "Hipopótamo", emoji: "🦛" }, { nome: "Jacaré", emoji: "🐊" }, { nome: "Macaco", emoji: "🐒" },
-                { nome: "Morcego", emoji: "🦇" }, { nome: "Ouriço", emoji: "🦔" }, { nome: "Ovelha", emoji: "🐑" },
-                { nome: "Peixe-palhaço", emoji: "🐠" }, { nome: "Raposa", emoji: "🦊" }, { nome: "Tricerátopo", emoji: "🦖" },
-                { nome: "Urso-polar", emoji: "🐻‍❄️" }, { nome: "Urubu", emoji: "🦅" }, { nome: "Veado", emoji: "🦌" },
+                { nome: "Axolote", emoji: "🦎" },
+                { nome: "Capivara", emoji: "🦫" },
+                { nome: "Caranguejo", emoji: "🦀" },
+                { nome: "Corvo", emoji: "🐦‍⬛" },
+                { nome: "Guaxinim", emoji: "🦝" },
+                { nome: "Joaninha", emoji: "🐞" },
+                { nome: "Lhama", emoji: "🦙" },
+                { nome: "Libélula", emoji: "🦋" },
+                { nome: "Lontra", emoji: "🦦" },
+                { nome: "Onça", emoji: "🐆" },
+                { nome: "Pássaro", emoji: "🐦" },
+                { nome: "Pavão", emoji: "🦚" },
+                { nome: "Porco", emoji: "🐷" },
+                { nome: "Pterodáctilo", emoji: "🦖" },
+                { nome: "Tartaruga", emoji: "🐢" },
+                { nome: "Tubarão", emoji: "🦈" },
+                { nome: "Urso", emoji: "🐻" },
+                { nome: "Zorrilho", emoji: "🦨" },
             ];
 
             const dataPath = path.join(__dirname, "../../data/sorteio.json");
