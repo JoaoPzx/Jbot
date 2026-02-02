@@ -1,4 +1,5 @@
 // index.js
+require('dotenv').config();
 const { EmbedBuilder, Collection, Client, IntentsBitField } = require('discord.js');
 const { partidasAtivas, iniciarRodada } = require("./commands/Game/Partidas/play");
 const Perfil = require("./models/Perfil"); // IMPORTAÇÃO CORRETA
@@ -10,9 +11,6 @@ const {
   botoesDesativados
 } = require("./commands/Game/Cassino/blackjack");
 
-
-
-require('dotenv').config();
 const { connect } = require('./database');
 const fs = require('fs');
 const path = require('path');
@@ -38,10 +36,6 @@ Canvas.registerFont(
 );
 
 console.log("✔ SF Pro Display (Regular, Medium, Bold,) registrada com sucesso!");
-
-// ======================================================
-// 🔥 CONECTAR AO MONGO
-// ======================================================
 
 connect();
 
